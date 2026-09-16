@@ -1,1 +1,51 @@
-1
+{
+  "name": "Contratista Drywall — Next.js + Prisma + Neon",
+  "build": { "dockerfile": "Dockerfile" },
+  "remoteUser": "vscode",
+
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "22",
+      "pnpm": true,
+      // Nada de tu stack compila nativo (Prisma/Next traen binarios precompilados,
+      // auth usa bcryptjs) → no necesita python/g++ de node-gyp.
+      // Si algún día un paquete pide compilación, quitá esta línea.
+      "nodeGypDependencies": false
+    }
+  },
+
+  // Caché de pnpm persistente entre rebuilds: reinstalás en segundos
+  "mounts": [
+    "source=pnpm-store,target=/home/vscode/.local/share/pnpm/store,type=volume"
+  ],
+
+  "forwardPorts": [3000, 5555],
+  "portsAttributes": {
+    "3000": { "label": "Next.js (dev)", "onAutoForward": "openBrowser" },
+    "5555": { "label": "Prisma Studio" }
+  },
+
+  // Los secrets se definen en GitHub → Settings → Codespaces → Secrets.
+  // Se inyectan como variables del contenedor y así llegan a tu terminal.
+  "remoteEnv": {
+    "DATABASE_URL": "${containerEnv:DATABASE_URL}",
+    "AUTH_SECRET": "${containerEnv:AUTH_SECRET}"
+  },
+
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "workbench.startupEditor": "none"
+      },
+      "extensions": [
+        "Prisma.prisma",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss"
+      ]
+    }
+  }
+}
