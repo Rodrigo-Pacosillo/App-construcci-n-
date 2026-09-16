@@ -16,6 +16,15 @@ RUN apt-get update && apt-get install -y \
 RUN useradd -m -s /bin/bash vscode \
     && echo "vscode ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
+# 2.5 ⬅️ FIX EACCES: pre-crear la ruta del volumen de pnpm como vscode.
+# devcontainer.json monta un volumen en /home/vscode/.local/share/pnpm/store.
+# Si esa ruta NO existe en la imagen, Docker la crea (con TODOS sus padres)
+# como root al montarla → ~/.local/share queda de root → opencode y pnpm
+# revientan con EACCES. Si la ruta YA existe con dueño correcto en la imagen,
+# el mount respeta la propiedad y todo queda en manos de vscode.
+RUN mkdir -p /home/vscode/.local/share/pnpm/store \
+    && chown -R vscode:vscode /home/vscode/.local
+
 # 3. Lazygit (versión fijada: evita el rate-limit de la API anónima de GitHub)
 RUN LAZYGIT_VERSION="0.44.1" \
     && curl -Lo lazygit.tar.gz \
