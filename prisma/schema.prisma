@@ -1,0 +1,273 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums nativos de BD (valores estables) ──────────────────────────
+
+enum Rol {
+  admin
+  cliente
+}
+
+enum TipoObra {
+  vivienda_nueva
+  ampliacion
+  otro
+}
+
+enum TipoConstruccion {
+  tradicional
+  seco
+  no_sabe
+  integral
+}
+
+enum RangoM2 {
+  hasta_50
+  m50_100
+  m100_200
+  mas_200
+}
+
+enum PlazoInicio {
+  lo_antes_posible
+  en_3_meses
+  no_sabe
+}
+
+enum FaseFoto {
+  antes
+  durante
+  despues
+}
+
+enum EstadoObra {
+  en_curso
+  pausada
+  finalizada
+  entregada
+}
+
+enum EstadoPago {
+  registrado
+  confirmado
+}
+
+// ─── Entidades Fase 1 ───────────────────────────────────────────────
+
+model Usuario {
+  id           String   @id @default(cuid())
+  nombre       String
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  rol          Rol      @default(admin)
+  clienteId    String?  @unique @map("cliente_id")
+  cliente      Cliente? @relation(fields: [clienteId], references: [id])
+  activo       Boolean  @default(true)
+  creadoEn     DateTime @default(now()) @map("creado_en")
+
+  @@map("usuarios")
+}
+
+model Cliente {
+  id       String   @id @default(cuid())
+  nombre   String
+  whatsapp String
+  email    String?
+  ciudad   String?
+  creadoEn DateTime @default(now()) @map("creado_en")
+
+  usuario      Usuario?
+  cotizaciones Cotizacion[]
+  contratos    Contrato[]
+  proyectos    Proyecto[]
+  obras        ObraActiva[]
+
+  @@map("clientes")
+}
+
+model Cotizacion {
+  id               String         @id @default(cuid())
+  clienteId        String         @map("cliente_id")
+  cliente          Cliente        @relation(fields: [clienteId], references: [id])
+  tipoObra         TipoObra       @map("tipo_obra")
+  tipoConstruccion TipoConstruccion @map("tipo_construccion")
+  rangoM2          RangoM2        @map("rango_m2")
+  ubicacionObra    String?        @map("ubicacion_obra")
+  plazoInicio      PlazoInicio    @map("plazo_inicio")
+  origen           String
+  estado           String         @default("nuevo")
+  montoEstimado    Decimal?       @map("monto_estimado") @db.Decimal(12, 2)
+  montoCerrado     Decimal?       @map("monto_cerrado") @db.Decimal(12, 2)
+  notasInternas    String?        @map("notas_internas")
+  creadoEn         DateTime       @default(now()) @map("creado_en")
+  actualizadoEn    DateTime       @updatedAt @map("actualizado_en")
+
+  contratos Contrato[]
+
+  @@index([clienteId])
+  @@index([origen])
+  @@index([estado])
+  @@map("cotizaciones")
+}
+
+model Contrato {
+  id            String      @id @default(cuid())
+  clienteId     String      @map("cliente_id")
+  cliente       Cliente     @relation(fields: [clienteId], references: [id])
+  cotizacionId  String?     @map("cotizacion_id")
+  cotizacion    Cotizacion? @relation(fields: [cotizacionId], references: [id])
+  archivoPdfUrl String?     @map("archivo_pdf_url")
+  fechaFirma    DateTime?   @map("fecha_firma")
+  montoTotal    Decimal     @map("monto_total") @db.Decimal(12, 2)
+  observaciones String?
+
+  obras ObraActiva[]
+
+  @@map("contratos")
+}
+
+model Proyecto {
+  id               String           @id @default(cuid())
+  clienteId        String?          @map("cliente_id")
+  slug             String           @unique
+  titulo           String
+  tipoConstruccion TipoConstruccion @map("tipo_construccion")
+  m2Construidos    Int              @map("m2_construidos")
+  diasEjecucion    Int              @map("dias_ejecucion")
+  ubicacion        String
+  problemaCliente  String           @map("problema_cliente")
+  solucion         String
+  destacado        Boolean          @default(false)
+  publicado        Boolean          @default(false)
+  creadoEn         DateTime         @default(now()) @map("creado_en")
+  actualizadoEn    DateTime         @updatedAt @map("actualizado_en")
+
+  cliente    Cliente?        @relation(fields: [clienteId], references: [id])
+  fotos      FotoProyecto[]
+  testimonios Testimonio[]
+
+  @@map("proyectos")
+}
+
+model FotoProyecto {
+  id         String    @id @default(cuid())
+  proyectoId String    @map("proyecto_id")
+  proyecto   Proyecto  @relation(fields: [proyectoId], references: [id], onDelete: Cascade)
+  url        String
+  fase       FaseFoto
+  orden      Int
+
+  @@index([proyectoId])
+  @@map("fotos_proyecto")
+}
+
+model Testimonio {
+  id               String    @id @default(cuid())
+  proyectoId       String?   @map("proyecto_id")
+  proyecto         Proyecto? @relation(fields: [proyectoId], references: [id])
+  clienteNombre    String    @map("cliente_nombre")
+  texto            String
+  fotoUrl          String?   @map("foto_url")
+  puntaje          Int?
+  autorizaPublicar Boolean   @default(false) @map("autoriza_publicar")
+  publicado        Boolean   @default(false)
+  actualizadoEn    DateTime  @updatedAt @map("actualizado_en")
+
+  @@map("testimonios")
+}
+
+model Servicio {
+  id          String  @id @default(cuid())
+  slug        String  @unique
+  titulo      String
+  descripcion String
+  orden       Int     @default(0)
+  activo      Boolean @default(true)
+
+  @@map("servicios")
+}
+
+model Faq {
+  id        String  @id @default(cuid())
+  pregunta  String
+  respuesta String
+  orden     Int     @default(0)
+  activo    Boolean @default(true)
+
+  @@map("faqs")
+}
+
+model Certificacion {
+  id          String  @id @default(cuid())
+  titulo      String
+  descripcion String
+  activo      Boolean @default(true)
+
+  @@map("certificaciones")
+}
+
+model PrecioReferencia {
+  id               String           @id @default(cuid())
+  tipoConstruccion TipoConstruccion @map("tipo_construccion")
+  rangoM2          RangoM2          @map("rango_m2")
+  precioMin        Decimal          @map("precio_min") @db.Decimal(12, 2)
+  precioMax        Decimal          @map("precio_max") @db.Decimal(12, 2)
+  vigenteDesde     DateTime         @default(now()) @map("vigente_desde")
+
+  @@unique([tipoConstruccion, rangoM2, vigenteDesde])
+  @@map("precio_referencia")
+}
+
+// ─── Entidades Fase 2 (modeladas, NO codear) ────────────────────────
+
+model ObraActiva {
+  id              String     @id @default(cuid())
+  clienteId       String     @map("cliente_id")
+  contratoId      String?    @map("contrato_id")
+  direccionObra   String     @map("direccion_obra")
+  fechaInicio     DateTime   @map("fecha_inicio")
+  fechaFinEstimada DateTime? @map("fecha_fin_estimada")
+  estado          EstadoObra @default(en_curso)
+  progreso        Int        @default(0)
+
+  cliente  Cliente    @relation(fields: [clienteId], references: [id])
+  contrato Contrato?  @relation(fields: [contratoId], references: [id])
+  hitos    HitosObra[]
+  pagos    PagoObra[]
+
+  @@map("obras_activas")
+}
+
+model HitosObra {
+  id             String   @id @default(cuid())
+  obraId         String   @map("obra_id")
+  titulo         String
+  descripcion    String
+  fecha          DateTime
+  fotoUrl        String?  @map("foto_url")
+  visibleCliente Boolean  @default(false) @map("visible_cliente")
+
+  obra ObraActiva @relation(fields: [obraId], references: [id])
+
+  @@map("hitos_obra")
+}
+
+model PagoObra {
+  id             String     @id @default(cuid())
+  obraId         String     @map("obra_id")
+  monto          Decimal    @db.Decimal(12, 2)
+  fecha          DateTime
+  concepto       String
+  comprobanteUrl String?    @map("comprobante_url")
+  estado         EstadoPago @default(registrado)
+
+  obra ObraActiva @relation(fields: [obraId], references: [id])
+
+  @@map("pagos_obra")
+}

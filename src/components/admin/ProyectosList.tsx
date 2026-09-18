@@ -1,0 +1,111 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import { updateProyecto, deleteProyecto } from "@/app/admin/proyectos/actions";
+
+type Proyecto = {
+  id: string;
+  titulo: string;
+  slug: string;
+  tipoConstruccion: string;
+  m2Construidos: number;
+  diasEjecucion: number;
+  ubicacion: string;
+  publicado: boolean;
+  destacado: boolean;
+  creadoEn: Date;
+};
+
+export function ProyectosList({ proyectos }: { proyectos: Proyecto[] }) {
+  const [isPending, startTransition] = useTransition();
+
+  function handleTogglePublicado(id: string, current: boolean) {
+    startTransition(async () => {
+      await updateProyecto(id, { publicado: !current });
+    });
+  }
+
+  function handleToggleDestacado(id: string, current: boolean) {
+    startTransition(async () => {
+      await updateProyecto(id, { destacado: !current });
+    });
+  }
+
+  function handleDelete(id: string) {
+    if (!confirm("¿Eliminar este proyecto?")) return;
+    startTransition(async () => {
+      await deleteProyecto(id);
+    });
+  }
+
+  return (
+    <div className="rounded border border-border bg-surface">
+      <div className="overflow-x-auto">
+        <table className="w-full text-left text-sm">
+          <thead>
+            <tr className="border-b border-border">
+              <th className="px-4 py-3 section-label text-ink/40">Proyecto</th>
+              <th className="px-4 py-3 section-label text-ink/40">Tipo</th>
+              <th className="px-4 py-3 section-label text-ink/40">M2</th>
+              <th className="px-4 py-3 section-label text-ink/40">Dias</th>
+              <th className="px-4 py-3 section-label text-ink/40">Publicado</th>
+              <th className="px-4 py-3 section-label text-ink/40">Destacado</th>
+              <th className="px-4 py-3 section-label text-ink/40">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {proyectos.map((p) => (
+              <tr key={p.id} className="border-b border-border last:border-0">
+                <td className="px-4 py-3">
+                  <p className="font-medium">{p.titulo}</p>
+                  <p className="text-xs text-ink/40">{p.ubicacion}</p>
+                </td>
+                <td className="px-4 py-3 capitalize text-ink/60">{p.tipoConstruccion}</td>
+                <td className="px-4 py-3 text-ink/60">{p.m2Construidos}</td>
+                <td className="px-4 py-3 text-ink/60">{p.diasEjecucion}</td>
+                <td className="px-4 py-3">
+                  <button
+                    onClick={() => handleTogglePublicado(p.id, p.publicado)}
+                    disabled={isPending}
+                    className={`rounded px-2 py-0.5 text-xs font-medium ${
+                      p.publicado ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-500"
+                    }`}
+                  >
+                    {p.publicado ? "Si" : "No"}
+                  </button>
+                </td>
+                <td className="px-4 py-3">
+                  <button
+                    onClick={() => handleToggleDestacado(p.id, p.destacado)}
+                    disabled={isPending}
+                    className={`rounded px-2 py-0.5 text-xs font-medium ${
+                      p.destacado ? "bg-accent/20 text-accent" : "bg-gray-100 text-gray-500"
+                    }`}
+                  >
+                    {p.destacado ? "Si" : "No"}
+                  </button>
+                </td>
+                <td className="px-4 py-3">
+                  <button
+                    onClick={() => handleDelete(p.id)}
+                    disabled={isPending}
+                    className="text-xs text-red-500 hover:underline"
+                  >
+                    Eliminar
+                  </button>
+                </td>
+              </tr>
+            ))}
+            {proyectos.length === 0 && (
+              <tr>
+                <td colSpan={7} className="px-4 py-8 text-center text-ink/30">
+                  No hay proyectos aun
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
