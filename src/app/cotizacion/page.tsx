@@ -1,13 +1,33 @@
 "use client";
 
 import { useState } from "react";
+import { createCotizacion } from "./actions";
 
 export default function CotizacionPage() {
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setSubmitted(true);
+    setError(null);
+    setLoading(true);
+
+    const formData = new FormData(e.currentTarget);
+
+    try {
+      const result = await createCotizacion(formData);
+
+      if (result.success) {
+        setSubmitted(true);
+      } else {
+        setError("Error al enviar el formulario. Por favor inténtelo nuevamente.");
+      }
+    } catch (err) {
+      setError("Error inesperado. Por favor inténtelo nuevamente.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   if (submitted) {
@@ -19,7 +39,7 @@ export default function CotizacionPage() {
             Tu solicitud fue enviada
           </h1>
           <p className="mt-4 text-ink/50">
-            Te contactamos en menos de 24 horas para coordinar una visita tecnica.
+            Te contactamos en menos de 24 horas para coordinar una visita técnica.
           </p>
         </div>
       </div>
@@ -47,6 +67,7 @@ export default function CotizacionPage() {
                 id="nombre"
                 name="nombre"
                 required
+                maxLength={100}
                 className="mt-1 block w-full rounded border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent"
               />
             </div>
@@ -58,6 +79,7 @@ export default function CotizacionPage() {
                 id="whatsapp"
                 name="whatsapp"
                 required
+                maxLength={20}
                 className="mt-1 block w-full rounded border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent"
               />
             </div>
@@ -71,6 +93,7 @@ export default function CotizacionPage() {
               id="email"
               name="email"
               type="email"
+              maxLength={100}
               className="mt-1 block w-full rounded border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent"
             />
           </div>
@@ -114,6 +137,7 @@ export default function CotizacionPage() {
               id="ubicacion"
               name="ubicacion"
               placeholder="Barrio, Ciudad"
+              maxLength={200}
               className="mt-1 block w-full rounded border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent"
             />
           </div>
@@ -126,16 +150,25 @@ export default function CotizacionPage() {
               id="descripcion"
               name="descripcion"
               rows={4}
+              maxLength={1000}
               className="mt-1 block w-full rounded border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent"
             />
           </div>
 
           <button
             type="submit"
-            className="accent-btn w-full rounded py-3 text-sm font-medium"
+            disabled={loading}
+            className="accent-btn w-full rounded py-3 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Enviar solicitud
+            {loading ? "Enviando..." : "Enviar solicitud"}
           </button>
+        </form>
+
+        {error && (
+          <div className="mt-6 rounded border border-red-500 bg-red-50 px-4 py-3 text-sm text-red-800">
+            {error}
+          </div>
+        )}
         </form>
       </div>
     </div>

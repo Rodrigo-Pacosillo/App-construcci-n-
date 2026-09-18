@@ -93,8 +93,8 @@ model Cliente {
 
 model Cotizacion {
   id               String         @id @default(cuid())
-  clienteId        String         @map("cliente_id")
-  cliente          Cliente        @relation(fields: [clienteId], references: [id])
+  clienteId        String?        @map("cliente_id")
+  cliente          Cliente?       @relation(fields: [clienteId], references: [id])
   tipoObra         TipoObra       @map("tipo_obra")
   tipoConstruccion TipoConstruccion @map("tipo_construccion")
   rangoM2          RangoM2        @map("rango_m2")

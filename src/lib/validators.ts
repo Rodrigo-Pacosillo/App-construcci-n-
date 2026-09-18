@@ -4,22 +4,37 @@ import {
   ORIGENES_COTIZACION,
 } from "./constants";
 
-// ─── Cotización ────────────────────────────────────────────────────
-export const cotizacionSchema = z.object({
-  clienteId: z.string().cuid(),
+// ─── Cotización (forms de admin) ───────────────────────────────────
+export const cotizacionAdminSchema = z.object({
+  clienteId: z.string().cuid().optional(),
   tipoObra: z.enum(["vivienda_nueva", "ampliacion", "otro"]),
   tipoConstruccion: z.enum(["tradicional", "seco", "no_sabe"]),
   rangoM2: z.enum(["hasta_50", "m50_100", "m100_200", "mas_200"]),
   ubicacionObra: z.string().optional(),
   plazoInicio: z.enum(["lo_antes_posible", "en_3_meses", "no_sabe"]),
-  origen: z.enum(ORIGENES_COTIZACION),
-  estado: z.enum(ESTADOS_COTIZACION).default("nuevo"),
+  origen: z.enum(ORIGENES_COTIZACION).optional(),
+  estado: z.enum(ESTADOS_COTIZACION).optional(),
   montoEstimado: z.number().positive().optional(),
   montoCerrado: z.number().positive().optional(),
   notasInternas: z.string().optional(),
 });
 
-export type CotizacionInput = z.infer<typeof cotizacionSchema>;
+export type CotizacionAdminInput = z.infer<typeof cotizacionAdminSchema>;
+
+// ─── Cotización (formulario público) ────────────────────────────────
+export const cotizacionFormSchema = z.object({
+  nombre: z.string().min(1, "El nombre es requerido").max(100, "Máximo 100 caracteres"),
+  whatsapp: z.string().min(1, "El WhatsApp es requerido"),
+  email: z.string().email("Email inválido").optional(),
+  tipoObra: z.enum(["vivienda_nueva", "ampliacion", "otro"]),
+  tipoConstruccion: z.enum(["tradicional", "seco", "no_sabe"]),
+  rangoM2: z.enum(["hasta_50", "m50_100", "m100_200", "mas_200"]),
+  ubicacionObra: z.string().max(200, "Máximo 200 caracteres").optional(),
+  descripcion: z.string().max(1000, "Máximo 1000 caracteres").optional(),
+  plazoInicio: z.enum(["lo_antes_posible", "en_3_meses", "no_sabe"]),
+});
+
+export type CotizacionFormData = z.infer<typeof cotizacionFormSchema>;
 
 // ─── Cliente ───────────────────────────────────────────────────────
 export const clienteSchema = z.object({

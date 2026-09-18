@@ -17,23 +17,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let servicios: { slug: string }[] = [];
   let proyectos: { slug: string }[] = [];
 
-  try {
-    servicios = await prisma.servicio.findMany({
-      where: { activo: true },
-      select: { slug: true },
-    });
-  } catch {
-    servicios = FALLBACK_SERVICIOS;
-  }
+   try {
+     servicios = await prisma.servicio.findMany({
+       where: { activo: true },
+       select: { slug: true },
+     });
+   } catch (error) {
+     console.error("Error en sitemap (servicios):", error);
+     servicios = FALLBACK_SERVICIOS;
+   }
 
-  try {
-    proyectos = await prisma.proyecto.findMany({
-      where: { publicado: true },
-      select: { slug: true },
-    });
-  } catch {
-    proyectos = FALLBACK_PROYECTOS;
-  }
+   try {
+     proyectos = await prisma.proyecto.findMany({
+       where: { publicado: true },
+       select: { slug: true },
+     });
+   } catch (error) {
+     console.error("Error en sitemap (proyectos):", error);
+     proyectos = FALLBACK_PROYECTOS;
+   }
 
   const servicioPages = servicios.map((s) => ({
     url: `${base}/servicios/${s.slug}`,

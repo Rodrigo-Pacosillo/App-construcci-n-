@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { FALLBACK_FAQS } from "@/lib/fallback-data";
+import { sanitizeHTML } from "@/lib/sanitize";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -41,13 +42,13 @@ export default async function FaqPage() {
               className="group rounded border border-border bg-surface"
             >
               <summary className="cursor-pointer px-6 py-4 text-sm font-medium list-none flex items-center justify-between">
-                {faq.pregunta}
+                {sanitizeHTML(faq.pregunta)}
                 <span className="text-ink/30 transition-transform group-open:rotate-45">
                   +
                 </span>
               </summary>
               <div className="border-t border-border px-6 py-4 text-sm text-ink/60">
-                {faq.respuesta}
+                {sanitizeHTML(faq.respuesta)}
               </div>
             </details>
           ))}

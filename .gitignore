@@ -39,3 +39,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# IDE / editor
+.agents/
+.vscode/
+*.swp
+*.swo
+
+# Skills system (not part of app)
+skills-lock.json
+
+# Temporal analysis docs (keep in local only)
+ANALISIS-FASES.md
