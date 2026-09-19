@@ -32,7 +32,7 @@ export function Header() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="flex h-9 w-9 items-center justify-center rounded border border-border transition-colors hover:bg-ink/5"
+            className="relative flex h-9 w-9 items-center justify-center rounded border border-border transition-colors hover:bg-ink/5"
             aria-label="Cambiar tema"
           >
             <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />

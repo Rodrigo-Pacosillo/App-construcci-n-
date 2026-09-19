@@ -1,7 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
-import { updateTestimonio, deleteTestimonio } from "@/app/admin/testimonios/actions";
+import { updateTestimonio, deleteTestimonio } from "@/app/admin/(panel)/testimonios/actions";
 
 type Testimonio = {
   id: string;

@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { FALLBACK_SERVICIOS } from "@/lib/fallback-data";
 import { ServiciosGrid } from "./ServiciosGrid";

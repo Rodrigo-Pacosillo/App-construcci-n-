@@ -7,6 +7,16 @@ export const metadata: Metadata = {
   title: "Proyectos",
   description:
     "Portafolio de obras destacadas en construccion en seco. Casos reales con fotos antes/durante/despues.",
+  openGraph: {
+    images: [
+      {
+        url: "/og?title=Proyectos&subtitle=Portafolio%20de%20obras%20en%20construccion%20en%20seco&type=dark",
+        width: 1200,
+        height: 630,
+        alt: "Proyectos Steel Frame",
+      },
+    ],
+  },
 };
 
 async function getProyectos() {

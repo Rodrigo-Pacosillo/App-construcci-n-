@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { FALLBACK_SERVICIOS } from "@/lib/fallback-data";
+import type { Metadata } from "next";
 
 async function getServicio(slug: string) {
   try {
@@ -12,6 +13,34 @@ async function getServicio(slug: string) {
   } catch {
     return FALLBACK_SERVICIOS.find((s) => s.slug === slug) || null;
   }
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const servicio = await getServicio(slug);
+
+  if (!servicio) {
+    return { title: "Servicio no encontrado" };
+  }
+
+  return {
+    title: servicio.titulo,
+    description: servicio.descripcion.slice(0, 160),
+    openGraph: {
+      images: [
+        {
+          url: `/og?title=${encodeURIComponent(servicio.titulo)}&subtitle=${encodeURIComponent(servicio.descripcion.slice(0, 80))}&type=dark`,
+          width: 1200,
+          height: 630,
+          alt: servicio.titulo,
+        },
+      ],
+    },
+  };
 }
 
 export default async function ServicioPage({

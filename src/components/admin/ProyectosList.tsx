@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { updateProyecto, deleteProyecto } from "@/app/admin/proyectos/actions";
+import { useTransition } from "react";
+import { updateProyecto, deleteProyecto } from "@/app/admin/(panel)/proyectos/actions";
 
 type Proyecto = {
   id: string;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { updateServicio, deleteServicio, createServicio } from "@/app/admin/servicios/actions";
+import { updateServicio, deleteServicio, createServicio } from "@/app/admin/(panel)/servicios/actions";
 
 type Servicio = {
   id: string;
@@ -16,14 +16,6 @@ export function ServiciosList({ servicios }: { servicios: Servicio[] }) {
   const [isPending, startTransition] = useTransition();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ titulo: "", slug: "", descripcion: "" });
-
-  function handleUpdate(id: string, e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    startTransition(async () => {
-      await updateServicio(id, formData);
-    });
-  }
 
   function handleCreate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

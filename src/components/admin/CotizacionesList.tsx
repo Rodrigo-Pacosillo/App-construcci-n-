@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { updateCotizacionEstado } from "@/app/admin/cotizaciones/actions";
-import { ESTADOS_COTIZACION, ESTADO_LABELS, ESTADO_COLORES } from "@/lib/constants";
-import type { EstadoCotizacion } from "@/lib/constants";
+import { updateCotizacionEstado } from "@/app/admin/(panel)/cotizaciones/actions";
+import { ESTADOS_COTIZACION, ESTADO_LABELS } from "@/lib/constants";
 
 type Cotizacion = {
   id: string;

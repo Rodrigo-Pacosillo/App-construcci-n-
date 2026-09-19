@@ -7,6 +7,16 @@ export const metadata: Metadata = {
   title: "Servicios",
   description:
     "Steel frame, drywall, cielorrasos, revestimientos y aislaciones. Soluciones completas en construccion en seco.",
+  openGraph: {
+    images: [
+      {
+        url: "/og?title=Servicios&subtitle=Soluciones%20completas%20en%20construccion%20en%20seco&type=dark",
+        width: 1200,
+        height: 630,
+        alt: "Servicios Steel Frame",
+      },
+    ],
+  },
 };
 
 async function getServicios() {

@@ -23,7 +23,7 @@ export default function CotizacionPage() {
       } else {
         setError("Error al enviar el formulario. Por favor inténtelo nuevamente.");
       }
-    } catch (err) {
+    } catch {
       setError("Error inesperado. Por favor inténtelo nuevamente.");
     } finally {
       setLoading(false);

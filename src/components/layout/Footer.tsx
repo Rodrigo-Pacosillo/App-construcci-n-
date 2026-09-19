@@ -36,10 +36,16 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-8 border-t border-white/10 pt-6 text-center text-xs text-white/30">
+        <div className="mt-8 flex flex-col items-center justify-between gap-2 border-t border-white/10 pt-6 text-center text-xs text-white/30 sm:flex-row sm:text-left">
           <p className="section-label">
             &copy; {new Date().getFullYear()} Steel Frame — Todos los derechos reservados
           </p>
+          <Link
+            href="/admin/login"
+            className="section-label text-white/30 transition-colors hover:text-accent"
+          >
+            Ingreso
+          </Link>
         </div>
       </div>
     </footer>

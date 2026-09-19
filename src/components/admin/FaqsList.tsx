@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { updateFaq, deleteFaq, createFaq } from "@/app/admin/faqs/actions";
+import { updateFaq, deleteFaq, createFaq } from "@/app/admin/(panel)/faqs/actions";
 
 type Faq = {
   id: string;
@@ -15,14 +15,6 @@ export function FaqsList({ faqs }: { faqs: Faq[] }) {
   const [isPending, startTransition] = useTransition();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ pregunta: "", respuesta: "" });
-
-  function handleUpdate(id: string, e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    startTransition(async () => {
-      await updateFaq(id, formData);
-    });
-  }
 
   function handleCreate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

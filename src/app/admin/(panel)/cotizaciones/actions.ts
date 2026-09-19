@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth-utils";
-import { ESTADOS_COTIZACION } from "@/lib/constants";
+import { ESTADOS_COTIZACION, type EstadoCotizacion } from "@/lib/constants";
 
 export async function updateCotizacionEstado(
   id: string,
@@ -19,7 +19,7 @@ export async function updateCotizacionEstado(
   }
 
   // Validar estado
-  if (!ESTADOS_COTIZACION.includes(estado as any)) {
+  if (!ESTADOS_COTIZACION.includes(estado as EstadoCotizacion)) {
     return { success: false, error: { estado: ["Estado inválido"] } };
   }
 

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { FALLBACK_PROYECTOS } from "@/lib/fallback-data";
+import type { Metadata } from "next";
 
 async function getProyecto(slug: string) {
   try {
@@ -13,6 +14,34 @@ async function getProyecto(slug: string) {
   } catch {
     return FALLBACK_PROYECTOS.find((p) => p.slug === slug) || null;
   }
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const proyecto = await getProyecto(slug);
+
+  if (!proyecto) {
+    return { title: "Proyecto no encontrado" };
+  }
+
+  return {
+    title: proyecto.titulo,
+    description: `${proyecto.tipoConstruccion === "seco" ? "Steel Frame" : proyecto.tipoConstruccion} · ${proyecto.m2Construidos}m2 · ${proyecto.ubicacion}`,
+    openGraph: {
+      images: [
+        {
+          url: `/og?title=${encodeURIComponent(proyecto.titulo)}&subtitle=${encodeURIComponent(`${proyecto.tipoConstruccion === "seco" ? "Steel Frame" : proyecto.tipoConstruccion} · ${proyecto.ubicacion}`)}&type=dark`,
+          width: 1200,
+          height: 630,
+          alt: proyecto.titulo,
+        },
+      ],
+    },
+  };
 }
 
 export default async function ProyectoPage({
