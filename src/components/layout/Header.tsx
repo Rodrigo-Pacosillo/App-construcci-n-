@@ -27,12 +27,6 @@ export function Header() {
               {item.label}
             </Link>
           ))}
-          <Link
-            href="/admin"
-            className="section-label text-ink/60 transition-colors hover:text-ink"
-          >
-            Admin
-          </Link>
         </nav>
 
         <div className="flex items-center gap-3">
@@ -67,13 +61,6 @@ export function Header() {
               {item.label}
             </Link>
           ))}
-          <Link
-            href="/admin"
-            onClick={() => setMobileOpen(false)}
-            className="block py-2 section-label text-ink/60 transition-colors hover:text-ink"
-          >
-            Admin
-          </Link>
         </nav>
       )}
     </header>

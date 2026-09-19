@@ -49,19 +49,19 @@ export default async function ServicioPage({
           <ul className="mt-4 space-y-3 text-sm text-ink/60">
             <li className="flex items-start gap-2">
               <span className="text-accent">✓</span>
-              Mas de 15 anos de experiencia en construccion en seco
+              Equipo con experiencia comprobada en construccion en seco
             </li>
             <li className="flex items-start gap-2">
               <span className="text-accent">✓</span>
-              Materiales de primera calidad
+              Materiales de primera calidad certificados
             </li>
             <li className="flex items-start gap-2">
               <span className="text-accent">✓</span>
-              Presupuesto claro y sin sorpresas
+              Presupuesto claro, detallado y sin sorpresas
             </li>
             <li className="flex items-start gap-2">
               <span className="text-accent">✓</span>
-              Plazos de entrega garantizados
+              Plazos de entrega cumplidos
             </li>
           </ul>
         </div>

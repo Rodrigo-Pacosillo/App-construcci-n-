@@ -129,6 +129,40 @@ export default function CotizacionPage() {
             </div>
           </div>
 
+          <div className="grid gap-6 sm:grid-cols-2">
+            <div>
+              <label htmlFor="rangoM2" className="section-label block text-ink/40">
+                Superficie estimada
+              </label>
+              <select
+                id="rangoM2"
+                name="rangoM2"
+                required
+                className="mt-1 block w-full rounded border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent"
+              >
+                <option value="hasta_50">Hasta 50 m2</option>
+                <option value="m50_100">50 - 100 m2</option>
+                <option value="m100_200">100 - 200 m2</option>
+                <option value="mas_200">Mas de 200 m2</option>
+              </select>
+            </div>
+            <div>
+              <label htmlFor="plazoInicio" className="section-label block text-ink/40">
+                Cuándo querés empezar
+              </label>
+              <select
+                id="plazoInicio"
+                name="plazoInicio"
+                required
+                className="mt-1 block w-full rounded border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent"
+              >
+                <option value="lo_antes_posible">Lo antes posible</option>
+                <option value="en_3_meses">En 3 meses</option>
+                <option value="no_sabe">No sabe</option>
+              </select>
+            </div>
+          </div>
+
           <div>
             <label htmlFor="ubicacion" className="section-label block text-ink/40">
               Ubicacion de la obra
