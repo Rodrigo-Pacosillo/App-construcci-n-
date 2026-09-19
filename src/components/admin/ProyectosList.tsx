@@ -19,18 +19,6 @@ type Proyecto = {
 export function ProyectosList({ proyectos }: { proyectos: Proyecto[] }) {
   const [isPending, startTransition] = useTransition();
 
-  function handleTogglePublicado(id: string, current: boolean) {
-    startTransition(async () => {
-      await updateProyecto(id, { publicado: !current });
-    });
-  }
-
-  function handleToggleDestacado(id: string, current: boolean) {
-    startTransition(async () => {
-      await updateProyecto(id, { destacado: !current });
-    });
-  }
-
   function handleDelete(id: string) {
     if (!confirm("¿Eliminar este proyecto?")) return;
     startTransition(async () => {
@@ -65,7 +53,12 @@ export function ProyectosList({ proyectos }: { proyectos: Proyecto[] }) {
                 <td className="px-4 py-3 text-ink/60">{p.diasEjecucion}</td>
                 <td className="px-4 py-3">
                   <button
-                    onClick={() => handleTogglePublicado(p.id, p.publicado)}
+                    type="button"
+                    onClick={() => startTransition(async () => {
+                      const formData = new FormData();
+                      formData.set("publicado", String(!p.publicado));
+                      await updateProyecto(p.id, formData);
+                    })}
                     disabled={isPending}
                     className={`rounded px-2 py-0.5 text-xs font-medium ${
                       p.publicado ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-500"
@@ -76,7 +69,12 @@ export function ProyectosList({ proyectos }: { proyectos: Proyecto[] }) {
                 </td>
                 <td className="px-4 py-3">
                   <button
-                    onClick={() => handleToggleDestacado(p.id, p.destacado)}
+                    type="button"
+                    onClick={() => startTransition(async () => {
+                      const formData = new FormData();
+                      formData.set("destacado", String(!p.destacado));
+                      await updateProyecto(p.id, formData);
+                    })}
                     disabled={isPending}
                     className={`rounded px-2 py-0.5 text-xs font-medium ${
                       p.destacado ? "bg-accent/20 text-accent" : "bg-gray-100 text-gray-500"
@@ -87,6 +85,7 @@ export function ProyectosList({ proyectos }: { proyectos: Proyecto[] }) {
                 </td>
                 <td className="px-4 py-3">
                   <button
+                    type="button"
                     onClick={() => handleDelete(p.id)}
                     disabled={isPending}
                     className="text-xs text-red-500 hover:underline"

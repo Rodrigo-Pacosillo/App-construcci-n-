@@ -14,12 +14,6 @@ type Testimonio = {
 export function TestimoniosList({ testimonios }: { testimonios: Testimonio[] }) {
   const [isPending, startTransition] = useTransition();
 
-  function handleTogglePublicado(id: string, current: boolean) {
-    startTransition(async () => {
-      await updateTestimonio(id, { publicado: !current });
-    });
-  }
-
   function handleDelete(id: string) {
     if (!confirm("¿Eliminar este testimonio?")) return;
     startTransition(async () => {
@@ -48,7 +42,12 @@ export function TestimoniosList({ testimonios }: { testimonios: Testimonio[] }) 
                 <td className="px-4 py-3 text-accent">{t.puntaje ? "★".repeat(t.puntaje) : "—"}</td>
                 <td className="px-4 py-3">
                   <button
-                    onClick={() => handleTogglePublicado(t.id, t.publicado)}
+                    type="button"
+                    onClick={() => startTransition(async () => {
+                      const formData = new FormData();
+                      formData.set("publicado", String(!t.publicado));
+                      await updateTestimonio(t.id, formData);
+                    })}
                     disabled={isPending}
                     className={`rounded px-2 py-0.5 text-xs font-medium ${
                       t.publicado ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-500"
@@ -59,6 +58,7 @@ export function TestimoniosList({ testimonios }: { testimonios: Testimonio[] }) 
                 </td>
                 <td className="px-4 py-3">
                   <button
+                    type="button"
                     onClick={() => handleDelete(t.id)}
                     disabled={isPending}
                     className="text-xs text-red-500 hover:underline"

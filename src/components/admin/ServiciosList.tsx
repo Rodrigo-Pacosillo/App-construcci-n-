@@ -17,9 +17,21 @@ export function ServiciosList({ servicios }: { servicios: Servicio[] }) {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ titulo: "", slug: "", descripcion: "" });
 
-  function handleToggleActivo(id: string, current: boolean) {
+  function handleUpdate(id: string, e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
     startTransition(async () => {
-      await updateServicio(id, { activo: !current });
+      await updateServicio(id, formData);
+    });
+  }
+
+  function handleCreate(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    startTransition(async () => {
+      await createServicio(formData);
+      setForm({ titulo: "", slug: "", descripcion: "" });
+      setShowForm(false);
     });
   }
 
@@ -30,19 +42,11 @@ export function ServiciosList({ servicios }: { servicios: Servicio[] }) {
     });
   }
 
-  function handleCreate(e: React.FormEvent) {
-    e.preventDefault();
-    startTransition(async () => {
-      await createServicio(form);
-      setForm({ titulo: "", slug: "", descripcion: "" });
-      setShowForm(false);
-    });
-  }
-
   return (
     <div>
       <div className="mb-4 flex justify-end">
         <button
+          type="button"
           onClick={() => setShowForm(!showForm)}
           className="accent-btn rounded px-4 py-2 text-xs font-medium"
         >
@@ -54,25 +58,34 @@ export function ServiciosList({ servicios }: { servicios: Servicio[] }) {
         <form onSubmit={handleCreate} className="mb-6 rounded border border-border bg-surface p-4 space-y-3">
           <div className="grid gap-3 sm:grid-cols-2">
             <input
-              placeholder="Titulo"
+              name="titulo"
               value={form.titulo}
               onChange={(e) => setForm({ ...form, titulo: e.target.value })}
+              placeholder="Titulo"
               required
               className="rounded border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent"
             />
             <input
-              placeholder="slug"
+              name="slug"
               value={form.slug}
               onChange={(e) => setForm({ ...form, slug: e.target.value })}
+              placeholder="slug"
               required
               pattern="^[a-z0-9-]+$"
               className="rounded border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent"
             />
           </div>
+          <input
+            name="orden"
+            type="hidden"
+            value={servicios.length}
+            className="rounded border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent"
+          />
           <textarea
-            placeholder="Descripcion"
+            name="descripcion"
             value={form.descripcion}
             onChange={(e) => setForm({ ...form, descripcion: e.target.value })}
+            placeholder="Descripcion"
             required
             rows={2}
             className="w-full rounded border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent"
@@ -103,7 +116,12 @@ export function ServiciosList({ servicios }: { servicios: Servicio[] }) {
                   <td className="px-4 py-3 text-ink/40">{s.slug}</td>
                   <td className="px-4 py-3">
                     <button
-                      onClick={() => handleToggleActivo(s.id, s.activo)}
+                      type="button"
+                      onClick={() => startTransition(async () => {
+                        const formData = new FormData();
+                        formData.set("activo", String(!s.activo));
+                        await updateServicio(s.id, formData);
+                      })}
                       disabled={isPending}
                       className={`rounded px-2 py-0.5 text-xs font-medium ${
                         s.activo ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-500"
@@ -114,6 +132,7 @@ export function ServiciosList({ servicios }: { servicios: Servicio[] }) {
                   </td>
                   <td className="px-4 py-3">
                     <button
+                      type="button"
                       onClick={() => handleDelete(s.id)}
                       disabled={isPending}
                       className="text-xs text-red-500 hover:underline"

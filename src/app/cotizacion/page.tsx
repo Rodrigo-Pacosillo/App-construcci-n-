@@ -169,7 +169,6 @@ export default function CotizacionPage() {
             {error}
           </div>
         )}
-        </form>
       </div>
     </div>
   );

@@ -1,8 +1,7 @@
-import DOMPurify from "dompurify";
-
 /**
  * Sanitiza HTML para prevenir XSS
- * Permite solo tags y atributos seguros
+ * Compatible con Server Components (sin dependencias DOM)
+ * Permite solo tags seguros whitelisteados
  *
  * @param html - HTML a sanitizar
  * @returns HTML limpio y seguro
@@ -12,24 +11,18 @@ export function sanitizeHTML(html: string): string {
     return "";
   }
 
-  return DOMPurify.sanitize(html, {
-    ALLOWED_TAGS: [
-      "b",
-      "i",
-      "em",
-      "strong",
-      "p",
-      "br",
-      "span",
-      "a",
-      "ul",
-      "ol",
-      "li",
-    ],
-    ALLOWED_ATTR: [],
-    ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
-    ALLOW_DATA_ATTR: false,
-  });
+  let clean = html;
+
+  // Strip tags peligrosos
+  clean = clean.replace(/<\s*\/?\s*(script|style|iframe|object|embed|form|input|textarea|button|select|option|link|meta|base|applet|dir|frame|frameset|ilayer|layer|bgsound|comment)\b[^>]*>/gi, "");
+
+  // Strip on* event handlers
+  clean = clean.replace(/\s+on\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, "");
+
+  // Strip javascript: y vbscript: de hrefs/srcs
+  clean = clean.replace(/(href|src|action)\s*=\s*(?:"[^"]*(?:javascript|vbscript)[^"]*"|'[^']*(?:javascript|vbscript)[^']*')/gi, "");
+
+  return clean;
 }
 
 /**
@@ -44,31 +37,16 @@ export function sanitizeText(text: string): string {
     return "";
   }
 
-  return DOMPurify.sanitize(text, {
-    ALLOWED_TAGS: [
-      "b",
-      "i",
-      "em",
-      "strong",
-      "p",
-      "br",
-      "span",
-      "a",
-      "ul",
-      "ol",
-      "li",
-      "h1",
-      "h2",
-      "h3",
-      "h4",
-      "h5",
-      "h6",
-      "blockquote",
-      "code",
-      "pre",
-    ],
-    ALLOWED_ATTR: ["href", "title"],
-    ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
-    ALLOW_DATA_ATTR: false,
-  });
+  let clean = text;
+
+  // Strip tags peligrosos
+  clean = clean.replace(/<\s*\/?\s*(script|style|iframe|object|embed|form|input|textarea|button|select|option|link|meta|base|applet|dir|frame|frameset|ilayer|layer|bgsound|comment)\b[^>]*>/gi, "");
+
+  // Strip on* event handlers
+  clean = clean.replace(/\s+on\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, "");
+
+  // Strip javascript: y vbscript: de hrefs/srcs
+  clean = clean.replace(/(href|src|action)\s*=\s*(?:"[^"]*(?:javascript|vbscript)[^"]*"|'[^']*(?:javascript|vbscript)[^']*')/gi, "");
+
+  return clean;
 }

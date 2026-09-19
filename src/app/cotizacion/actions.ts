@@ -3,8 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { cotizacionSchema } from "@/lib/validators";
-import { ESTADOS_COTIZACION } from "@/lib/constants";
+import { cotizacionFormSchema } from "@/lib/validators";
 
 /**
  * Crea una nueva cotización desde el formulario público

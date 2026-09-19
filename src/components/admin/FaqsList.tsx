@@ -16,9 +16,21 @@ export function FaqsList({ faqs }: { faqs: Faq[] }) {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ pregunta: "", respuesta: "" });
 
-  function handleToggleActivo(id: string, current: boolean) {
+  function handleUpdate(id: string, e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
     startTransition(async () => {
-      await updateFaq(id, { activo: !current });
+      await updateFaq(id, formData);
+    });
+  }
+
+  function handleCreate(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    startTransition(async () => {
+      await createFaq(formData);
+      setForm({ pregunta: "", respuesta: "" });
+      setShowForm(false);
     });
   }
 
@@ -26,15 +38,6 @@ export function FaqsList({ faqs }: { faqs: Faq[] }) {
     if (!confirm("¿Eliminar esta FAQ?")) return;
     startTransition(async () => {
       await deleteFaq(id);
-    });
-  }
-
-  function handleCreate(e: React.FormEvent) {
-    e.preventDefault();
-    startTransition(async () => {
-      await createFaq(form);
-      setForm({ pregunta: "", respuesta: "" });
-      setShowForm(false);
     });
   }
 
@@ -52,18 +55,26 @@ export function FaqsList({ faqs }: { faqs: Faq[] }) {
       {showForm && (
         <form onSubmit={handleCreate} className="mb-6 rounded border border-border bg-surface p-4 space-y-3">
           <input
-            placeholder="Pregunta"
+            name="pregunta"
             value={form.pregunta}
             onChange={(e) => setForm({ ...form, pregunta: e.target.value })}
+            placeholder="Pregunta"
             required
             className="w-full rounded border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent"
           />
           <textarea
-            placeholder="Respuesta"
+            name="respuesta"
             value={form.respuesta}
             onChange={(e) => setForm({ ...form, respuesta: e.target.value })}
+            placeholder="Respuesta"
             required
             rows={3}
+            className="w-full rounded border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent"
+          />
+          <input
+            name="orden"
+            type="hidden"
+            value={faqs.length}
             className="w-full rounded border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent"
           />
           <button type="submit" disabled={isPending} className="accent-btn rounded px-4 py-2 text-xs font-medium">
@@ -92,7 +103,12 @@ export function FaqsList({ faqs }: { faqs: Faq[] }) {
                   <td className="max-w-xs px-4 py-3 text-ink/60 line-clamp-2">{f.respuesta}</td>
                   <td className="px-4 py-3">
                     <button
-                      onClick={() => handleToggleActivo(f.id, f.activo)}
+                      type="button"
+                      onClick={() => startTransition(async () => {
+                        const formData = new FormData();
+                        formData.set("activo", String(!f.activo));
+                        await updateFaq(f.id, formData);
+                      })}
                       disabled={isPending}
                       className={`rounded px-2 py-0.5 text-xs font-medium ${
                         f.activo ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-500"
@@ -103,6 +119,7 @@ export function FaqsList({ faqs }: { faqs: Faq[] }) {
                   </td>
                   <td className="px-4 py-3">
                     <button
+                      type="button"
                       onClick={() => handleDelete(f.id)}
                       disabled={isPending}
                       className="text-xs text-red-500 hover:underline"
