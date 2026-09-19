@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { getPreciosReferencia } from "./actions";
+import type { PrecioReferencia } from "./actions";
 
 const PASOS = [
   {
@@ -25,21 +27,6 @@ const PASOS = [
   },
 ];
 
-const PRECIOS: Record<string, Record<string, { min: number; max: number }>> = {
-  seco: {
-    hasta_50: { min: 350000, max: 500000 },
-    m50_100: { min: 300000, max: 420000 },
-    m100_200: { min: 280000, max: 380000 },
-    mas_200: { min: 250000, max: 350000 },
-  },
-  tradicional: {
-    hasta_50: { min: 400000, max: 550000 },
-    m50_100: { min: 350000, max: 480000 },
-    m100_200: { min: 320000, max: 440000 },
-    mas_200: { min: 300000, max: 400000 },
-  },
-};
-
 const M2_LABELS: Record<string, string> = {
   hasta_50: "50 m2",
   m50_100: "75 m2",
@@ -55,14 +42,32 @@ function formatCurrency(n: number) {
   }).format(n);
 }
 
+function buildPreciosMap(data: PrecioReferencia[]): Record<string, Record<string, { min: number; max: number }>> {
+  const map: Record<string, Record<string, { min: number; max: number }>> = {};
+  for (const p of data) {
+    if (!map[p.tipoConstruccion]) map[p.tipoConstruccion] = {};
+    map[p.tipoConstruccion][p.rangoM2] = { min: p.precioMin, max: p.precioMax };
+  }
+  return map;
+}
+
 export default function EstimadorPage() {
   const [paso, setPaso] = useState(0);
   const [tipo, setTipo] = useState<string | null>(null);
   const [m2, setM2] = useState<string | null>(null);
+  const [precios, setPrecios] = useState<Record<string, Record<string, { min: number; max: number }>>>({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getPreciosReferencia().then((data) => {
+      setPrecios(buildPreciosMap(data));
+      setLoading(false);
+    });
+  }, []);
 
   const resultado =
-    tipo && m2 && PRECIOS[tipo]?.[m2]
-      ? PRECIOS[tipo][m2]
+    tipo && m2 && precios[tipo]?.[m2]
+      ? precios[tipo][m2]
       : null;
 
   const m2Num =
@@ -98,7 +103,9 @@ export default function EstimadorPage() {
         </div>
 
         <div className="mt-12">
-          {paso < 2 ? (
+          {loading ? (
+            <p className="text-center text-ink/40">Cargando precios...</p>
+          ) : paso < 2 ? (
             <>
               <h2 className="font-heading text-2xl font-bold">
                 {PASOS[paso].titulo}

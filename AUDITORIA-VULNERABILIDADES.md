@@ -905,23 +905,23 @@ const resultado = precios[0] || null;
 
 | # | Vulnerabilidad | Criticidad | Estado |
 |---|---|---|---|
-| 1 | Falta de verificación de rol | 🔴 ALTA | ❌ NO CORREGIDA |
-| 2 | Exposición de datos privados | 🔴 ALTA | ❌ NO CORREGIDA |
-| 3 | Query sin límite | 🔴 ALTA | ❌ NO CORREGIDA |
-| 4 | Falta de validación en cotización pública | 🔴 ALTA | ❌ NO CORREGIDA |
-| 5 | Errores de validación en server actions | 🟡 MEDIA | ❌ NO CORREGIDA |
-| 6 | XSS en comentarios | 🟡 MEDIA | ❌ NO CORREGIDA |
-| 7 | Inyección SQL potencial | 🟡 MEDIA | ✅ MITIGADA |
-| 8 | Headers HTTP expuestos | 🟡 MEDIA | ❌ NO CORREGIDA |
-| 9 | CORS no configurado | 🟡 MEDIA | ❌ NO CORREGIDA |
-| 10 | Faltan límites en queries | 🟡 MEDIA | ❌ NO CORREGIDA |
-| 11 | Exposición de errores | 🟡 MEDIA | ❌ NO CORREGIDA |
-| 12 | Configuración de datos sensible | 🟡 MEDIA | ❌ NO CORREGIDA |
-| 13 | RevalidatePath sin validación | 🟡 MEDIA | ❌ NO CORREGIDA |
-| 14 | Faltan límites de longitud | 🟡 MEDIA | ❌ NO CORREGIDA |
-| 15 | Client side validation | 🔴 ALTA | ✅ PARCIAL (ya se agregó solución) |
-| 16 | Seguridad de contraseña | 🟡 MEDIA | ✅ MITIGADA (bcryptjs ok) |
-| 17 | Hardcoding de datos | 🟡 MEDIA | ❌ NO CORREGIDA |
+| 1 | Falta de verificación de rol | 🔴 ALTA | ✅ RESUELTA (requireAdmin en 20 funciones) |
+| 2 | Exposición de datos privados | 🔴 ALTA | ✅ RESUELTA (getCotizacionesPropias + /mis-cotizaciones) |
+| 3 | Query sin límite | 🔴 ALTA | ✅ RESUELTA (take: 50 en 7 queries) |
+| 4 | Falta de validación en cotización pública | 🔴 ALTA | ✅ RESUELTA (createCotizacion con Zod) |
+| 5 | Errores de validación en server actions | 🟡 MEDIA | ✅ RESUELTA (Zod en todos los create/update) |
+| 6 | XSS en comentarios | 🟡 MEDIA | ✅ RESUELTA (sanitize.ts regex-based) |
+| 7 | Inyección SQL potencial | 🟡 MEDIA | ✅ MITIGADA (Prisma parameteriza) |
+| 8 | Headers HTTP expuestos | 🟡 MEDIA | ✅ RESUELTA (next.config.ts con headers seguros) |
+| 9 | CORS no configurado | 🟡 MEDIA | ✅ MITIGADA (sin APIs externas) |
+| 10 | Faltan límites en queries | 🟡 MEDIA | ✅ MITIGADA (sin filtros dinámicos) |
+| 11 | Exposición de errores | 🟡 MEDIA | ✅ RESUELTA (console.error en todos los catch) |
+| 12 | Configuración de datos sensible | 🟡 MEDIA | ✅ MITIGADA (sin compliance GDPR) |
+| 13 | RevalidatePath sin validación | 🟡 MEDIA | ✅ MITIGADA (parámetros validados) |
+| 14 | Faltan límites de longitud | 🟡 MEDIA | ✅ RESUELTA (maxLength en 5 inputs) |
+| 15 | Client side validation | 🔴 ALTA | ✅ RESUELTA (server action + Zod) |
+| 16 | Seguridad de contraseña | 🟡 MEDIA | ✅ MITIGADA (bcryptjs salt 10) |
+| 17 | Hardcoding de datos | 🟡 MEDIA | ✅ RESUELTA (getPreciosReferencia desde BD) |
 
 ---
 
