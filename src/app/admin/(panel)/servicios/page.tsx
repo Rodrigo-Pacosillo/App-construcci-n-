@@ -5,7 +5,7 @@ import { ServiciosList } from "@/components/admin/ServiciosList";
 
 export default async function ServiciosAdminPage() {
   const session = await auth();
-  if (!session) redirect("/admin/login");
+  if (!session) redirect("/login?callbackUrl=/admin");
 
   const servicios = await getServicios();
 

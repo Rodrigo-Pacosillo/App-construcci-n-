@@ -1,4 +1,4 @@
-import { PrismaClient, Rol, TipoObra, TipoConstruccion, RangoM2, PlazoInicio, FaseFoto } from "@prisma/client";
+import { PrismaClient, Rol, TipoObra, TipoConstruccion, RangoM2, PlazoInicio, FaseFoto, EstadoObra, EstadoPago } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -594,8 +594,119 @@ async function main() {
   ]);
   console.log(`   ✅ ${precios.length} precios de referencia creados`);
 
+  console.log("🏗️  Creando usuario cliente + obra activa...");
+  const clientePasswordHash = await bcrypt.hash("cliente123", 10);
+  const usuarioCliente = await prisma.usuario.create({
+    data: {
+      nombre: clientes[4].nombre,
+      email: "cliente@demo.com",
+      passwordHash: clientePasswordHash,
+      rol: Rol.cliente,
+      clienteId: clientes[4].id,
+    },
+  });
+  console.log(`   ✅ Usuario cliente creado: ${usuarioCliente.email}`);
+
+  const contrato = await prisma.contrato.create({
+    data: {
+      clienteId: clientes[4].id,
+      cotizacionId: cotizaciones[4].id,
+      montoTotal: 17500000,
+      fechaFirma: new Date("2026-06-20"),
+      observaciones:
+        "Contrato llave en mano. Incluye estructura steel frame, cerramientos, instalaciones y terminaciones.",
+    },
+  });
+
+  const obra = await prisma.obraActiva.create({
+    data: {
+      clienteId: clientes[4].id,
+      contratoId: contrato.id,
+      direccionObra: "Los Alamillos 1450, Pilar",
+      fechaInicio: new Date("2026-07-01"),
+      fechaFinEstimada: new Date("2026-11-30"),
+      estado: EstadoObra.en_curso,
+      progreso: 45,
+    },
+  });
+
+  const hitos = await Promise.all([
+    prisma.hitosObra.create({
+      data: {
+        obraId: obra.id,
+        titulo: "Replanteo y fundaciones",
+        descripcion:
+          "Nivelacion del terreno, replanteo de ejes y ejecucion de platea de fundacion.",
+        fecha: new Date("2026-07-08"),
+        visibleCliente: true,
+      },
+    }),
+    prisma.hitosObra.create({
+      data: {
+        obraId: obra.id,
+        titulo: "Estructura steel frame",
+        descripcion:
+          "Montaje de paneles y perfiles galvanizados. Estructura completa y arriostrada.",
+        fecha: new Date("2026-07-28"),
+        visibleCliente: true,
+      },
+    }),
+    prisma.hitosObra.create({
+      data: {
+        obraId: obra.id,
+        titulo: "Cubierta y cerramientos",
+        descripcion:
+          "Colocacion de chapa, aislacion hidrofuga y cerramientos exteriores.",
+        fecha: new Date("2026-08-20"),
+        visibleCliente: true,
+      },
+    }),
+    prisma.hitosObra.create({
+      data: {
+        obraId: obra.id,
+        titulo: "Instalaciones (en curso)",
+        descripcion:
+          "Tendido de canerias electricas y sanitarias. Previsto para septiembre.",
+        fecha: new Date("2026-09-15"),
+        visibleCliente: false,
+      },
+    }),
+  ]);
+  console.log(`   ✅ ${hitos.length} hitos de obra creados`);
+
+  const pagos = await Promise.all([
+    prisma.pagoObra.create({
+      data: {
+        obraId: obra.id,
+        monto: 5250000,
+        fecha: new Date("2026-06-25"),
+        concepto: "Anticipo 30% a la firma del contrato",
+        estado: EstadoPago.confirmado,
+      },
+    }),
+    prisma.pagoObra.create({
+      data: {
+        obraId: obra.id,
+        monto: 4375000,
+        fecha: new Date("2026-07-30"),
+        concepto: "Certificado de avance: estructura steel frame",
+        estado: EstadoPago.confirmado,
+      },
+    }),
+    prisma.pagoObra.create({
+      data: {
+        obraId: obra.id,
+        monto: 3500000,
+        fecha: new Date("2026-09-05"),
+        concepto: "Certificado de avance: cubierta y cerramientos",
+        estado: EstadoPago.registrado,
+      },
+    }),
+  ]);
+  console.log(`   ✅ ${pagos.length} pagos de obra creados`);
+
   console.log("\n🎉 ¡Seed completado exitosamente!");
-  console.log(`   Usuarios: 1 (admin@demo.com)`);
+  console.log(`   Usuarios: 2 (admin@demo.com, cliente@demo.com)`);
   console.log(`   Clientes: ${clientes.length}`);
   console.log(`   Cotizaciones: ${cotizaciones.length}`);
   console.log(`   Proyectos: ${proyectos.length}`);
@@ -605,6 +716,7 @@ async function main() {
   console.log(`   FAQs: ${faqs.length}`);
   console.log(`   Certificaciones: ${certificaciones.length}`);
   console.log(`   Precios de referencia: ${precios.length}`);
+  console.log(`   Obras activas: 1 (cliente@demo.com / cliente123)`);
 }
 
 main()

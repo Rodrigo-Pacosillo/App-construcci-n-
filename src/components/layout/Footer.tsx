@@ -41,10 +41,10 @@ export function Footer() {
             &copy; {new Date().getFullYear()} Steel Frame — Todos los derechos reservados
           </p>
           <Link
-            href="/admin/login"
+            href="/login"
             className="section-label text-white/30 transition-colors hover:text-accent"
           >
-            Ingreso
+            Mi cuenta
           </Link>
         </div>
       </div>

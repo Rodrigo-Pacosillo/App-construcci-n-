@@ -5,7 +5,7 @@ import { FaqsList } from "@/components/admin/FaqsList";
 
 export default async function FaqsAdminPage() {
   const session = await auth();
-  if (!session) redirect("/admin/login");
+  if (!session) redirect("/login?callbackUrl=/admin");
 
   const faqs = await getFaqs();
 

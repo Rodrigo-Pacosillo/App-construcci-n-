@@ -1,8 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { signIn, getSession } from "next-auth/react";
+
+const INPUT_CLASS =
+  "mt-1 block w-full rounded border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent";
 
 export function LoginForm({ callbackUrl }: { callbackUrl: string }) {
   const router = useRouter();
@@ -22,14 +26,24 @@ export function LoginForm({ callbackUrl }: { callbackUrl: string }) {
       redirect: false,
     });
 
-    setLoading(false);
-
     if (result?.error) {
       setError("Email o contraseña incorrectos");
-    } else {
-      router.push(callbackUrl);
-      router.refresh();
+      setLoading(false);
+      return;
     }
+
+    const session = await getSession();
+    const role = session?.user?.role;
+    setLoading(false);
+
+    if (role === "admin") {
+      router.push(callbackUrl.startsWith("/admin") ? callbackUrl : "/admin");
+    } else if (role === "cliente") {
+      router.push(callbackUrl.startsWith("/cliente") ? callbackUrl : "/cliente");
+    } else {
+      router.push("/");
+    }
+    router.refresh();
   }
 
   return (
@@ -38,28 +52,14 @@ export function LoginForm({ callbackUrl }: { callbackUrl: string }) {
         <label htmlFor="email" className="section-label block text-ink/40">
           Email
         </label>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          required
-          defaultValue="admin@demo.com"
-          className="mt-1 block w-full rounded border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent"
-        />
+        <input id="email" name="email" type="email" required className={INPUT_CLASS} />
       </div>
 
       <div>
         <label htmlFor="password" className="section-label block text-ink/40">
           Contraseña
         </label>
-        <input
-          id="password"
-          name="password"
-          type="password"
-          required
-          defaultValue="admin123"
-          className="mt-1 block w-full rounded border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent"
-        />
+        <input id="password" name="password" type="password" required className={INPUT_CLASS} />
       </div>
 
       {error && <p className="text-sm text-red-500">{error}</p>}
@@ -71,6 +71,13 @@ export function LoginForm({ callbackUrl }: { callbackUrl: string }) {
       >
         {loading ? "Entrando..." : "Entrar"}
       </button>
+
+      <p className="text-center text-sm text-ink/50">
+        ¿No tenés cuenta?{" "}
+        <Link href="/registro" className="text-accent hover:underline">
+          Creá una
+        </Link>
+      </p>
     </form>
   );
 }

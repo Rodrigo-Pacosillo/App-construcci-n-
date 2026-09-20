@@ -138,3 +138,56 @@ export const loginSchema = z.object({
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;
+
+// ─── Registro de cliente ───────────────────────────────────────────
+export const registroSchema = z
+  .object({
+    nombre: z.string().min(1, "El nombre es requerido").max(100, "Máximo 100 caracteres"),
+    whatsapp: z.string().min(1, "El WhatsApp es requerido").max(30, "Máximo 30 caracteres"),
+    email: z.string().email("Email inválido"),
+    ciudad: z.string().max(100, "Máximo 100 caracteres").optional().or(z.literal("")),
+    password: z
+      .string()
+      .min(8, "La contraseña debe tener al menos 8 caracteres")
+      .max(72, "Máximo 72 caracteres"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Las contraseñas no coinciden",
+    path: ["confirmPassword"],
+  });
+
+export type RegistroInput = z.infer<typeof registroSchema>;
+
+// ─── Obra activa (Fase 2) ──────────────────────────────────────────
+export const obraSchema = z.object({
+  clienteId: z.string().min(1, "El cliente es requerido"),
+  contratoId: z.string().optional().or(z.literal("")),
+  direccionObra: z.string().min(1, "La dirección es requerida").max(200, "Máximo 200 caracteres"),
+  fechaInicio: z.coerce.date({ message: "Fecha inválida" }),
+  fechaFinEstimada: z.coerce.date({ message: "Fecha inválida" }).optional().or(z.literal("")),
+  estado: z.enum(["en_curso", "pausada", "finalizada", "entregada"]),
+  progreso: z.number().int().min(0).max(100),
+});
+
+export type ObraInput = z.infer<typeof obraSchema>;
+
+// ─── Hito de obra (Fase 2) ─────────────────────────────────────────
+export const hitoSchema = z.object({
+  titulo: z.string().min(1, "El título es requerido").max(100, "Máximo 100 caracteres"),
+  descripcion: z.string().min(1, "La descripción es requerida").max(500, "Máximo 500 caracteres"),
+  fecha: z.coerce.date({ message: "Fecha inválida" }),
+  visibleCliente: z.boolean().default(false),
+});
+
+export type HitoInput = z.infer<typeof hitoSchema>;
+
+// ─── Pago de obra (Fase 2) ─────────────────────────────────────────
+export const pagoSchema = z.object({
+  monto: z.number().positive("El monto debe ser mayor a 0").max(9999999999),
+  fecha: z.coerce.date({ message: "Fecha inválida" }),
+  concepto: z.string().min(1, "El concepto es requerido").max(200, "Máximo 200 caracteres"),
+  estado: z.enum(["registrado", "confirmado"]),
+});
+
+export type PagoInput = z.infer<typeof pagoSchema>;

@@ -10,7 +10,7 @@ import { redirect } from "next/navigation";
 export async function requireAuth() {
   const session = await auth();
   if (!session) {
-    redirect("/admin/login");
+    redirect("/login?callbackUrl=/admin");
   }
   return session;
 }

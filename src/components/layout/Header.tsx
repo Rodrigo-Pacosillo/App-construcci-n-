@@ -30,6 +30,13 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-3">
+          <Link
+            href="/login"
+            className="section-label hidden text-ink/60 transition-colors hover:text-ink md:inline"
+          >
+            Ingreso
+          </Link>
+
           <button
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
             className="relative flex h-9 w-9 items-center justify-center rounded border border-border transition-colors hover:bg-ink/5"
@@ -61,6 +68,13 @@ export function Header() {
               {item.label}
             </Link>
           ))}
+          <Link
+            href="/login"
+            onClick={() => setMobileOpen(false)}
+            className="block py-2 section-label text-accent"
+          >
+            Ingreso
+          </Link>
         </nav>
       )}
     </header>

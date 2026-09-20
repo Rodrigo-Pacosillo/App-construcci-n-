@@ -5,7 +5,7 @@ import { ProyectosList } from "@/components/admin/ProyectosList";
 
 export default async function ProyectosAdminPage() {
   const session = await auth();
-  if (!session) redirect("/admin/login");
+  if (!session) redirect("/login?callbackUrl=/admin");
 
   const proyectos = await getProyectos();
 

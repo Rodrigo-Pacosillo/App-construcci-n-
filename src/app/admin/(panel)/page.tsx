@@ -5,7 +5,7 @@ import { getDashboardStats, getCotizacionesRecientes } from "./actions";
 
 export default async function AdminDashboard() {
   const session = await auth();
-  if (!session) redirect("/admin/login");
+  if (!session) redirect("/login?callbackUrl=/admin");
 
   const stats = await getDashboardStats();
   const cotizaciones = await getCotizacionesRecientes();

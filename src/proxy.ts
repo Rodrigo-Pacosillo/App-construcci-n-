@@ -6,9 +6,13 @@ export const proxy = auth((req) => {
 
   if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
     if (!req.auth) {
-      const loginUrl = new URL("/admin/login", req.nextUrl.origin);
+      const loginUrl = new URL("/login", req.nextUrl.origin);
       loginUrl.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(loginUrl);
+    }
+
+    if (req.auth.user?.role !== "admin") {
+      return NextResponse.redirect(new URL("/", req.nextUrl.origin));
     }
   }
 

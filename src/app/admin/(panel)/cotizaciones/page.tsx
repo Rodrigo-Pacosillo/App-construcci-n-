@@ -5,7 +5,7 @@ import { CotizacionesList } from "@/components/admin/CotizacionesList";
 
 export default async function CotizacionesPage() {
   const session = await auth();
-  if (!session) redirect("/admin/login");
+  if (!session) redirect("/login?callbackUrl=/admin");
 
   const cotizaciones = await getCotizaciones();
 
