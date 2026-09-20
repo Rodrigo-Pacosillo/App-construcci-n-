@@ -12,7 +12,7 @@ las decisiones detrás de ese schema, no lo duplica.
 
 | Tipo | Ejemplo | Cambia con... |
 |---|---|---|
-| **ENUM nativo de BD** | `TipoConstruccion`, `FaseFoto`, `RolUsuario` | Migración de BD |
+| **ENUM nativo de BD** | `TipoConstruccion`, `FaseFoto`, `Rol` | Migración de BD |
 | **VARCHAR + Zod** | `estado` cotización, `origen` cotización | `src/lib/constants.ts` |
 
 **Regla:** si el valor es estable y no va a cambiar (fases de una foto,
@@ -23,7 +23,8 @@ nuevo estado del embudo, un nuevo canal de origen), usa VARCHAR + Zod.
 
 ### usuarios
 
-Cuentas de acceso. Hoy solo el admin; en fase 2, clientes.
+Cuentas de acceso: admin y clientes con portal. No es la entidad de
+negocio — los leads viven en `clientes` y pueden NO tener cuenta.
 
 ```prisma
 model Usuario {
@@ -31,7 +32,7 @@ model Usuario {
   nombre        String
   email         String    @unique
   passwordHash  String    @map("password_hash")
-  rol           Rol       @default(admin)
+  rol           Rol       @default(cliente)
   clienteId     String?   @unique @map("cliente_id")
   cliente       Cliente?  @relation(fields: [clienteId], references: [id])
   activo        Boolean   @default(true)
@@ -42,6 +43,10 @@ model Usuario {
 ```
 
 - `clienteId` NULL para admin, 1:0..1 real con clientes
+- El default del rol es `cliente`: un alta sin rol explícito jamás debe
+  nacer admin (el admin se crea explícitamente con `rol: admin`)
+- El id de `usuarios` NUNCA se guarda como FK en otra tabla de negocio;
+  siempre se resuelve `usuario → cliente` (ver `usuario.clienteId`)
 - `passwordHash` usa bcrypt (bcryptjs)
 - Nunca borrar usuarios — usar `activo = false`
 
@@ -54,7 +59,7 @@ model Cliente {
   id        String       @id @default(cuid())
   nombre    String
   whatsapp  String
-  email     String?
+  email     String?      @unique
   ciudad    String?
   creadoEn  DateTime     @default(now()) @map("creado_en")
 
@@ -65,6 +70,10 @@ model Cliente {
   @@map("clientes")
 }
 ```
+
+- `email` es la llave natural para deduplicar leads: el mismo email no
+  puede crear dos `clientes`. El registro público reusa el lead existente
+  en vez de duplicarlo.
 
 **NUNCA borrado físico** — soft delete con `activo` si es necesario (aún
 no se modela, pero la convención es clara).
@@ -87,7 +96,8 @@ model Cotizacion {
   estado            String            @default("nuevo") // VARCHAR + Zod
   montoEstimado     Decimal?          @map("monto_estimado") @db.Decimal(12, 2)
   montoCerrado      Decimal?          @map("monto_cerrado") @db.Decimal(12, 2)
-  notasInternas     String?           @map("notas_internas")
+  requerimiento     String?           @map("requerimiento") // mensaje del cliente del form público
+  notasInternas     String?           @map("notas_internas") // apuntes del admin
   creadoEn          DateTime          @default(now()) @map("creado_en")
   actualizadoEn     DateTime          @updatedAt @map("actualizado_en")
 
@@ -99,6 +109,11 @@ model Cotizacion {
   @@map("cotizaciones")
 }
 ```
+
+- `clienteId` OBLIGATORIO: el formulario público siempre resuelve o crea
+  el lead antes de guardar la cotización. Nunca guardar `usuarios.id` ahí.
+- `requerimiento` = lo que escribió el cliente al pedir. `notas_internas`
+  es solo para el admin; NO mezclarlos.
 
 **Estados del embudo** (VARCHAR + Zod en `src/lib/constants.ts`):
 `nuevo` → `contactado` → `visita_tecnica` → `presupuestado` →
@@ -123,10 +138,15 @@ model Contrato {
   fechaFirma      DateTime?   @map("fecha_firma")
   montoTotal      Decimal     @map("monto_total") @db.Decimal(12, 2)
   observaciones   String?
+  creadoEn        DateTime    @default(now()) @map("creado_en")
 
+  @@index([clienteId])
   @@map("contratos")
 }
 ```
+
+- `fechaFirma` es la fecha de negocio (firma); `creadoEn` es cuándo se
+  cargó el registro en el sistema.
 
 ### proyectos
 
@@ -192,8 +212,10 @@ model Testimonio {
   puntaje             Int?      // 1-5, para estrellas
   autorizaPublicar    Boolean   @default(false) @map("autoriza_publicar")
   publicado           Boolean   @default(false)
+  creadoEn            DateTime  @default(now()) @map("creado_en")
   actualizadoEn       DateTime  @updatedAt @map("actualizado_en")
 
+  @@index([proyectoId])
   @@map("testimonios")
 }
 ```
@@ -312,6 +334,16 @@ model PagoObra {
 }
 ```
 
+## Índices de FK
+
+PostgreSQL **no** indexa automáticamente las columnas FK (a diferencia de
+MySQL). Todas las FKs en tablas con datos deben llevar `@@index`:
+
+`cotizaciones.clienteId` ✅ · `fotos_proyecto.proyectoId` ✅ ·
+`contratos.clienteId` ✅ · `proyectos.clienteId` ✅ ·
+`testimonios.proyectoId` ✅ · `obras_activas.clienteId/contratoId` ✅ ·
+`hitos_obra.obraId` ✅ · `pagos_obra.obraId` ✅
+
 ## Migraciones
 
 ### Orden de creación
@@ -326,6 +358,24 @@ model PagoObra {
 8. `servicios`, `faqs`, `certificaciones` (sin dependencias)
 9. `precio_referencia` (sin dependencias)
 10. Fase 2: `obras_activas`, `hitos_obra`, `pagos_obra`
+
+### Endurecimiento BD (`20260920120000_bd_hardening`)
+
+Migración pendiente de aplicar contra Neon. Cambios:
+
+- `usuarios.rol` default `admin` → `cliente`
+- `clientes.email` pasa a `@unique` (dedupe de leads)
+- `cotizaciones.cliente_id` pasa a NOT NULL + nueva columna `requerimiento`
+- `contratos.creado_en` y `testimonios.creado_en`
+- Índices de FK en `contratos`, `proyectos`, `testimonios`,
+  `obras_activas`, `hitos_obra`, `pagos_obra`
+
+**Precondiciones antes de aplicar** (fallan si no se limpian):
+
+1. `clientes`: sin emails duplicados (`SELECT email, count(*) FROM clientes GROUP BY email HAVING count(*) > 1`)
+2. `cotizaciones`: sin `cliente_id` NULL (`SELECT count(*) FROM cotizaciones WHERE cliente_id IS NULL`)
+
+Aplicar con `pnpm db:migrate` (o `prisma migrate deploy`).
 
 ### Comandos
 

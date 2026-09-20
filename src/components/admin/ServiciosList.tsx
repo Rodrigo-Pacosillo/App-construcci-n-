@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { updateServicio, deleteServicio, createServicio } from "@/app/admin/(panel)/servicios/actions";
+import { toggleServicioActivo, deleteServicio, createServicio } from "@/app/admin/(panel)/servicios/actions";
 
 type Servicio = {
   id: string;
@@ -16,12 +16,17 @@ export function ServiciosList({ servicios }: { servicios: Servicio[] }) {
   const [isPending, startTransition] = useTransition();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ titulo: "", slug: "", descripcion: "" });
+  const [error, setError] = useState("");
 
   function handleCreate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     startTransition(async () => {
-      await createServicio(formData);
+      const res = await createServicio(formData);
+      if (!res.success) {
+        setError("No se pudo crear el servicio.");
+        return;
+      }
       setForm({ titulo: "", slug: "", descripcion: "" });
       setShowForm(false);
     });
@@ -30,7 +35,8 @@ export function ServiciosList({ servicios }: { servicios: Servicio[] }) {
   function handleDelete(id: string) {
     if (!confirm("¿Eliminar este servicio?")) return;
     startTransition(async () => {
-      await deleteServicio(id);
+      const res = await deleteServicio(id);
+      if (res && !res.success) setError("No se pudo eliminar el servicio.");
     });
   }
 
@@ -45,6 +51,10 @@ export function ServiciosList({ servicios }: { servicios: Servicio[] }) {
           {showForm ? "Cancelar" : "+ Nuevo servicio"}
         </button>
       </div>
+
+      {error && (
+        <p className="mb-4 text-sm text-red-500">{error}</p>
+      )}
 
       {showForm && (
         <form onSubmit={handleCreate} className="mb-6 rounded border border-border bg-surface p-4 space-y-3">
@@ -110,9 +120,8 @@ export function ServiciosList({ servicios }: { servicios: Servicio[] }) {
                     <button
                       type="button"
                       onClick={() => startTransition(async () => {
-                        const formData = new FormData();
-                        formData.set("activo", String(!s.activo));
-                        await updateServicio(s.id, formData);
+                        const res = await toggleServicioActivo(s.id);
+                        if (res && !res.success) setError("No se pudo actualizar el servicio.");
                       })}
                       disabled={isPending}
                       className={`rounded px-2 py-0.5 text-xs font-medium ${

@@ -24,9 +24,11 @@ del negocio. Esto gobierna las decisiones:
 - Todo el contenido (proyectos, testimonios, servicios, precios) es
   **contenido semilla** cargado por `prisma/seed.ts`. Datos verosímiles,
   NO reales.
-- Las imágenes viven en `/public/img/` (stock descargado). **NO implementar
-  upload de imágenes ni integrar storage externo** — decisión postergada a
-  propósito hasta que el dueño apruebe.
+- Las imágenes viven en `public/img/proyectos/`: **placeholders técnicos
+  generados** (estética plano técnico) para las 12 rutas `/img/proyectos/*.jpg`
+  que referencia el seed. Reemplazar por stock real cuando el dueño apruebe.
+  **NO implementar upload de imágenes ni integrar storage externo** — decisión
+  postergada a propósito hasta que el dueño apruebe.
 - **Portal de cliente y obras activas — YA IMPLEMENTADOS** (auth unificado,
   `/cliente`, `/admin/obras`, hitos y pagos). No agregar módulos nuevos
   (facturación, portal avanzado, etc.) sin aprobación del dueño.
@@ -51,7 +53,10 @@ del negocio. Esto gobierna las decisiones:
 2. **Dominio:** los datos de negocio viven en `clientes`; `usuarios` solo
    resuelve login y permisos. Nunca duplicar datos entre ambos.
 3. **Contenido desde BD:** ninguna página pública hardcodea contenido;
-   todo sale de la BD (en demo: del seed).
+   todo sale de la BD (en demo: del seed). Excepción deliberada:
+   `src/lib/fallback-data.ts` se muestra solo cuando la query devuelve vacío.
+   **Mantener fallbacks sincronizados con `seed.ts`** (mismos slugs,
+   títulos y contenido). No borrarlos como "violaciones".
 4. **Animaciones:** Motion para UI, GSAP para scroll. Toda animación respeta
    `prefers-reduced-motion`.
 5. **Imágenes:** jamás binarios en la BD — siempre rutas/URLs.
@@ -92,14 +97,29 @@ en fuente mono uppercase. No crear UI fuera de este lenguaje.
 ## Comandos
 
 - `pnpm dev` — desarrollo
-- `pnpm build` — build de producción
+- `pnpm build` — build de producción (typecheck incluido; gate de cada fase)
+- `pnpm lint` — ESLint (flat config, sin args)
 - `pnpm db:migrate` — crear/aplicar migraciones
 - `pnpm db:seed` — DESTRUCTIVO: borra y recarga los datos semilla (demo)
+- `pnpm db:studio` — Prisma Studio (puerto 5555)
+- El `postinstall` corre `prisma generate` (necesario antes del primer `dev`)
+
+## Gotchas
+
+- **Next.js 16 renombró el middleware: el archivo es `src/proxy.ts`.**
+  Un `src/middleware.ts` existe en la doc vieja (`docs/plan-demo.md`) pero
+  **no se ejecuta**. El guard de `/cliente` vive en su layout, no en el proxy.
+- **No hay test runner configurado.** La verificación es `pnpm build` +
+  `pnpm lint` + `pnpm db:seed` contra una BD.
+- **Credenciales de demo** (creadas por el seed): `admin@demo.com` /
+  `admin123` y `cliente@demo.com` / `cliente123`.
 
 ## Infraestructura
 
 - Deploy: Vercel (Hobby) por push; previews por rama
 - BD: Neon — una única branch (`main`/production), conexión pooled
 - Migraciones: NO corren en el build de Vercel; aplicarlas a mano contra la BD
+- Migraciones versionadas: `init` + `bd_hardening` (el `schema.prisma` ya refleja ambas)
 - Secrets: `DATABASE_URL`, `AUTH_SECRET`
-- Entorno: devcontainer (Node 22 + pnpm)
+- Entorno: devcontainer (Node 22 + pnpm). Si `DATABASE_URL` llega vacío,
+  levantá un Postgres local para `db:seed`/verificación

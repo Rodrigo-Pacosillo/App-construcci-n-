@@ -29,7 +29,7 @@
 | `nombre` | `String` | | Nombre completo |
 | `email` | `String` | `@unique` | Login único |
 | `password_hash` | `String` | `@map("password_hash")` | bcrypt hash |
-| `rol` | `Rol` | `@default(admin)` | admin / cliente |
+| `rol` | `Rol` | `@default(cliente)` | admin / cliente (nunca default admin) |
 | `cliente_id` | `String?` | `@unique @map("cliente_id")` | FK → `clientes.id` (1:1 opcional) |
 | `activo` | `Boolean` | `@default(true)` | Soft enable/disable |
 | `creado_en` | `DateTime` | `@default(now()) @map("creado_en")` | Timestamp |
@@ -46,7 +46,7 @@
 | `id` | `String` | `@id @default(cuid())` | PK |
 | `nombre` | `String` | | Razón social / nombre |
 | `whatsapp` | `String` | | Contacto principal |
-| `email` | `String?` | | Opcional |
+| `email` | `String?` | `@unique` | Opcional — llave natural de dedupe |
 | `ciudad` | `String?` | | Opcional |
 | `creado_en` | `DateTime` | `@default(now()) @map("creado_en")` | Timestamp |
 
@@ -64,7 +64,7 @@
 | Campo | Tipo | Constraints | Descripción |
 |-------|------|-------------|-------------|
 | `id` | `String` | `@id @default(cuid())` | PK |
-| `cliente_id` | `String?` | `@map("cliente_id")` | FK → `clientes.id` (opcional) |
+| `cliente_id` | `String` | `@map("cliente_id")` | FK → `clientes.id` (obligatorio) |
 | `tipo_obra` | `TipoObra` | `@map("tipo_obra")` | Enum |
 | `tipo_construccion` | `TipoConstruccion` | `@map("tipo_construccion")` | Enum |
 | `rango_m2` | `RangoM2` | `@map("rango_m2")` | Enum |
@@ -75,6 +75,7 @@
 | `monto_estimado` | `Decimal?` | `@db.Decimal(12,2) @map("monto_estimado")` | Estimación inicial |
 | `monto_cerrado` | `Decimal?` | `@db.Decimal(12,2) @map("monto_cerrado")` | Valor final acordado |
 | `notas_internas` | `String?` | `@map("notas_internas")` | Solo admin |
+| `requerimiento` | `String?` | `@map("requerimiento")` | Mensaje del cliente del form público |
 | `creado_en` | `DateTime` | `@default(now()) @map("creado_en")` | |
 | `actualizado_en` | `DateTime` | `@updatedAt @map("actualizado_en")` | Auto-update |
 
@@ -97,6 +98,7 @@
 | `fecha_firma` | `DateTime?` | `@map("fecha_firma")` | |
 | `monto_total` | `Decimal` | `@db.Decimal(12,2) @map("monto_total")` | Valor contractual |
 | `observaciones` | `String?` | | |
+| `creado_en` | `DateTime` | `@default(now()) @map("creado_en")` | Registro cargado en sistema |
 
 **Relaciones**
 - `cliente` → `Cliente` (N:1)
@@ -160,7 +162,10 @@
 | `puntaje` | `Int?` | | 1-5 estrellas |
 | `autoriza_publicar` | `Boolean` | `@default(false) @map("autoriza_publicar")` | Consentimiento |
 | `publicado` | `Boolean` | `@default(false)` | Visible en web |
+| `creado_en` | `DateTime` | `@default(now()) @map("creado_en")` | |
 | `actualizado_en` | `DateTime` | `@updatedAt @map("actualizado_en")` | |
+
+**Índice**: `proyecto_id`
 
 **Relaciones**
 - `proyecto` → `Proyecto` (N:1, opcional)
@@ -266,9 +271,9 @@
 
 ---
 
-## Tablas Fase 2 — Modeladas, NO implementadas (3)
+## Tablas Fase 2 — Implementadas (3)
 
-> Existen en schema para que la migración futura no duela. **No codear UI ni API hoy.**
+> Módulos de obra activa: portal de cliente y panel admin ya los usan.
 
 ### 16. `obras_activas` (ObraActiva)
 
@@ -282,6 +287,8 @@
 | `fecha_fin_estimada` | `DateTime?` | |
 | `estado` | `EstadoObra` | Enum F2 |
 | `progreso` | `Int` | 0-100% |
+
+**Índices**: `cliente_id`, `contrato_id`
 
 **Relaciones**: `cliente`, `contrato`, `hitos[]`, `pagos[]`
 
@@ -299,6 +306,8 @@
 | `foto_url` | `String?` | Evidencia |
 | `visible_cliente` | `Boolean` | `@default(false)` |
 
+**Índice**: `obra_id`
+
 ---
 
 ### 18. `pagos_obra` (PagoObra)
@@ -312,6 +321,8 @@
 | `concepto` | `String` | Descripción |
 | `comprobante_url` | `String?` | PDF/imagen |
 | `estado` | `EstadoPago` | Enum F2 |
+
+**Índice**: `obra_id`
 
 ---
 
@@ -341,5 +352,5 @@ erDiagram
 - **Timestamps**: `creado_en` (default now), `actualizado_en` (@updatedAt)
 - **Soft delete**: `activo` / `publicado` booleans, no hard delete
 - **Decimal money**: `@db.Decimal(12,2)` para ARS
-- **NextAuth**: Tablas `account`, `session`, `verification_token`, `authenticator` gestionadas por `@auth/prisma-adapter`
-- **Fase 2**: Modelos `ObraActiva`, `HitosObra`, `PagoObra` listos para migración futura
+- **NextAuth**: Sesiones JWT sobre `usuarios`. Nota: `@auth/prisma-adapter` está configurado en código pero las tablas del adapter (`account`, `session`, `verification_token`, `authenticator`) NO existen en el schema; con strategy JWT + Credentials no se usan, pero el adapter está de más (ver decisión pendiente).
+- **Fase 2**: Modelos `ObraActiva`, `HitosObra`, `PagoObra` implementados (portal cliente + panel admin).

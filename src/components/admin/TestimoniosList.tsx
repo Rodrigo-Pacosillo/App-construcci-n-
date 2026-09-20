@@ -1,7 +1,7 @@
 "use client";
 
-import { useTransition } from "react";
-import { updateTestimonio, deleteTestimonio } from "@/app/admin/(panel)/testimonios/actions";
+import { useState, useTransition } from "react";
+import { toggleTestimonioPublicado, deleteTestimonio } from "@/app/admin/(panel)/testimonios/actions";
 
 type Testimonio = {
   id: string;
@@ -13,16 +13,21 @@ type Testimonio = {
 
 export function TestimoniosList({ testimonios }: { testimonios: Testimonio[] }) {
   const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState("");
 
   function handleDelete(id: string) {
     if (!confirm("¿Eliminar este testimonio?")) return;
     startTransition(async () => {
-      await deleteTestimonio(id);
+      const res = await deleteTestimonio(id);
+      if (res && !res.success) setError("No se pudo eliminar el testimonio.");
     });
   }
 
   return (
     <div className="rounded border border-border bg-surface">
+      {error && (
+        <p className="border-b border-border px-4 py-2 text-sm text-red-500">{error}</p>
+      )}
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm">
           <thead>
@@ -44,9 +49,8 @@ export function TestimoniosList({ testimonios }: { testimonios: Testimonio[] }) 
                   <button
                     type="button"
                     onClick={() => startTransition(async () => {
-                      const formData = new FormData();
-                      formData.set("publicado", String(!t.publicado));
-                      await updateTestimonio(t.id, formData);
+                      const res = await toggleTestimonioPublicado(t.id);
+                      if (res && !res.success) setError("No se pudo actualizar el testimonio.");
                     })}
                     disabled={isPending}
                     className={`rounded px-2 py-0.5 text-xs font-medium ${

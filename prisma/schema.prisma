@@ -65,7 +65,7 @@ model Usuario {
   nombre       String
   email        String   @unique
   passwordHash String   @map("password_hash")
-  rol          Rol      @default(admin)
+  rol          Rol      @default(cliente)
   clienteId    String?  @unique @map("cliente_id")
   cliente      Cliente? @relation(fields: [clienteId], references: [id])
   activo       Boolean  @default(true)
@@ -78,7 +78,7 @@ model Cliente {
   id       String   @id @default(cuid())
   nombre   String
   whatsapp String
-  email    String?
+  email    String?  @unique
   ciudad   String?
   creadoEn DateTime @default(now()) @map("creado_en")
 
@@ -93,8 +93,8 @@ model Cliente {
 
 model Cotizacion {
   id               String         @id @default(cuid())
-  clienteId        String?        @map("cliente_id")
-  cliente          Cliente?       @relation(fields: [clienteId], references: [id])
+  clienteId        String         @map("cliente_id")
+  cliente          Cliente        @relation(fields: [clienteId], references: [id])
   tipoObra         TipoObra       @map("tipo_obra")
   tipoConstruccion TipoConstruccion @map("tipo_construccion")
   rangoM2          RangoM2        @map("rango_m2")
@@ -104,6 +104,7 @@ model Cotizacion {
   estado           String         @default("nuevo")
   montoEstimado    Decimal?       @map("monto_estimado") @db.Decimal(12, 2)
   montoCerrado     Decimal?       @map("monto_cerrado") @db.Decimal(12, 2)
+  requerimiento    String?        @map("requerimiento")
   notasInternas    String?        @map("notas_internas")
   creadoEn         DateTime       @default(now()) @map("creado_en")
   actualizadoEn    DateTime       @updatedAt @map("actualizado_en")
@@ -126,9 +127,11 @@ model Contrato {
   fechaFirma    DateTime?   @map("fecha_firma")
   montoTotal    Decimal     @map("monto_total") @db.Decimal(12, 2)
   observaciones String?
+  creadoEn      DateTime    @default(now()) @map("creado_en")
 
   obras ObraActiva[]
 
+  @@index([clienteId])
   @@map("contratos")
 }
 
@@ -152,6 +155,7 @@ model Proyecto {
   fotos      FotoProyecto[]
   testimonios Testimonio[]
 
+  @@index([clienteId])
   @@map("proyectos")
 }
 
@@ -177,8 +181,10 @@ model Testimonio {
   puntaje          Int?
   autorizaPublicar Boolean   @default(false) @map("autoriza_publicar")
   publicado        Boolean   @default(false)
+  creadoEn         DateTime  @default(now()) @map("creado_en")
   actualizadoEn    DateTime  @updatedAt @map("actualizado_en")
 
+  @@index([proyectoId])
   @@map("testimonios")
 }
 
@@ -224,7 +230,7 @@ model PrecioReferencia {
   @@map("precio_referencia")
 }
 
-// ─── Entidades Fase 2 (modeladas, NO codear) ────────────────────────
+// ─── Entidades Fase 2 (implementadas) ──────────────────────────────
 
 model ObraActiva {
   id              String     @id @default(cuid())
@@ -241,6 +247,8 @@ model ObraActiva {
   hitos    HitosObra[]
   pagos    PagoObra[]
 
+  @@index([clienteId])
+  @@index([contratoId])
   @@map("obras_activas")
 }
 
@@ -255,6 +263,7 @@ model HitosObra {
 
   obra ObraActiva @relation(fields: [obraId], references: [id])
 
+  @@index([obraId])
   @@map("hitos_obra")
 }
 
@@ -269,5 +278,6 @@ model PagoObra {
 
   obra ObraActiva @relation(fields: [obraId], references: [id])
 
+  @@index([obraId])
   @@map("pagos_obra")
 }

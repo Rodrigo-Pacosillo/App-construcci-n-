@@ -1,7 +1,11 @@
 "use client";
 
-import { useTransition } from "react";
-import { updateProyecto, deleteProyecto } from "@/app/admin/(panel)/proyectos/actions";
+import { useState, useTransition } from "react";
+import {
+  toggleProyectoPublicado,
+  toggleProyectoDestacado,
+  deleteProyecto,
+} from "@/app/admin/(panel)/proyectos/actions";
 
 type Proyecto = {
   id: string;
@@ -18,16 +22,21 @@ type Proyecto = {
 
 export function ProyectosList({ proyectos }: { proyectos: Proyecto[] }) {
   const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState("");
 
   function handleDelete(id: string) {
     if (!confirm("¿Eliminar este proyecto?")) return;
     startTransition(async () => {
-      await deleteProyecto(id);
+      const res = await deleteProyecto(id);
+      if (res && !res.success) setError("No se pudo eliminar el proyecto.");
     });
   }
 
   return (
     <div className="rounded border border-border bg-surface">
+      {error && (
+        <p className="border-b border-border px-4 py-2 text-sm text-red-500">{error}</p>
+      )}
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm">
           <thead>
@@ -52,14 +61,13 @@ export function ProyectosList({ proyectos }: { proyectos: Proyecto[] }) {
                 <td className="px-4 py-3 text-ink/60">{p.m2Construidos}</td>
                 <td className="px-4 py-3 text-ink/60">{p.diasEjecucion}</td>
                 <td className="px-4 py-3">
-                  <button
-                    type="button"
-                    onClick={() => startTransition(async () => {
-                      const formData = new FormData();
-                      formData.set("publicado", String(!p.publicado));
-                      await updateProyecto(p.id, formData);
-                    })}
-                    disabled={isPending}
+<button
+                      type="button"
+                      onClick={() => startTransition(async () => {
+                        const res = await toggleProyectoPublicado(p.id);
+                        if (res && !res.success) setError("No se pudo actualizar el proyecto.");
+                      })}
+                      disabled={isPending}
                     className={`rounded px-2 py-0.5 text-xs font-medium ${
                       p.publicado ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-500"
                     }`}
@@ -68,14 +76,13 @@ export function ProyectosList({ proyectos }: { proyectos: Proyecto[] }) {
                   </button>
                 </td>
                 <td className="px-4 py-3">
-                  <button
-                    type="button"
-                    onClick={() => startTransition(async () => {
-                      const formData = new FormData();
-                      formData.set("destacado", String(!p.destacado));
-                      await updateProyecto(p.id, formData);
-                    })}
-                    disabled={isPending}
+<button
+                      type="button"
+                      onClick={() => startTransition(async () => {
+                        const res = await toggleProyectoDestacado(p.id);
+                        if (res && !res.success) setError("No se pudo actualizar el proyecto.");
+                      })}
+                      disabled={isPending}
                     className={`rounded px-2 py-0.5 text-xs font-medium ${
                       p.destacado ? "bg-accent/20 text-accent" : "bg-gray-100 text-gray-500"
                     }`}

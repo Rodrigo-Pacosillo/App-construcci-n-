@@ -40,14 +40,23 @@ export async function register(formData: FormData) {
 
   try {
     await prisma.$transaction(async (tx) => {
-      const cliente = await tx.cliente.create({
-        data: {
-          nombre,
-          whatsapp,
-          email,
-          ciudad: ciudad || null,
-        },
-      });
+      // Reusar el lead existente: si esta persona ya cotizó como visitante,
+      // hay un `cliente` con su email. Crear otro duplicaría el lead y
+      // dejaría sus cotizaciones anteriores sin vínculo con la cuenta.
+      const clienteExistente = email
+        ? await tx.cliente.findUnique({ where: { email } })
+        : null;
+
+      const cliente =
+        clienteExistente ??
+        (await tx.cliente.create({
+          data: {
+            nombre,
+            whatsapp,
+            email,
+            ciudad: ciudad || null,
+          },
+        }));
 
       await tx.usuario.create({
         data: {

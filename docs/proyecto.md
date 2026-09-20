@@ -66,7 +66,8 @@ cotizaciones      — el corazón: el embudo de ventas
 - estado VARCHAR (evolutivo → Zod) [INDEX]
 - monto_estimado DECIMAL(12,2) NULL  — se completa al presupuestar
 - monto_cerrado   DECIMAL(12,2) NULL  — se completa al ganar
-- notas_internas TEXT NULL, creado_en, actualizado_en
+- requerimiento  TEXT NULL — mensaje del cliente (form público)
+- notas_internas TEXT NULL — apuntes del admin, creado_en, actualizado_en
 
 contratos
 - id, cliente_id FK, cotizacion_id FK→cotizaciones NULL (traza el

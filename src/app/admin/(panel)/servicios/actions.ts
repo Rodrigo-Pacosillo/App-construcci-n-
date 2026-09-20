@@ -6,7 +6,7 @@ import { requireAdmin } from "@/lib/auth-utils";
 import { servicioSchema } from "@/lib/validators";
 
 export async function getServicios() {
-  await requireAdmin(); // ← Vulnerabilidad #1: verificar que es admin
+  await requireAdmin();
 
   try {
     return await prisma.servicio.findMany({
@@ -19,7 +19,7 @@ export async function getServicios() {
 }
 
 export async function createServicio(formData: FormData) {
-  await requireAdmin(); // ← Vulnerabilidad #1: verificar que es admin
+  await requireAdmin();
 
   // Validar datos con Zod
   const data = {
@@ -58,7 +58,7 @@ export async function updateServicio(
   id: string,
   formData: FormData
 ) {
-  await requireAdmin(); // ← Vulnerabilidad #1: verificar que es admin
+  await requireAdmin();
 
   // Validar datos con Zod
   const data = {
@@ -93,8 +93,34 @@ export async function updateServicio(
   }
 }
 
+export async function toggleServicioActivo(id: string) {
+  await requireAdmin();
+
+  try {
+    const servicio = await prisma.servicio.findUnique({
+      where: { id },
+      select: { activo: true },
+    });
+    if (!servicio) {
+      return { success: false, error: { _form: ["Servicio no encontrado"] } };
+    }
+
+    await prisma.servicio.update({
+      where: { id },
+      data: { activo: !servicio.activo },
+    });
+    revalidatePath("/admin/servicios");
+    revalidatePath("/servicios");
+    revalidatePath("/");
+    return { success: true };
+  } catch (error) {
+    console.error("Error actualizando activo de servicio:", error);
+    return { success: false, error: { _form: ["Error al actualizar el servicio."] } };
+  }
+}
+
 export async function deleteServicio(id: string) {
-  await requireAdmin(); // ← Vulnerabilidad #1: verificar que es admin
+  await requireAdmin();
 
   try {
     await prisma.servicio.delete({ where: { id } });

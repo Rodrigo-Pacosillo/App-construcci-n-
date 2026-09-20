@@ -110,6 +110,8 @@ async function main() {
         plazoInicio: PlazoInicio.lo_antes_posible,
         origen: "web",
         estado: "nuevo",
+        requerimiento:
+          "Queremos construir una casa de 3 dormitorios en Belgrano. Buscamos algo moderno, bien aislado y con plazo firme.",
       },
     }),
     prisma.cotizacion.create({
@@ -161,6 +163,8 @@ async function main() {
         estado: "ganado",
         montoEstimado: 18000000,
         montoCerrado: 17500000,
+        requerimiento:
+          "Casa principal de 200m2 más quincho. Necesitamos plazos ciertos porque tenemos un bebé en camino.",
       },
     }),
     prisma.cotizacion.create({
@@ -431,7 +435,7 @@ async function main() {
         slug: "cielorrasos",
         titulo: "Cielorrasos",
         descripcion:
-          "Cielorrasos suspendidos en placa de yeso, con optiones de diseños, iluminación empotrada y acabados lisos o texturizados.",
+          "Cielorrasos suspendidos en placa de yeso, con opciones de diseños, iluminación empotrada y acabados lisos o texturizados.",
         orden: 3,
       },
     }),
@@ -456,7 +460,7 @@ async function main() {
     prisma.servicio.create({
       data: {
         slug: "habilitaciones",
-        titulo: "Habilitaciones y Habilitaciones",
+        titulo: "Habilitaciones de Locales",
         descripcion:
           "Trámites y ejecución para habilitación de locales comerciales, oficinas y espacios gastronómicos. Cumplimiento de normativas.",
         orden: 6,

@@ -1,19 +1,26 @@
-export const FALLBACK_SERVICIOS = [
+import type { Faq, Servicio } from "@prisma/client";
+
+// ─── Fallbacks de contenido ─────────────────────────────────────────
+// Se muestran cuando la BD devuelve vacío (por ejemplo, seed no corrido).
+// MANTENER SINCRONIZADOS con prisma/seed.ts: mismo contenido, mismos slugs.
+// No borrar: son la red de seguridad de la demo si la BD no responde.
+
+export const FALLBACK_SERVICIOS: Servicio[] = [
   {
     id: "1",
     slug: "steel-frame",
     titulo: "Steel Frame",
     descripcion:
-      "Construccion de viviendas y estructuras con perfileria de acero galvanizado. Mas liviano, mas rapido, mas eficiente termicamente.",
+      "Construcción de viviendas y estructuras con perfilería de acero galvanizado. Más liviano, más rápido, más eficiente térmicamente.",
     orden: 1,
     activo: true,
   },
   {
     id: "2",
     slug: "drywall",
-    titulo: "Tabiqueria Drywall",
+    titulo: "Tabiquería Drywall",
     descripcion:
-      "Tabiques internos en placa de yeso sobre estructura de acero. Rapido, limpio y con excelente aislacion acustica y termica.",
+      "Tabiques internos en placa de yeso sobre estructura de acero. Rápido, limpio y con excelente aislación acústica y térmica.",
     orden: 2,
     activo: true,
   },
@@ -22,7 +29,7 @@ export const FALLBACK_SERVICIOS = [
     slug: "cielorrasos",
     titulo: "Cielorrasos",
     descripcion:
-      "Cielorrasos suspendidos en placa de yeso, con opciones de disenos, iluminacion empotrada y acabados lisos o texturizados.",
+      "Cielorrasos suspendidos en placa de yeso, con opciones de diseños, iluminación empotrada y acabados lisos o texturizados.",
     orden: 3,
     activo: true,
   },
@@ -38,10 +45,19 @@ export const FALLBACK_SERVICIOS = [
   {
     id: "5",
     slug: "aislaciones",
-    titulo: "Aislaciones Termicas y Acusticas",
+    titulo: "Aislaciones Térmicas y Acústicas",
     descripcion:
-      "Instalacion de lana de vidrio, lana de roca y otros materiales aislantes para maxima eficiencia energetica y confort.",
+      "Instalación de lana de vidrio, lana de roca y otros materiales aislantes para máxima eficiencia energética y confort.",
     orden: 5,
+    activo: true,
+  },
+  {
+    id: "6",
+    slug: "habilitaciones",
+    titulo: "Habilitaciones de Locales",
+    descripcion:
+      "Trámites y ejecución para habilitación de locales comerciales, oficinas y espacios gastronómicos. Cumplimiento de normativas.",
+    orden: 6,
     activo: true,
   },
 ];
@@ -56,9 +72,9 @@ export const FALLBACK_PROYECTOS = [
     diasEjecucion: 45,
     ubicacion: "Pilar, Buenos Aires",
     problemaCliente:
-      "La familia queria una casa moderna y sustentable, pero con presupuesto limitado y plazo ajustado para mudarse.",
+      "La familia quería una casa moderna y sustentable, pero con presupuesto limitado y plazo ajustado para mudarse.",
     solucion:
-      "Construccion en steel frame con aislacion termica de alta eficiencia. Reduccion del 40% en tiempo de obra respecto a tradicional.",
+      "Construcción en steel frame con aislación térmica de alta eficiencia. Reducción del 40% en tiempo de obra respecto a tradicional, con mejor aislación.",
     destacado: true,
     publicado: true,
     fotos: [
@@ -70,15 +86,15 @@ export const FALLBACK_PROYECTOS = [
   {
     id: "2",
     slug: "ampliacion-vicente-lopez",
-    titulo: "Ampliacion en Vicente Lopez",
+    titulo: "Ampliación en Vicente López",
     tipoConstruccion: "seco",
     m2Construidos: 65,
     diasEjecucion: 20,
-    ubicacion: "Vicente Lopez, Buenos Aires",
+    ubicacion: "Vicente López, Buenos Aires",
     problemaCliente:
-      "Necesitaban un estudio y un dormitorio extra en el piso superior, sin perder el jardin.",
+      "Necesitaban un estudio y un dormitorio extra en el piso superior, sin perder el jardín.",
     solucion:
-      "Ampliacion en steel frame sobre estructura existente. Se logro el doble de espacio sin demoler.",
+      "Ampliación en steel frame sobre estructura existente. Se logró el doble de espacio sin demoler, con acabados idénticos a la casa original.",
     destacado: true,
     publicado: true,
     fotos: [
@@ -95,9 +111,9 @@ export const FALLBACK_PROYECTOS = [
     diasEjecucion: 15,
     ubicacion: "San Telmo, CABA",
     problemaCliente:
-      "Un emprendedor queria habilitar un local gastronomico en un sótano, con plazo minimo de demora.",
+      "Un emprendedor quería habilitar un local gastronómico en un sótano, con plazo mínimo de demora.",
     solucion:
-      "Acondicionamiento completo con tabiqueria drywall, cielorrasos suspendidos y revestimientos resistentes a humedad. Listo en 15 dias.",
+      "Acondicionamiento completo con tabiquería drywall, cielorrasos suspendidos y revestimientos resistentes a humedad. Listo en 15 días.",
     destacado: false,
     publicado: true,
     fotos: [
@@ -108,15 +124,15 @@ export const FALLBACK_PROYECTOS = [
   {
     id: "4",
     slug: "quinta-rehabilitacion",
-    titulo: "Quinta en Rehabilitacion",
+    titulo: "Quinta en Rehabilitación",
     tipoConstruccion: "integral",
     m2Construidos: 350,
     diasEjecucion: 80,
     ubicacion: "San Pedro, Buenos Aires",
     problemaCliente:
-      "Una quinta familiar con decadas de abandono que querian convertir en casa de fin de semana.",
+      "Una quinta familiar con décadas de abandono que querían convertir en casa de fin de semana.",
     solucion:
-      "Rehabilitacion integral: estructura reforzada, nuevos tabiques, aislacion, instalaciones. Se preservo la fachada original.",
+      "Rehabilitación integral: estructura reforzada, nuevos tabiques, aislación, instalaciones. Se preservó la fachada original.",
     destacado: true,
     publicado: true,
     fotos: [
@@ -125,47 +141,106 @@ export const FALLBACK_PROYECTOS = [
       { url: "/img/proyectos/sanpedro-despues.jpg", fase: "despues", orden: 3 },
     ],
   },
+  {
+    id: "5",
+    slug: "oficinas-empresariales",
+    titulo: "Oficinas Empresariales",
+    tipoConstruccion: "seco",
+    m2Construidos: 180,
+    diasEjecucion: 30,
+    ubicacion: "Microcentro, CABA",
+    problemaCliente:
+      "Una startup necesitaba oficinas modulares que pudieran reconfigurar según crezca el equipo.",
+    solucion:
+      "Sistema de tabiques desmontables en drywall con puertas corredizas. El espacio se adapta al equipo sin obras.",
+    destacado: false,
+    publicado: true,
+    fotos: [
+      { url: "/img/proyectos/oficinas-durante.jpg", fase: "durante", orden: 1 },
+      { url: "/img/proyectos/oficinas-despues.jpg", fase: "despues", orden: 2 },
+    ],
+  },
+  {
+    id: "6",
+    slug: "casa-ecologica-escobar",
+    titulo: "Casa Ecológica en Escobar",
+    tipoConstruccion: "seco",
+    m2Construidos: 160,
+    diasEjecucion: 35,
+    ubicacion: "Escobar, Buenos Aires",
+    problemaCliente:
+      "Un arquitecto quería demostrar que la construcción en seco puede ser tan estética como la tradicional.",
+    solucion:
+      "Casa de diseño con tabiques vistos, cielorrasos de chapa ondulada y amplios vanos de vidrio. Publicada en revista de arquitectura.",
+    destacado: false,
+    publicado: true,
+    fotos: [],
+  },
 ];
 
-export const FALLBACK_FAQS = [
+export const FALLBACK_FAQS: Faq[] = [
   {
     id: "1",
-    pregunta: "Cuanto tarda una casa en steel frame?",
+    pregunta: "¿Cuánto tarda una casa en steel frame?",
     respuesta:
-      "Una vivienda de 100m2 tarda entre 30 y 45 dias desde el inicio de la obra hasta la entrega de llaves.",
+      "Una vivienda de 100m² tarda entre 30 y 45 días desde el inicio de la obra hasta la entrega de llaves. Es significativamente más rápido que la construcción tradicional.",
     orden: 1,
     activo: true,
   },
   {
     id: "2",
-    pregunta: "El steel frame es mas caro que la construccion tradicional?",
+    pregunta: "¿El steel frame es más caro que la construcción tradicional?",
     respuesta:
-      "El costo por m2 es comparable, pero el ahorro viene por el tiempo de obra (menos interes si financias) y la eficiencia termica.",
+      "El costo por m² es comparable, pero el ahorro viene por el tiempo de obra (menos interés si financiás) y la eficiencia térmica (menor costo de calefacción/refrigeración).",
     orden: 2,
     activo: true,
   },
   {
     id: "3",
-    pregunta: "Sirve para ampliaciones?",
+    pregunta: "¿Sirve para ampliaciones?",
     respuesta:
-      "Si, es ideal para ampliaciones porque es mas liviano que la estructura tradicional, lo que permite construir sobre estructuras existentes sin refuerzos costosos.",
+      "Sí, es ideal para ampliaciones porque es más liviano que la estructura tradicional, lo que permite construir sobre estructuras existentes sin refuerzos costosos.",
     orden: 3,
     activo: true,
   },
   {
     id: "4",
-    pregunta: "Como es la aislacion termica?",
+    pregunta: "¿Cómo es la aislación térmica?",
     respuesta:
-      "El sistema incluye lana de vidrio o roca entre los parantes, logrando un coeficiente termico superior a la construccion tradicional.",
+      "El sistema incluye lana de vidrio o roca entre los parantes, logrando un coeficiente térmico superior a la construcción tradicional con muros de 20cm.",
     orden: 4,
     activo: true,
   },
   {
     id: "5",
-    pregunta: "Trabajan en toda la zona norte del Gran Buenos Aires?",
+    pregunta: "¿Trabajan en toda la zona norte del Gran Buenos Aires?",
     respuesta:
-      "Si, cubrimos CABA y toda la zona norte del GBA: Vicente Lopez, San Isidro, Tigre, Pilar, Escobar, y alrededores.",
+      "Sí, cubrimos CABA y toda la zona norte del GBA: Vicente López, San Isidro, Tigre, Pilar, Escobar, y alrededores.",
     orden: 5,
+    activo: true,
+  },
+  {
+    id: "6",
+    pregunta: "¿Puedo ver ejemplos de trabajos anteriores?",
+    respuesta:
+      "Sí, en nuestra sección de proyectos encontrarás casos reales con fotos antes/durante/después, metros cuadrados y tiempos de ejecución.",
+    orden: 6,
+    activo: true,
+  },
+  {
+    id: "7",
+    pregunta: "¿Cómo pido un presupuesto?",
+    respuesta:
+      "Podés usar nuestro estimador online para tener una referencia, o completar el formulario de cotización con los detalles de tu obra. Te contactamos en 24 horas.",
+    orden: 7,
+    activo: true,
+  },
+  {
+    id: "8",
+    pregunta: "¿Qué incluye el presupuesto?",
+    respuesta:
+      "El presupuesto incluye estructura, tabiquería, cielorraso, revestimientos, aislación e instalaciones básicas. No incluye sanitarios, grifería ni pisos (a menos que se especifique).",
+    orden: 8,
     activo: true,
   },
 ];
@@ -173,17 +248,17 @@ export const FALLBACK_FAQS = [
 export const FALLBACK_TESTIMONIOS = [
   {
     id: "1",
-    clienteNombre: "Juan Perez",
+    clienteNombre: "Juan Pérez",
     texto:
-      "Increible como en 45 dias pasamos de terreno a casa habitable. La calidad de los acabados supero nuestras expectativas.",
+      "Increíble cómo en 45 días pasamos de terreno a casa habitable. La calidad de los acabados superó nuestras expectativas. El aislamiento térmico es notable.",
     puntaje: 5,
     publicado: true,
   },
   {
     id: "2",
-    clienteNombre: "Laura Fernandez",
+    clienteNombre: "Laura Fernández",
     texto:
-      "Necesitabamos ampliar sin demoler y cumplieron exactamente lo prometido. La ampliacion se ve como si siempre hubiera estado ahi.",
+      "Necesitábamos ampliar sin demoler y cumplieron exactamente lo prometido. La ampliación se ve como si siempre hubiera estado ahí.",
     puntaje: 5,
     publicado: true,
   },
@@ -191,7 +266,23 @@ export const FALLBACK_TESTIMONIOS = [
     id: "3",
     clienteNombre: "Diego Torres",
     texto:
-      "El local quedo listo en 15 dias, justo antes de la inauguracion. Profesionales de primera.",
+      "El local quedó listo en 15 días, justo antes de la inauguración. Profesionales de primera.",
+    puntaje: 5,
+    publicado: true,
+  },
+  {
+    id: "4",
+    clienteNombre: "Roberto García",
+    texto:
+      "Transformaron una quinta abandonada en una casa hermosa. Preservaron la fachada y modernizaron todo por dentro. Excelente trabajo.",
+    puntaje: 4,
+    publicado: true,
+  },
+  {
+    id: "5",
+    clienteNombre: "María López",
+    texto:
+      "Contraté solo la cotización pero me sorprendió la profesionalidad y claridad del presupuesto. Muy recomendable.",
     puntaje: 5,
     publicado: true,
   },

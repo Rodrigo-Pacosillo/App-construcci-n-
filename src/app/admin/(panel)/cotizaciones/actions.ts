@@ -9,7 +9,8 @@ export async function updateCotizacionEstado(
   id: string,
   estado: string
 ) {
-  // ← Vulnerabilidad #13: validar parámetros antes de procesar
+  await requireAdmin();
+
   const cotizacion = await prisma.cotizacion.findUnique({
     where: { id },
     select: { id: true },
@@ -23,8 +24,6 @@ export async function updateCotizacionEstado(
     return { success: false, error: { estado: ["Estado inválido"] } };
   }
 
-  await requireAdmin(); // ← Vulnerabilidad #1: verificar que es admin
-
   await prisma.cotizacion.update({
     where: { id },
     data: { estado },
@@ -35,13 +34,13 @@ export async function updateCotizacionEstado(
 }
 
 export async function getCotizaciones() {
-  await requireAdmin(); // ← Vulnerabilidad #1: verificar que es admin
+  await requireAdmin();
 
   try {
     return await prisma.cotizacion.findMany({
       include: { cliente: true },
       orderBy: { creadoEn: "desc" },
-      take: 50, // ← Vulnerabilidad #3: agregar límite
+      take: 50,
     });
   } catch (error) {
     console.error("Error en getCotizaciones:", error);
@@ -50,13 +49,13 @@ export async function getCotizaciones() {
 }
 
 export async function getCotizacionesPorEstado() {
-  await requireAdmin(); // ← Vulnerabilidad #1: verificar que es admin
+  await requireAdmin();
 
   try {
     const cotizaciones = await prisma.cotizacion.findMany({
       include: { cliente: true },
       orderBy: { creadoEn: "desc" },
-      take: 50, // ← Vulnerabilidad #3: agregar límite
+      take: 50,
     });
 
     const porEstado: Record<string, typeof cotizaciones> = {

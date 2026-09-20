@@ -4,12 +4,12 @@ import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth-utils";
 
 export async function getDashboardStats() {
-  await requireAdmin(); // ← Verificar que es admin
+  await requireAdmin();
 
   try {
     const cotizaciones = await prisma.cotizacion.findMany({
       include: { cliente: true },
-      take: 50, // ← Vulnerabilidad #3: agregar límite
+      take: 50,
     });
 
     const porEstado: Record<string, number> = {};
@@ -33,13 +33,13 @@ export async function getDashboardStats() {
 }
 
 export async function getCotizacionesRecientes() {
-  await requireAdmin(); // ← Verificar que es admin
+  await requireAdmin();
 
   try {
     return await prisma.cotizacion.findMany({
       include: { cliente: true },
       orderBy: { creadoEn: "desc" },
-      take: 50, // ← Vulnerabilidad #3: agregar límite
+      take: 50,
     });
   } catch (error) {
     console.error("Error en getCotizacionesRecientes:", error);

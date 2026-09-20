@@ -6,13 +6,13 @@ import { requireAdmin } from "@/lib/auth-utils";
 import { proyectoSchema } from "@/lib/validators";
 
 export async function getProyectos() {
-  await requireAdmin(); // ← Vulnerabilidad #1: verificar que es admin
+  await requireAdmin();
 
   try {
     return await prisma.proyecto.findMany({
       include: { fotos: true },
       orderBy: { creadoEn: "desc" },
-      take: 50, // ← Vulnerabilidad #3: agregar límite
+      take: 50,
     });
   } catch (error) {
     console.error("Error en getProyectos:", error);
@@ -21,7 +21,7 @@ export async function getProyectos() {
 }
 
 export async function createProyecto(formData: FormData) {
-  await requireAdmin(); // ← Vulnerabilidad #1: verificar que es admin
+  await requireAdmin();
 
   // Validar datos con Zod
   const data = {
@@ -63,7 +63,7 @@ export async function createProyecto(formData: FormData) {
 }
 
 export async function updateProyecto(id: string, formData: FormData) {
-  await requireAdmin(); // ← Vulnerabilidad #1: verificar que es admin
+  await requireAdmin();
 
   // Validar datos con Zod
   const data = {
@@ -105,8 +105,60 @@ export async function updateProyecto(id: string, formData: FormData) {
   }
 }
 
+export async function toggleProyectoPublicado(id: string) {
+  await requireAdmin();
+
+  try {
+    const proyecto = await prisma.proyecto.findUnique({
+      where: { id },
+      select: { publicado: true },
+    });
+    if (!proyecto) {
+      return { success: false, error: { _form: ["Proyecto no encontrado"] } };
+    }
+
+    await prisma.proyecto.update({
+      where: { id },
+      data: { publicado: !proyecto.publicado },
+    });
+    revalidatePath("/admin/proyectos");
+    revalidatePath("/proyectos");
+    revalidatePath("/");
+    return { success: true };
+  } catch (error) {
+    console.error("Error actualizando publicado de proyecto:", error);
+    return { success: false, error: { _form: ["Error al actualizar el proyecto."] } };
+  }
+}
+
+export async function toggleProyectoDestacado(id: string) {
+  await requireAdmin();
+
+  try {
+    const proyecto = await prisma.proyecto.findUnique({
+      where: { id },
+      select: { destacado: true },
+    });
+    if (!proyecto) {
+      return { success: false, error: { _form: ["Proyecto no encontrado"] } };
+    }
+
+    await prisma.proyecto.update({
+      where: { id },
+      data: { destacado: !proyecto.destacado },
+    });
+    revalidatePath("/admin/proyectos");
+    revalidatePath("/proyectos");
+    revalidatePath("/");
+    return { success: true };
+  } catch (error) {
+    console.error("Error actualizando destacado de proyecto:", error);
+    return { success: false, error: { _form: ["Error al actualizar el proyecto."] } };
+  }
+}
+
 export async function deleteProyecto(id: string) {
-  await requireAdmin(); // ← Vulnerabilidad #1: verificar que es admin
+  await requireAdmin();
 
   try {
     await prisma.proyecto.delete({ where: { id } });

@@ -6,12 +6,12 @@ import { requireAdmin } from "@/lib/auth-utils";
 import { faqSchema } from "@/lib/validators";
 
 export async function getFaqs() {
-  await requireAdmin(); // ← Vulnerabilidad #1: verificar que es admin
+  await requireAdmin();
 
   try {
     return await prisma.faq.findMany({
       orderBy: { orden: "asc" },
-      take: 50, // ← Vulnerabilidad #3: agregar límite
+      take: 50,
     });
   } catch (error) {
     console.error("Error en getFaqs:", error);
@@ -20,7 +20,7 @@ export async function getFaqs() {
 }
 
 export async function createFaq(formData: FormData) {
-  await requireAdmin(); // ← Vulnerabilidad #1: verificar que es admin
+  await requireAdmin();
 
   // Validar datos con Zod
   const data = {
@@ -58,7 +58,7 @@ export async function updateFaq(
   id: string,
   formData: FormData
 ) {
-  await requireAdmin(); // ← Vulnerabilidad #1: verificar que es admin
+  await requireAdmin();
 
   // Validar datos con Zod
   const data = {
@@ -92,8 +92,34 @@ export async function updateFaq(
   }
 }
 
+export async function toggleFaqActivo(id: string) {
+  await requireAdmin();
+
+  try {
+    const faq = await prisma.faq.findUnique({
+      where: { id },
+      select: { activo: true },
+    });
+    if (!faq) {
+      return { success: false, error: { _form: ["FAQ no encontrada"] } };
+    }
+
+    await prisma.faq.update({
+      where: { id },
+      data: { activo: !faq.activo },
+    });
+    revalidatePath("/admin/faqs");
+    revalidatePath("/faq");
+    revalidatePath("/");
+    return { success: true };
+  } catch (error) {
+    console.error("Error actualizando activo de FAQ:", error);
+    return { success: false, error: { _form: ["Error al actualizar la FAQ."] } };
+  }
+}
+
 export async function deleteFaq(id: string) {
-  await requireAdmin(); // ← Vulnerabilidad #1: verificar que es admin
+  await requireAdmin();
 
   try {
     await prisma.faq.delete({ where: { id } });

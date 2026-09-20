@@ -22,7 +22,7 @@ export async function FaqSection() {
   return (
     <section className="py-24 lg:py-32">
       <div className="mx-auto max-w-3xl px-4 lg:px-8">
-        <p className="section-label mb-4 text-ink/40">04 / PREGUNTAS FRECUENTES</p>
+        <p className="section-label mb-4 text-ink/40">05 / PREGUNTAS FRECUENTES</p>
         <h2 className="font-heading text-4xl font-bold md:text-5xl">
           FAQ
         </h2>

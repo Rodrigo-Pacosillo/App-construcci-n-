@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { updateFaq, deleteFaq, createFaq } from "@/app/admin/(panel)/faqs/actions";
+import { toggleFaqActivo, deleteFaq, createFaq } from "@/app/admin/(panel)/faqs/actions";
 
 type Faq = {
   id: string;
@@ -15,12 +15,17 @@ export function FaqsList({ faqs }: { faqs: Faq[] }) {
   const [isPending, startTransition] = useTransition();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ pregunta: "", respuesta: "" });
+  const [error, setError] = useState("");
 
   function handleCreate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     startTransition(async () => {
-      await createFaq(formData);
+      const res = await createFaq(formData);
+      if (!res.success) {
+        setError("No se pudo crear la FAQ.");
+        return;
+      }
       setForm({ pregunta: "", respuesta: "" });
       setShowForm(false);
     });
@@ -29,7 +34,8 @@ export function FaqsList({ faqs }: { faqs: Faq[] }) {
   function handleDelete(id: string) {
     if (!confirm("¿Eliminar esta FAQ?")) return;
     startTransition(async () => {
-      await deleteFaq(id);
+      const res = await deleteFaq(id);
+      if (res && !res.success) setError("No se pudo eliminar la FAQ.");
     });
   }
 
@@ -43,6 +49,10 @@ export function FaqsList({ faqs }: { faqs: Faq[] }) {
           {showForm ? "Cancelar" : "+ Nueva FAQ"}
         </button>
       </div>
+
+      {error && (
+        <p className="mb-4 text-sm text-red-500">{error}</p>
+      )}
 
       {showForm && (
         <form onSubmit={handleCreate} className="mb-6 rounded border border-border bg-surface p-4 space-y-3">
@@ -97,9 +107,8 @@ export function FaqsList({ faqs }: { faqs: Faq[] }) {
                     <button
                       type="button"
                       onClick={() => startTransition(async () => {
-                        const formData = new FormData();
-                        formData.set("activo", String(!f.activo));
-                        await updateFaq(f.id, formData);
+                        const res = await toggleFaqActivo(f.id);
+                        if (res && !res.success) setError("No se pudo actualizar la FAQ.");
                       })}
                       disabled={isPending}
                       className={`rounded px-2 py-0.5 text-xs font-medium ${

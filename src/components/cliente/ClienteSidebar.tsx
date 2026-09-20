@@ -9,21 +9,39 @@ import {
   FolderOpen,
   MessageSquare,
   Wrench,
-  HelpCircle,
   LogOut,
   Menu,
   X,
-  type LucideIcon,
 } from "lucide-react";
 
-const ICONS: Record<string, LucideIcon> = {
-  LayoutDashboard,
-  FileText,
-  FolderOpen,
-  MessageSquare,
-  Wrench,
-  HelpCircle,
-};
+const NAV_ITEMS = [
+  { id: "dashboard", label: "Resumen", href: "/cliente", icon: LayoutDashboard },
+  { id: "cotizaciones", label: "Mis cotizaciones", href: "/cliente/cotizaciones", icon: FileText },
+  { id: "contratos", label: "Mis contratos", href: "/cliente/contratos", icon: Wrench },
+  { id: "proyectos", label: "Mis proyectos", href: "/cliente/proyectos", icon: FolderOpen },
+  { id: "obra", label: "Mi obra", href: "/cliente/obra", icon: MessageSquare },
+] as const;
+
+function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
+  return (
+    <>
+      {NAV_ITEMS.map((item) => {
+        const Icon = item.icon;
+        return (
+          <Link
+            key={item.id}
+            href={item.href}
+            onClick={onNavigate}
+            className="flex items-center gap-3 rounded px-3 py-2 text-sm text-ink/60 transition-colors hover:bg-ink/5 hover:text-ink"
+          >
+            <Icon className="h-4 w-4 shrink-0" />
+            {item.label}
+          </Link>
+        );
+      })}
+    </>
+  );
+}
 
 export function ClienteSidebar({ email }: { email: string }) {
   const [open, setOpen] = useState(false);
@@ -50,28 +68,7 @@ export function ClienteSidebar({ email }: { email: string }) {
           </Link>
         </div>
         <nav className="flex-1 overflow-y-auto p-4">
-          {["dashboard", "cotizaciones", "contratos", "proyectos", "obra"].map(
-            (item) => {
-              const Icon = ICONS[item as keyof typeof ICONS];
-              const hrefMap: Record<string, string> = {
-                dashboard: "/cliente",
-                cotizaciones: "/cliente/cotizaciones",
-                contratos: "/cliente/contratos",
-                proyectos: "/cliente/proyectos",
-                obra: "/cliente/obra",
-              };
-              return (
-                <Link
-                  key={item}
-                  href={hrefMap[item]}
-                  className="flex items-center gap-3 rounded px-3 py-2 text-sm text-ink/60 transition-colors hover:bg-ink/5 hover:text-ink"
-                >
-                  {Icon && <Icon className="h-4 w-4 shrink-0" />}
-                  {item}
-                </Link>
-              );
-            },
-          )}
+          <NavLinks />
         </nav>
         <div className="shrink-0 border-t border-border p-4">
           <p className="truncate text-xs text-ink/40">{email}</p>
@@ -101,29 +98,7 @@ export function ClienteSidebar({ email }: { email: string }) {
             </Link>
           </div>
           <div className="mt-4 space-y-1 overflow-y-auto">
-            {["dashboard", "cotizaciones", "contratos", "proyectos", "obra"].map(
-              (item) => {
-                const hrefMap: Record<string, string> = {
-                  dashboard: "/cliente",
-                  cotizaciones: "/cliente/cotizaciones",
-                  contratos: "/cliente/contratos",
-                  proyectos: "/cliente/proyectos",
-                  obra: "/cliente/obra",
-                };
-                const Icon = ICONS[item as keyof typeof ICONS];
-                return (
-                  <Link
-                    key={item}
-                    href={hrefMap[item]}
-                    onClick={() => setOpen(false)}
-                    className="flex items-center gap-3 rounded px-3 py-2 text-sm text-ink/60 transition-colors hover:bg-ink/5 hover:text-ink"
-                  >
-                    {Icon && <Icon className="h-4 w-4 shrink-0" />}
-                    {item}
-                  </Link>
-                );
-              },
-            )}
+            <NavLinks onNavigate={() => setOpen(false)} />
           </div>
           <div className="shrink-0 border-t border-border p-4">
             <p className="truncate text-xs text-ink/40">{email}</p>

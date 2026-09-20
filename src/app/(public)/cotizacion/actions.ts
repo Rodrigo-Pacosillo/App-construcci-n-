@@ -39,26 +39,63 @@ export async function createCotizacion(formData: FormData) {
   const { nombre, whatsapp, email, tipoObra, tipoConstruccion, rangoM2, ubicacionObra, descripcion, plazoInicio } =
     valid.data;
 
-  // Determinar si es cliente o visitante
-  const origen = session?.user?.role === "cliente" ? "referido" : "web";
-  const clienteId = session?.user?.role === "cliente" ? session.user.id : null;
+  // Resolver el cliente que respalda la cotización.
+  // session.user.id es el id de `usuarios`; el id de negocio vive en `clientes`.
+  let clienteIdFinal: string | null = null;
+  let origen = "web";
 
-  // Crear o actualizar cliente
-  let clienteIdFinal = clienteId;
-  if (!clienteIdFinal) {
-    // Crear cliente para visitante
-    try {
-      const cliente = await prisma.cliente.create({
-        data: {
-          nombre,
-          whatsapp,
-          email,
-          ciudad: ubicacionObra?.split(',')[1]?.trim() || null, // Extraer ciudad si viene en ubicacion
+  if (session?.user?.role === "cliente") {
+    const usuario = await prisma.usuario.findUnique({
+      where: { id: session.user.id },
+      select: { clienteId: true },
+    });
+    if (!usuario?.clienteId) {
+      return {
+        success: false,
+        error: {
+          _form: ["Tu cuenta no está vinculada a un cliente. Contactanos por WhatsApp."],
         },
-      });
-      clienteIdFinal = cliente.id;
-    } catch (error) {
-      console.error("Error creando cliente:", error);
+      };
+    }
+    clienteIdFinal = usuario.clienteId;
+    origen = "referido";
+  } else {
+    // Visitante: buscar el cliente existente por email o crearlo (find-or-create).
+    // La unicidad de clientes.email evita duplicar un lead que ya cotizó antes.
+    if (email) {
+      const existente = await prisma.cliente.findUnique({ where: { email } });
+      if (existente) clienteIdFinal = existente.id;
+    }
+
+    if (!clienteIdFinal) {
+      try {
+        const cliente = await prisma.cliente.create({
+          data: {
+            nombre,
+            whatsapp,
+            email: email || null,
+            ciudad: ubicacionObra?.split(",")[1]?.trim() || null,
+          },
+        });
+        clienteIdFinal = cliente.id;
+      } catch (error) {
+        const e = error as { code?: string };
+        if (e?.code === "P2002") {
+          const existente = await prisma.cliente.findUnique({ where: { email } });
+          if (existente) {
+            clienteIdFinal = existente.id;
+          }
+        }
+        if (!clienteIdFinal) {
+          console.error("Error creando cliente:", error);
+          return {
+            success: false,
+            error: {
+              _form: ["No se pudo registrar tu consulta. Intentá de nuevo."],
+            },
+          };
+        }
+      }
     }
   }
 
@@ -73,7 +110,7 @@ export async function createCotizacion(formData: FormData) {
         plazoInicio,
         origen,
         estado: "nuevo",
-        notasInternas: descripcion, // Usar descripcion como notas internas
+        requerimiento: descripcion || null,
       },
     });
 
