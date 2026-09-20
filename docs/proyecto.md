@@ -26,7 +26,7 @@ visitante → cotización (con origen)
    → embudo: nuevo → contactado → visita_tecnica → presupuestado
                                      → ganado / perdido
    → ganado: contrato
-   → obra (fase 2 — no codear aún)
+   → obra activa (portal cliente + admin de obras)
    → proyecto publicado en portafolio (antes/durante/después)
    → testimonio publicado
    → genera el próximo lead              ← el círculo se cierra
@@ -102,9 +102,9 @@ precio_referencia — alimenta el estimador público
 - UQ(tipo_construccion, rango_m2, vigente_desde) — historial sin duplicados
 ```
 
-### Fase 2 — modelada, NO codear
+### Fase 2 — implementada (portal de cliente + admin de obras)
 
-En el schema para que la migración futura no duela; sin UI ni lógica:
+Entidades en uso por `/cliente` y `/admin/obras` (hitos y pagos):
 
 ```text
 obras_activas  — cliente_id FK, contrato_id FK NULL, direccion_obra,

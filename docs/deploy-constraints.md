@@ -6,25 +6,24 @@ Leer ANTES de hacer cambios que afecten el deploy, el middleware, o la BD.
 
 | Recurso | Límite |
 |---|---|
-| Edge Functions (middleware/proxy) | **1 MB** por función |
+| Edge Functions (legacy `middleware.ts`) | **1 MB** por función |
 | Serverless Functions | 10 seg ejecución (Hobby) |
 | Bandwidth | 100 GB/mes |
 | Despliegues | 100/día |
 | Proyectos de producción | 1 |
 
-### ⚠️ Regla de oro para el middleware/proxy
-**NO importar Prisma, bcryptjs, ni dependencias pesadas** en `src/proxy.ts` o `src/middleware.ts`. El bundle completo debe pesar **< 1 MB**.
+### ⚠️ Runtime del proxy (actualizado a Next.js 16)
+En Next.js 16 `src/middleware.ts` se renombró a **`src/proxy.ts`** y corre
+**siempre en runtime Node.js** (el runtime Edge ya no está soportado ni es
+configurable). Por eso `src/proxy.ts` SÍ puede importar `auth` —y con él
+Prisma— sin el límite de 1 MB que tenía el middleware en Edge.
 
-Lo que SÍ va en el middleware:
-- Verificación JWT liviana (Web Crypto API / `crypto.subtle`)
-- Redirecciones
-- Headers simples
+Regla vigente:
+- Verificación de sesión y rol vía `auth()` de Auth.js (JWT, sin query a BD)
+- Redirecciones y headers simples
 
-Lo que NO va en el middleware:
-- Prisma Client (~400 KB)
-- bcryptjs (~60 KB)
-- Auth.js completo (~200 KB)
-- Cualquier query a BD
+La restricción vieja de "no importar Prisma/Auth.js" aplicaba solo a
+`middleware.ts` en Edge y ya NO rige para `proxy.ts`.
 
 ## Neon Free
 
@@ -33,19 +32,22 @@ Lo que NO va en el middleware:
 | Almacenamiento | 0.5 GB |
 | Compute | 191.9 horas/mes (~24/7 un instante) |
 | Conexiones concurrentes | 100 |
-| Branches | 1 principal + 1 preview |
+| Branches | 1 (`main`/production) |
 | Backups automáticos | No (solo en planes de pago) |
 
 ### ⚠️ Reglas para la BD
-- No hacer migraciones pesadas en producción (usar `prisma db push` en dev)
+- No hacer migraciones destructivas ni pesadas en producción sin aviso
+- Migraciones: `pnpm db:migrate` en local; contra la BD de producción se
+  aplican a mano (el build de Vercel NO corre `prisma migrate deploy`)
 - Connection pooling: siempre usar el URL pooled de Neon (`?pgbouncer=true`)
-- Seed: solo en desarrollo (`pnpm db:seed`)
+- Seed: `pnpm db:seed` es DESTRUCTIVO (borra y recarga); correrlo solo a propósito
 - Queries: solo en Server Components o server actions, nunca en client components
 
 ## Restricciones del proyecto
 
 - Imágenes: servidas desde `/public/img/` (stock de demo), NO de storage externo
 - Contenido: todo sale de la BD (en demo: del seed)
-- Auth: solo 1 admin (`admin@demo.com` / `admin123`)
-- Solo Fase 1-3 del schema (sin portal de cliente, obras, pagos)
+- Auth demo: admin `admin@demo.com`/`admin123` y cliente `cliente@demo.com`/`cliente123`
+- Fase 2 implementada: portal de cliente (`/cliente`) y obras activas
+  (`/admin/obras`, hitos y pagos)
 - Copy UI: español rioplatense con voseo

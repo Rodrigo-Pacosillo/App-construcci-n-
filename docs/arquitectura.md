@@ -114,7 +114,7 @@ public/
 | Servicio | Tier | Uso |
 |---|---|---|
 | Vercel | Hobby (gratis) | Deploy + previews por rama |
-| Neon | Free | PostgreSQL (branch `dev` + `main`) |
+| Neon | Free | PostgreSQL (una única branch: `main`/production) |
 | GitHub | Free | Repo + CI básico |
 
 ### Environment Variables
@@ -134,7 +134,7 @@ pnpm dev          # Desarrollo local
 pnpm build        # Build de producción
 pnpm lint         # ESLint
 pnpm db:migrate   # Crear/aplicar migraciones
-pnpm db:seed      # Reset + recarga de datos semilla (solo dev/demo)
+pnpm db:seed      # DESTRUCTIVO: borra y recarga los datos semilla (demo)
 ```
 
 ## Decisiones técnicas clave

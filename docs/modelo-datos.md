@@ -262,7 +262,7 @@ model PrecioReferencia {
 }
 ```
 
-## Entidades — Fase 2 (modeladas, NO codear)
+## Entidades — Fase 2 (implementadas)
 
 ```prisma
 model ObraActiva {
@@ -331,7 +331,7 @@ model PagoObra {
 
 ```bash
 pnpm db:migrate    # Crear + aplicar migración
-pnpm db:seed       # Reset + carga de datos semilla
+pnpm db:seed       # DESTRUCTIVO: borra y recarga los datos semilla
 ```
 
 ## Seed (`prisma/seed.ts`)
@@ -339,9 +339,11 @@ pnpm db:seed       # Reset + carga de datos semilla
 El seed carga datos verosímiles (NO reales) para la demo:
 
 - 1 admin (email: `admin@demo.com`, password: `admin123`)
+- 1 usuario cliente (email: `cliente@demo.com`, password: `cliente123`)
 - ~8-10 clientes de ejemplo
 - ~12-15 cotizaciones en diferentes estados del embudo
 - 1 contrato de ejemplo
+- 1 obra activa con hitos y pagos de ejemplo
 - ~6 proyectos publicados (portafolio)
 - ~12 fotos de proyectos (antes/durante/después)
 - ~5 testimonios

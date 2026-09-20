@@ -8,7 +8,9 @@ Sistema web para un contratista independiente de construcción en seco
 - **Sitio público:** portafolio de obras, servicios, testimonios, FAQ,
   estimador orientativo y captura de cotizaciones. Requisito #1: SEO local.
 - **Panel admin (/admin):** gestión de cotizaciones con embudo de ventas,
-  portafolio, testimonios y contenido del sitio.
+  portafolio, testimonios, contenido del sitio y obras activas (hitos/pagos).
+- **Portal cliente (/cliente):** área autenticada donde cada cliente ve sus
+  contratos, cotizaciones, avance de obra y perfil.
 
 El propósito de cada página pública es uno de dos: **convertir** (cotización)
 o **posicionar** (SEO). Toda decisión de UI y animación sirve a eso: transmitir
@@ -25,9 +27,9 @@ del negocio. Esto gobierna las decisiones:
 - Las imágenes viven en `/public/img/` (stock descargado). **NO implementar
   upload de imágenes ni integrar storage externo** — decisión postergada a
   propósito hasta que el dueño apruebe.
-- **NO implementar nada de Fase 2** (portal de cliente, obras, hitos, pagos)
-  aunque `schema.prisma` incluya esos modelos. Están para que la migración
-  futura no duela, no para codear ahora.
+- **Portal de cliente y obras activas — YA IMPLEMENTADOS** (auth unificado,
+  `/cliente`, `/admin/obras`, hitos y pagos). No agregar módulos nuevos
+  (facturación, portal avanzado, etc.) sin aprobación del dueño.
 - Restricción dura: todo corre en tiers gratis (**Vercel Hobby + Neon free**).
 
 ## Stack (cerrado — no agregar dependencias sin justificar contra esto)
@@ -36,7 +38,8 @@ del negocio. Esto gobierna las decisiones:
   `"use client"` solo donde es imprescindible
 - **Prisma + PostgreSQL** (Neon) — migraciones versionadas
 - **Zod** — única capa de validación; tipos derivados con `z.infer`
-- **Auth.js v5** — protege `/admin` vía middleware desde el día 1
+- **Auth.js v5** — protege `/admin` y `/cliente` (`src/proxy.ts` + guards
+  de layout)
 - **Tailwind CSS**
 - **Motion** — micro-interacciones UI (hovers, reveals, acordeones)
 - **GSAP + ScrollTrigger** — scroll narrativo con pinning
@@ -61,9 +64,11 @@ del negocio. Esto gobierna las decisiones:
 ## Mapa del repositorio
 
 - `src/app/` — sitio público: `/`, `/proyectos/[slug]`, `/servicios/[slug]`,
-  `/cotizacion`, `/estimador`, `/faq`
-- `src/app/admin/` — panel protegido por middleware
-- `src/components/` — `sections/`, `proyecto/`, `ui/`, `admin/`
+  `/cotizacion`, `/estimador`, `/faq`, `/login`, `/registro`
+- `src/app/admin/` — panel protegido (cotizaciones, obras, contenido)
+- `src/app/cliente/` — portal de cliente (contratos, cotizaciones, obra, perfil)
+- `src/components/` — `sections/`, `proyecto/`, `ui/`, `admin/`, `cliente/`,
+  `auth/`
 - `src/lib/` — `db.ts`, `auth.ts`, `constants.ts` (estados, orígenes, nav),
   `validators.ts` (schemas Zod compartidos)
 - `prisma/` — `schema.prisma` (fuente de verdad del modelo) + `seed.ts`
@@ -89,12 +94,12 @@ en fuente mono uppercase. No crear UI fuera de este lenguaje.
 - `pnpm dev` — desarrollo
 - `pnpm build` — build de producción
 - `pnpm db:migrate` — crear/aplicar migraciones
-- `pnpm db:seed` — reset + recarga de datos semilla (solo dev/demo)
+- `pnpm db:seed` — DESTRUCTIVO: borra y recarga los datos semilla (demo)
 
 ## Infraestructura
 
 - Deploy: Vercel (Hobby) por push; previews por rama
-- BD: Neon — branch `dev` para desarrollo (conexión pooled), `main` para
-  producción
+- BD: Neon — una única branch (`main`/production), conexión pooled
+- Migraciones: NO corren en el build de Vercel; aplicarlas a mano contra la BD
 - Secrets: `DATABASE_URL`, `AUTH_SECRET`
 - Entorno: devcontainer (Node 22 + pnpm)
