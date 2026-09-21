@@ -10,7 +10,9 @@ export async function getTestimonios() {
 
   try {
     return await prisma.testimonio.findMany({
-      orderBy: { actualizadoEn: "desc" },
+      // Orden ESTABLE por recepción: togglear publicado NUNCA mueve filas
+      // (ordenar por actualizadoEn hacía saltar la fila recién toggléeada al tope).
+      orderBy: { creadoEn: "asc" },
       take: 50,
     });
   } catch (error) {
