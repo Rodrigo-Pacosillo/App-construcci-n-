@@ -30,7 +30,7 @@ export function TestimoniosCarousel({ testimonios }: { testimonios: Testimonio[]
               <div>
                 <p className="text-sm font-medium">{t.clienteNombre}</p>
                 {t.puntaje && (
-                  <p className="text-xs text-accent">
+                  <p className="text-xs text-accent-strong">
                     {"★".repeat(t.puntaje)}
                   </p>
                 )}

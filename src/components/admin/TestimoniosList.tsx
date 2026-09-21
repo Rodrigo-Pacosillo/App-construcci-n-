@@ -44,7 +44,7 @@ export function TestimoniosList({ testimonios }: { testimonios: Testimonio[] }) 
               <tr key={t.id} className="border-b border-border last:border-0">
                 <td className="px-4 py-3 font-medium">{t.clienteNombre}</td>
                 <td className="max-w-xs px-4 py-3 text-ink/60 line-clamp-2">{t.texto}</td>
-                <td className="px-4 py-3 text-accent">{t.puntaje ? "★".repeat(t.puntaje) : "—"}</td>
+                <td className="px-4 py-3 text-accent-strong">{t.puntaje ? "★".repeat(t.puntaje) : "—"}</td>
                 <td className="px-4 py-3">
                   <button
                     type="button"

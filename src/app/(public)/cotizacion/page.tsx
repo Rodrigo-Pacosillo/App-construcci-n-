@@ -34,7 +34,7 @@ export default function CotizacionPage() {
     return (
       <div className="py-24 text-center lg:py-32">
         <div className="mx-auto max-w-md px-4">
-          <p className="section-label mb-4 text-accent">MUCHAS GRACIAS</p>
+          <p className="section-label mb-4 text-accent-strong">MUCHAS GRACIAS</p>
           <h1 className="font-heading text-3xl font-bold">
             Tu solicitud fue enviada
           </h1>
@@ -109,13 +109,13 @@ export default function CotizacionPage() {
                 className="mt-1 block w-full rounded border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent"
               >
                 <option value="vivienda_nueva">Vivienda nueva</option>
-                <option value="ampliacion">Ampliacion</option>
+                <option value="ampliacion">Ampliación</option>
                 <option value="otro">Otro</option>
               </select>
             </div>
             <div>
               <label htmlFor="tipoConstruccion" className="section-label block text-ink/40">
-                Tipo de construccion
+                Tipo de construcción
               </label>
               <select
                 id="tipoConstruccion"
@@ -143,7 +143,7 @@ export default function CotizacionPage() {
                 <option value="hasta_50">Hasta 50 m2</option>
                 <option value="m50_100">50 - 100 m2</option>
                 <option value="m100_200">100 - 200 m2</option>
-                <option value="mas_200">Mas de 200 m2</option>
+                <option value="mas_200">Más de 200 m2</option>
               </select>
             </div>
             <div>
@@ -165,7 +165,7 @@ export default function CotizacionPage() {
 
           <div>
             <label htmlFor="ubicacion" className="section-label block text-ink/40">
-              Ubicacion de la obra
+              Ubicación de la obra
             </label>
             <input
               id="ubicacion"

@@ -101,8 +101,8 @@ export default async function ClientObraPage() {
             </p>
           </div>
           <div className="text-right">
-            <p className="section-label text-accent">PROGRESO</p>
-            <p className="mt-1 font-heading text-4xl font-bold text-accent">
+            <p className="section-label text-accent-strong">PROGRESO</p>
+            <p className="mt-1 font-heading text-4xl font-bold text-accent-strong">
               {obra.progreso}%
             </p>
             <p className="mt-1 text-sm text-ink/50">

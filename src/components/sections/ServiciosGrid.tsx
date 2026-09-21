@@ -38,8 +38,8 @@ export function ServiciosGrid({ servicios }: { servicios: Servicio[] }) {
             <p className="relative mt-2 text-sm text-ink/50 line-clamp-3">
               {servicio.descripcion}
             </p>
-            <span className="relative mt-4 inline-block text-xs text-accent opacity-0 transition-opacity group-hover:opacity-100">
-              Ver mas →
+            <span className="relative mt-4 inline-block text-xs text-accent-strong opacity-0 transition-opacity group-hover:opacity-100">
+              Ver más →
             </span>
           </Link>
         </motion.div>

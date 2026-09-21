@@ -13,6 +13,7 @@ import {
   HardHat,
   MessageSquare,
   Wrench,
+  Award,
   HelpCircle,
   type LucideIcon,
 } from "lucide-react";
@@ -25,6 +26,7 @@ const ICONS: Record<string, LucideIcon> = {
   HardHat,
   MessageSquare,
   Wrench,
+  Award,
   HelpCircle,
 };
 

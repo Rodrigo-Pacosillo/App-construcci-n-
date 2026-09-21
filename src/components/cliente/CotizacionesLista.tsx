@@ -75,7 +75,7 @@ export function CotizacionesLista({ cotizaciones }: { cotizaciones: Cotizacion[]
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="section-label text-accent">{ESTADO_LABELS[c.estado as EstadoCotizacion]}</p>
+                  <p className="section-label text-accent-strong">{ESTADO_LABELS[c.estado as EstadoCotizacion]}</p>
                   {c.montoCerrado && (
                     <p className="mt-1 font-heading text-lg font-bold">
                       ${c.montoCerrado.toLocaleString("es-AR")}

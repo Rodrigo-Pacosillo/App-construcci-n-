@@ -74,7 +74,7 @@ export function LoginForm({ callbackUrl }: { callbackUrl: string }) {
 
       <p className="text-center text-sm text-ink/50">
         ¿No tenés cuenta?{" "}
-        <Link href="/registro" className="text-accent hover:underline">
+        <Link href="/registro" className="text-accent-strong hover:underline">
           Creá una
         </Link>
       </p>

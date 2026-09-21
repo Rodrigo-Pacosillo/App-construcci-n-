@@ -6,15 +6,15 @@ export function HeroSection() {
     <section className="block-dark relative overflow-hidden py-24 lg:py-32">
       <div className="relative z-10 mx-auto max-w-7xl px-4 lg:px-8">
         <div className="max-w-3xl">
-          <p className="section-label mb-4 text-accent">01 / CONSTRUCCION EN SECO</p>
+          <p className="section-label mb-4 text-accent">CONSTRUCCION EN SECO</p>
           <h1 className="font-heading text-5xl font-bold leading-tight text-white md:text-7xl">
             Construimos tu
             <br />
-            <span className="text-accent">proximo proyecto</span>
+            <span className="text-accent">próximo proyecto</span>
           </h1>
           <p className="mt-6 max-w-xl text-lg text-white/60">
             Steel frame, drywall, cielorrasos, revestimientos y aislaciones.
-            Rapido, eficiente y con la calidad que buscas.
+            Rápido, eficiente y con la calidad que buscas.
           </p>
           <div className="mt-8 flex flex-col gap-4 sm:flex-row">
             <Link

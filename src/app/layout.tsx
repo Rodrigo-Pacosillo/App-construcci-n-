@@ -22,25 +22,25 @@ const archivo = Archivo({
 
 export const metadata: Metadata = {
   title: {
-    default: "Steel Frame — Construccion en Seco",
+    default: "Steel Frame — Construcción en Seco",
     template: "%s | Steel Frame",
   },
   description:
-    "Contratista independiente de construccion en seco: steel frame, drywall, cielorrasos, revestimientos y aislaciones. Zona norte GBA y CABA.",
+    "Contratista independiente de construcción en seco: steel frame, drywall, cielorrasos, revestimientos y aislaciones. Zona norte GBA y CABA.",
   metadataBase: new URL("https://steelframe.com.ar"),
   openGraph: {
     type: "website",
     locale: "es_AR",
     siteName: "Steel Frame",
-    title: "Steel Frame — Construccion en Seco",
+    title: "Steel Frame — Construcción en Seco",
     description:
-      "Contratista independiente de construccion en seco: steel frame, drywall, cielorrasos, revestimientos y aislaciones.",
+      "Contratista independiente de construcción en seco: steel frame, drywall, cielorrasos, revestimientos y aislaciones.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Steel Frame — Construccion en Seco",
+    title: "Steel Frame — Construcción en Seco",
     description:
-      "Contratista independiente de construccion en seco: steel frame, drywall, cielorrasos, revestimientos y aislaciones.",
+      "Contratista independiente de construcción en seco: steel frame, drywall, cielorrasos, revestimientos y aislaciones.",
   },
   robots: {
     index: true,

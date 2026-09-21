@@ -74,22 +74,22 @@ export default async function ServicioPage({
         </p>
 
         <div className="mt-12 rounded border border-border bg-surface p-8">
-          <p className="section-label text-ink/40">¿POR QUE ELEGIRNOS?</p>
+          <p className="section-label text-ink/40">¿POR QUÉ ELEGIRNOS?</p>
           <ul className="mt-4 space-y-3 text-sm text-ink/60">
             <li className="flex items-start gap-2">
-              <span className="text-accent">✓</span>
-              Equipo con experiencia comprobada en construccion en seco
+              <span className="text-accent-strong">✓</span>
+              Equipo con experiencia comprobada en construcción en seco
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-accent">✓</span>
+              <span className="text-accent-strong">✓</span>
               Materiales de primera calidad certificados
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-accent">✓</span>
+              <span className="text-accent-strong">✓</span>
               Presupuesto claro, detallado y sin sorpresas
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-accent">✓</span>
+              <span className="text-accent-strong">✓</span>
               Plazos de entrega cumplidos
             </li>
           </ul>

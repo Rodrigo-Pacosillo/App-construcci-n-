@@ -47,7 +47,7 @@ export async function FaqSection() {
         <div className="mt-8 text-center">
           <Link
             href="/faq"
-            className="text-sm text-accent hover:underline"
+            className="text-sm text-accent-strong hover:underline"
           >
             Ver todas las preguntas →
           </Link>

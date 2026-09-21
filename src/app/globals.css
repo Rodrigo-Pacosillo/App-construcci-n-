@@ -13,6 +13,10 @@
   --color-surface: var(--surface);
   --color-border: var(--border-color);
 
+  /* Ink — semantic alias used by most components
+     (text-ink, text-ink/40, bg-ink/5, border-ink/*) */
+  --color-ink: var(--ink);
+
   /* Dark theme */
   --color-background-dark: var(--bg-dark);
   --color-foreground-dark: var(--ink-dark);
@@ -25,6 +29,10 @@
   /* Accent — amber */
   --color-accent: #FFB300;
   --color-accent-foreground: #17181A;
+
+  /* Accent for light surfaces — rotates with theme
+     (light: dark amber for AA, dark: pure amber) */
+  --color-accent-strong: var(--accent-strong);
 }
 
 :root {
@@ -32,7 +40,8 @@
   --bg: #FAFAF8;
   --ink: #17181A;
   --surface: #FFFFFF;
-  --border-color: #E5E3DE;
+  --border-color: #DDD8CF;
+  --accent-strong: #B45309;
 
   /* Dark */
   --bg-dark: #0F1013;
@@ -46,6 +55,7 @@
   --ink: #F2F1EC;
   --surface: #15171B;
   --border-color: #23262B;
+  --accent-strong: #FFB300;
 }
 
 /* Always-dark blocks (hero, footer, portfolio) */

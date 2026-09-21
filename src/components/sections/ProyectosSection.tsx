@@ -19,7 +19,7 @@ export async function ProyectosSection() {
   const proyectos = await getProyectos();
 
   return (
-    <section className="block-dark py-24 lg:py-32">
+    <section className="block-dark py-16 lg:py-24">
       <div className="mx-auto max-w-7xl px-4 lg:px-8">
         <p className="section-label mb-4 text-white/40">02 / PROYECTOS</p>
         <h2 className="font-heading text-4xl font-bold text-white md:text-5xl">
@@ -43,7 +43,7 @@ export async function ProyectosSection() {
                   {proyecto.titulo}
                 </h3>
                 <p className="mt-1 text-sm text-white/50">
-                  {proyecto.m2Construidos}m2 · {proyecto.diasEjecucion} dias
+                  {proyecto.m2Construidos}m2 · {proyecto.diasEjecucion} días
                 </p>
               </div>
             </Link>

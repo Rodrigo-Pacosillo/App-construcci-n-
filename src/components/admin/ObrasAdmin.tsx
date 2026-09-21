@@ -296,7 +296,7 @@ export function ObrasAdmin({
                 </p>
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-2xl font-bold text-accent">
+                <span className="text-2xl font-bold text-accent-strong">
                   {obra.progreso}%
                 </span>
                 <span className="text-ink/40">{expanded === obra.id ? "▾" : "▸"}</span>

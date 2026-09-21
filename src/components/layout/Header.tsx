@@ -14,7 +14,7 @@ export function Header() {
     <header className="sticky top-0 z-50 border-b border-border bg-surface/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 lg:px-8">
         <Link href="/" className="font-heading text-lg font-bold tracking-tight">
-          STEEL<span className="text-accent">FRAME</span>
+          STEEL<span className="text-accent-strong">FRAME</span>
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex">
@@ -71,7 +71,7 @@ export function Header() {
           <Link
             href="/login"
             onClick={() => setMobileOpen(false)}
-            className="block py-2 section-label text-accent"
+            className="block py-2 section-label text-accent-strong"
           >
             Ingreso
           </Link>

@@ -6,11 +6,11 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Servicios",
   description:
-    "Steel frame, drywall, cielorrasos, revestimientos y aislaciones. Soluciones completas en construccion en seco.",
+    "Steel frame, drywall, cielorrasos, revestimientos y aislaciones. Soluciones completas en construcción en seco.",
   openGraph: {
     images: [
       {
-        url: "/og?title=Servicios&subtitle=Soluciones%20completas%20en%20construccion%20en%20seco&type=dark",
+        url: "/og?title=Servicios&subtitle=Soluciones%20completas%20en%20construcci%C3%B3n%20en%20seco&type=dark",
         width: 1200,
         height: 630,
         alt: "Servicios Steel Frame",
@@ -42,8 +42,8 @@ export default async function ServiciosPage() {
           Nuestros servicios
         </h1>
         <p className="mt-4 max-w-2xl text-ink/50">
-          Ofrecemos soluciones completas en construccion en seco.
-          Cada servicio esta respaldado por anos de experiencia.
+          Ofrecemos soluciones completas en construcción en seco.
+          Cada servicio está respaldado por años de experiencia.
         </p>
 
         <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -62,7 +62,7 @@ export default async function ServiciosPage() {
               <p className="mt-3 text-sm text-ink/50">
                 {servicio.descripcion}
               </p>
-              <span className="mt-6 inline-block text-xs text-accent opacity-0 transition-opacity group-hover:opacity-100">
+              <span className="mt-6 inline-block text-xs text-accent-strong opacity-0 transition-opacity group-hover:opacity-100">
                 Ver detalle →
               </span>
             </Link>

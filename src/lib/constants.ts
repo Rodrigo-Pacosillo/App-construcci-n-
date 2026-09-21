@@ -41,6 +41,7 @@ export const ADMIN_NAV_ITEMS = [
   { label: "Obras", href: "/admin/obras", icon: "HardHat" },
   { label: "Testimonios", href: "/admin/testimonios", icon: "MessageSquare" },
   { label: "Servicios", href: "/admin/servicios", icon: "Wrench" },
+  { label: "Certificaciones", href: "/admin/certificaciones", icon: "Award" },
   { label: "FAQs", href: "/admin/faqs", icon: "HelpCircle" },
 ] as const;
 

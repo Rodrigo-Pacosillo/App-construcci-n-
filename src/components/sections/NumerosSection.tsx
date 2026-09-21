@@ -39,14 +39,14 @@ export function NumerosSection() {
   const numeros = [
     { label: "Metros cuadrados", valor: 5000, sufijo: "m2" },
     { label: "Obras ejecutadas", valor: 200, sufijo: "+" },
-    { label: "Dias promedio", valor: 35, sufijo: "" },
-    { label: "Anos de experiencia", valor: 15, sufijo: "" },
+    { label: "Días promedio", valor: 35, sufijo: "" },
+    { label: "Años de experiencia", valor: 15, sufijo: "" },
   ];
 
   return (
-    <section className="py-24 lg:py-32">
+    <section className="py-16 lg:py-24">
       <div className="mx-auto max-w-7xl px-4 lg:px-8">
-        <p className="section-label mb-4 text-ink/40">03 / NUMEROS</p>
+        <p className="section-label mb-4 text-ink/40">05 / RESULTADOS</p>
         <h2 className="font-heading text-4xl font-bold md:text-5xl">
           Nuestros resultados
         </h2>
@@ -54,7 +54,7 @@ export function NumerosSection() {
         <div className="mt-12 grid grid-cols-2 gap-8 lg:grid-cols-4">
           {numeros.map((num) => (
             <div key={num.label} className="text-center">
-              <p className="font-heading text-5xl font-bold text-accent">
+              <p className="font-heading text-5xl font-bold text-accent-strong">
                 <AnimatedNumber value={num.valor} suffix={num.sufijo} />
               </p>
               <p className="mt-2 section-label text-ink/40">{num.label}</p>

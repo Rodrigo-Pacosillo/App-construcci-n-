@@ -84,7 +84,7 @@ export function ProyectosList({ proyectos }: { proyectos: Proyecto[] }) {
                       })}
                       disabled={isPending}
                     className={`rounded px-2 py-0.5 text-xs font-medium ${
-                      p.destacado ? "bg-accent/20 text-accent" : "bg-gray-100 text-gray-500"
+                      p.destacado ? "bg-accent/20 text-accent-strong" : "bg-gray-100 text-gray-500"
                     }`}
                   >
                     {p.destacado ? "Si" : "No"}

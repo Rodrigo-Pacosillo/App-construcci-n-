@@ -14,13 +14,21 @@ plano impreso; oscuro = blueprint en pantalla.
 
 ```text
 Rotan con el tema:
-  claro:  fondo #FAFAF8 · ink #17181A · superficie #FFFFFF · bordes #E5E3DE
+  claro:  fondo #FAFAF8 · ink #17181A · superficie #FFFFFF · bordes #DDD8CF
   oscuro: fondo #0F1013 · ink #F2F1EC · superficie #15171B · bordes #23262B
 
 Fijos (no rotan):
   bloques oscuros: #0C0D10 + radial-gradient ámbar 3-4% opacidad
-  acento: ámbar #FFB300 — texto NEGRO encima SIEMPRE (ancla visual,
-  idéntico en ambos temas; contraste AA garantizado)
+  acento puro: #FFB300 — texto NEGRO encima SIEMPRE. Para texto, SOLO sobre
+  bloques oscuros (~11:1 de contraste)
+
+Acento en superficies claras (rota con el tema):
+  claro:  #B45309 (ámbar oscuro, ~5:1 sobre blanco — cumple AA)
+  oscuro: #FFB300 (idéntico al acento puro, la identidad se conserva)
+
+Regla práctica: `text-accent` en bloques oscuros, `text-accent-strong`
+sobre fondos claros. Nunca ámbar puro como texto sobre superficie clara
+(1.8:1 — falla AA y se lava).
 ```
 
 ## Tipografía
@@ -55,6 +63,10 @@ presupuesto").
   lucide), sin flash (script pre-hidratación)
 - Tailwind v4: `dark:` por clase
 - Bloques SIEMPRE oscuros (hero, footer, portafolio) — no rotan
+- **Acento por contexto:** bloques oscuros usan `text-accent` (ámbar puro);
+  superficies claras usan `text-accent-strong` (rota: ámbar oscuro en
+  claro, ámbar puro en oscuro). Los tokens `ink` rotan — `text-ink/40`,
+  `bg-ink/5`, etc. adaptan la jerarquía a cada tema
 
 ## Home — spec sección por sección
 

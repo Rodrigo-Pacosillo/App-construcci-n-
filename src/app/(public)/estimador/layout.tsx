@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Estimador de costos",
   description:
-    "Calcula una referencia orientativa del costo por m2 de tu obra en steel frame o construccion tradicional.",
+    "Calcula una referencia orientativa del costo por m2 de tu obra en steel frame o construcción tradicional.",
   openGraph: {
     images: [
       {

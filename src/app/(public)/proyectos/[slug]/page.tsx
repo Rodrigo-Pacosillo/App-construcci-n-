@@ -67,13 +67,13 @@ export default async function ProyectoPage({
         </Link>
 
         <div className="mt-8 flex items-center gap-4">
-          <p className="section-label text-accent">
+          <p className="section-label text-accent-strong">
             {proyecto.tipoConstruccion === "seco"
               ? "STEEL FRAME"
               : proyecto.tipoConstruccion.toUpperCase()}
           </p>
           {proyecto.destacado && (
-            <span className="section-label rounded bg-accent/10 px-2 py-0.5 text-accent">
+            <span className="section-label rounded bg-accent/10 px-2 py-0.5 text-accent-strong">
               DESTACADO
             </span>
           )}
@@ -94,7 +94,7 @@ export default async function ProyectoPage({
           </div>
           <div>
             <span className="section-label block text-ink/30">PLAZO</span>
-            {proyecto.diasEjecucion} dias
+            {proyecto.diasEjecucion} días
           </div>
         </div>
 

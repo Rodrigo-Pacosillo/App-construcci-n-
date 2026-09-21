@@ -6,11 +6,11 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Proyectos",
   description:
-    "Portafolio de obras destacadas en construccion en seco. Casos reales con fotos antes/durante/despues.",
+    "Portafolio de obras destacadas en construcción en seco. Casos reales con fotos antes/durante/después.",
   openGraph: {
     images: [
       {
-        url: "/og?title=Proyectos&subtitle=Portafolio%20de%20obras%20en%20construccion%20en%20seco&type=dark",
+        url: "/og?title=Proyectos&subtitle=Portafolio%20de%20obras%20en%20construcci%C3%B3n%20en%20seco&type=dark",
         width: 1200,
         height: 630,
         alt: "Proyectos Steel Frame",
@@ -67,7 +67,7 @@ export default async function ProyectosPage() {
                 </h2>
                 <div className="mt-2 flex gap-4 text-xs text-white/40">
                   <span>{proyecto.m2Construidos}m2</span>
-                  <span>{proyecto.diasEjecucion} dias</span>
+                  <span>{proyecto.diasEjecucion} días</span>
                   <span>{proyecto.ubicacion}</span>
                 </div>
               </div>

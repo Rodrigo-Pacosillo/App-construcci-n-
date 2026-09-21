@@ -6,11 +6,11 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Preguntas Frecuentes",
   description:
-    "Resolvemos tus dudas sobre construccion en seco, steel frame, plazos, costos y mas.",
+    "Resolvemos tus dudas sobre construcción en seco, steel frame, plazos, costos y más.",
   openGraph: {
     images: [
       {
-        url: "/og?title=Preguntas%20Frecuentes&subtitle=Resolvemos%20tus%20dudas%20sobre%20construccion%20en%20seco&type=dark",
+        url: "/og?title=Preguntas%20Frecuentes&subtitle=Resolvemos%20tus%20dudas%20sobre%20construcci%C3%B3n%20en%20seco&type=dark",
         width: 1200,
         height: 630,
         alt: "FAQ Steel Frame",
@@ -42,7 +42,7 @@ export default async function FaqPage() {
           Preguntas frecuentes
         </h1>
         <p className="mt-4 text-ink/50">
-          Resolvemos las dudas mas comunes sobre construccion en seco.
+          Resolvemos las dudas más comunes sobre construcción en seco.
         </p>
 
         <div className="mt-12 space-y-4">

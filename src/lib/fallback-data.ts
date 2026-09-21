@@ -1,4 +1,4 @@
-import type { Faq, Servicio } from "@prisma/client";
+import type { Certificacion, Faq, Servicio } from "@prisma/client";
 
 // ─── Fallbacks de contenido ─────────────────────────────────────────
 // Se muestran cuando la BD devuelve vacío (por ejemplo, seed no corrido).
@@ -288,9 +288,40 @@ export const FALLBACK_TESTIMONIOS = [
   },
 ];
 
+export const FALLBACK_CERTIFICACIONES: Certificacion[] = [
+  {
+    id: "1",
+    titulo: "Matrícula Constructora",
+    descripcion:
+      "Matrícula habilitante para construcciones en seco — Ciudad de Buenos Aires y Provincia.",
+    activo: true,
+  },
+  {
+    id: "2",
+    titulo: "Certificación Steel Frame",
+    descripcion:
+      "Certificación oficial por la Association of Steel Frame Constructors (ASFC).",
+    activo: true,
+  },
+  {
+    id: "3",
+    titulo: "Seguro de Responsabilidad Civil",
+    descripcion:
+      "Cobertura completa de responsabilidad civil para obras de hasta $50.000.000.",
+    activo: true,
+  },
+  {
+    id: "4",
+    titulo: "15 años de experiencia",
+    descripcion:
+      "Más de 200 obras ejecutadas en la zona norte del Gran Buenos Aires y CABA.",
+    activo: true,
+  },
+];
+
 export const FALLBACK_NUMEROS = [
   { label: "Metros cuadrados", valor: 5000, sufijo: "m2" },
   { label: "Obras ejecutadas", valor: 200, sufijo: "+" },
-  { label: "Dias promedio", valor: 35, sufijo: "" },
-  { label: "Anos de experiencia", valor: 15, sufijo: "" },
+  { label: "Días promedio", valor: 35, sufijo: "" },
+  { label: "Años de experiencia", valor: 15, sufijo: "" },
 ];

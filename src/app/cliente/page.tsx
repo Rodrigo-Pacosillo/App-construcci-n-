@@ -119,7 +119,7 @@ export default async function ClienteDashboard() {
             </div>
             <div className="text-right">
               <p className="section-label text-ink/40">PROGRESO TOTAL</p>
-              <p className="mt-2 font-heading text-5xl font-bold text-accent">
+              <p className="mt-2 font-heading text-5xl font-bold text-accent-strong">
                 {maxProgreso}%
               </p>
               <p className="mt-1 text-sm text-ink/50">

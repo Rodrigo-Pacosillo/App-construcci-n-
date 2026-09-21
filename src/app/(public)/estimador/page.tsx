@@ -6,19 +6,19 @@ import type { PrecioReferencia } from "./actions";
 
 const PASOS = [
   {
-    titulo: "Tipo de construccion",
+    titulo: "Tipo de construcción",
     opciones: [
       { value: "seco", label: "Steel Frame / Seco", desc: "Estructura de acero galvanizado" },
-      { value: "tradicional", label: "Tradicional", desc: "Mamposteria convencional" },
+      { value: "tradicional", label: "Tradicional", desc: "Mampostería convencional" },
     ],
   },
   {
     titulo: "Superficie estimada",
     opciones: [
-      { value: "hasta_50", label: "Hasta 50 m2", desc: "Monoambiente o ampliacion chica" },
+      { value: "hasta_50", label: "Hasta 50 m2", desc: "Monoambiente o ampliación chica" },
       { value: "m50_100", label: "50 - 100 m2", desc: "Casa de 1-2 dormitorios" },
       { value: "m100_200", label: "100 - 200 m2", desc: "Casa de 3-4 dormitorios" },
-      { value: "mas_200", label: "Mas de 200 m2", desc: "Casa grande o multiples ambientes" },
+      { value: "mas_200", label: "Más de 200 m2", desc: "Casa grande o múltiples ambientes" },
     ],
   },
   {
@@ -138,13 +138,13 @@ export default function EstimadorPage() {
                 disabled={paso === 0 ? !tipo : !m2}
                 className="mt-8 accent-btn w-full rounded py-3 text-sm font-medium disabled:opacity-30"
               >
-                {paso === 1 ? "Ver estimacion" : "Siguiente"}
+                {paso === 1 ? "Ver estimación" : "Siguiente"}
               </button>
             </>
           ) : (
             <>
               <h2 className="font-heading text-2xl font-bold">
-                Tu estimacion
+                Tu estimación
               </h2>
               {resultado && (
                 <div className="mt-6 rounded border border-border bg-surface p-8 text-center">
@@ -152,7 +152,7 @@ export default function EstimadorPage() {
                     {tipo === "seco" ? "STEEL FRAME" : "TRADICIONAL"} ·{" "}
                     {M2_LABELS[m2 || ""]}
                   </p>
-                  <p className="mt-4 font-heading text-4xl font-bold text-accent">
+                  <p className="mt-4 font-heading text-4xl font-bold text-accent-strong">
                     {formatCurrency(resultado.min)} - {formatCurrency(resultado.max)}
                   </p>
                   <p className="mt-2 text-sm text-ink/40">
@@ -166,7 +166,7 @@ export default function EstimadorPage() {
                 </div>
               )}
               <p className="mt-6 text-center text-sm text-ink/40">
-                Esta estimacion es orientativa. El precio final depende de
+                Esta estimación es orientativa. El precio final depende de
                 la complejidad, acabados y condiciones del terreno.
               </p>
               <div className="mt-8 flex gap-4">
