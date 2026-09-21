@@ -61,7 +61,7 @@ export default async function ProyectoPage({
       <div className="mx-auto max-w-4xl px-4 lg:px-8">
         <Link
           href="/proyectos"
-          className="section-label text-ink/40 hover:text-ink"
+          className="section-label text-ink-faint hover:text-ink"
         >
           ← Proyectos
         </Link>
@@ -83,17 +83,17 @@ export default async function ProyectoPage({
           {proyecto.titulo}
         </h1>
 
-        <div className="mt-6 flex flex-wrap gap-6 text-sm text-ink/50">
+        <div className="mt-6 flex flex-wrap gap-6 text-sm text-ink-muted">
           <div>
-            <span className="section-label block text-ink/30">UBICACION</span>
+            <span className="section-label block text-ink-faint">UBICACION</span>
             {proyecto.ubicacion}
           </div>
           <div>
-            <span className="section-label block text-ink/30">SUPERFICIE</span>
+            <span className="section-label block text-ink-faint">SUPERFICIE</span>
             {proyecto.m2Construidos}m2
           </div>
           <div>
-            <span className="section-label block text-ink/30">PLAZO</span>
+            <span className="section-label block text-ink-faint">PLAZO</span>
             {proyecto.diasEjecucion} días
           </div>
         </div>
@@ -107,7 +107,7 @@ export default async function ProyectoPage({
                   key={i}
                   className="relative aspect-[4/3] overflow-hidden rounded border border-border bg-surface"
                 >
-                  <div className="flex h-full items-center justify-center bg-ink/5 text-xs text-ink/30">
+                  <div className="flex h-full items-center justify-center bg-ink/5 text-xs text-ink-faint">
                     {foto.fase.toUpperCase()}
                   </div>
                 </div>
@@ -118,14 +118,14 @@ export default async function ProyectoPage({
 
         <div className="mt-12 grid gap-8 md:grid-cols-2">
           <div className="rounded border border-border bg-surface p-6">
-            <p className="section-label text-ink/40">PROBLEMA DEL CLIENTE</p>
-            <p className="mt-3 text-sm text-ink/70">
+            <p className="section-label text-ink-faint">PROBLEMA DEL CLIENTE</p>
+            <p className="mt-3 text-sm text-ink-muted">
               {proyecto.problemaCliente}
             </p>
           </div>
           <div className="rounded border border-border bg-surface p-6">
-            <p className="section-label text-ink/40">NUESTRA SOLUCION</p>
-            <p className="mt-3 text-sm text-ink/70">{proyecto.solucion}</p>
+            <p className="section-label text-ink-faint">NUESTRA SOLUCION</p>
+            <p className="mt-3 text-sm text-ink-muted">{proyecto.solucion}</p>
           </div>
         </div>
 

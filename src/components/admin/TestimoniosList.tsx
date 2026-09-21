@@ -32,18 +32,18 @@ export function TestimoniosList({ testimonios }: { testimonios: Testimonio[] }) 
         <table className="w-full text-left text-sm">
           <thead>
             <tr className="border-b border-border">
-              <th className="px-4 py-3 section-label text-ink/40">Cliente</th>
-              <th className="px-4 py-3 section-label text-ink/40">Testimonio</th>
-              <th className="px-4 py-3 section-label text-ink/40">Puntaje</th>
-              <th className="px-4 py-3 section-label text-ink/40">Publicado</th>
-              <th className="px-4 py-3 section-label text-ink/40">Acciones</th>
+              <th className="px-4 py-3 section-label text-ink-faint">Cliente</th>
+              <th className="px-4 py-3 section-label text-ink-faint">Testimonio</th>
+              <th className="px-4 py-3 section-label text-ink-faint">Puntaje</th>
+              <th className="px-4 py-3 section-label text-ink-faint">Publicado</th>
+              <th className="px-4 py-3 section-label text-ink-faint">Acciones</th>
             </tr>
           </thead>
           <tbody>
             {testimonios.map((t) => (
               <tr key={t.id} className="border-b border-border last:border-0">
                 <td className="px-4 py-3 font-medium">{t.clienteNombre}</td>
-                <td className="max-w-xs px-4 py-3 text-ink/60 line-clamp-2">{t.texto}</td>
+                <td className="max-w-xs px-4 py-3 text-ink-muted line-clamp-2">{t.texto}</td>
                 <td className="px-4 py-3 text-accent-strong">{t.puntaje ? "★".repeat(t.puntaje) : "—"}</td>
                 <td className="px-4 py-3">
                   <button
@@ -74,7 +74,7 @@ export function TestimoniosList({ testimonios }: { testimonios: Testimonio[] }) 
             ))}
             {testimonios.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-ink/30">
+                <td colSpan={5} className="px-4 py-8 text-center text-ink-faint">
                   No hay testimonios aun
                 </td>
               </tr>

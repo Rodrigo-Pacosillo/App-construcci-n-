@@ -35,33 +35,33 @@ export default async function ClienteDashboard() {
   return (
     <div className="space-y-8">
       <div>
-        <p className="section-label mb-2 text-ink/40">RESUMEN</p>
+        <p className="section-label mb-2 text-ink-faint">RESUMEN</p>
         <h1 className="font-heading text-3xl font-bold">
           Hola, {usuario?.nombre.split(" ")[0]}
         </h1>
-        <p className="mt-2 text-sm text-ink/50">
+        <p className="mt-2 text-sm text-ink-muted">
           Este es el resumen de tus proyectos con nosotros.
         </p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded border border-border bg-surface p-6">
-          <p className="section-label text-ink/40">COTIZACIONES</p>
+          <p className="section-label text-ink-faint">COTIZACIONES</p>
           <p className="mt-3 font-heading text-4xl font-bold">{totalCotizaciones}</p>
-          <p className="mt-1 text-sm text-ink/50">
+          <p className="mt-1 text-sm text-ink-muted">
             {cotizacionesGanadas} ganadas
           </p>
         </div>
 
         <div className="rounded border border-border bg-surface p-6">
-          <p className="section-label text-ink/40">OBRA ACTIVA</p>
+          <p className="section-label text-ink-faint">OBRA ACTIVA</p>
           {obra ? (
             <>
               <p className="mt-3 font-heading text-xl font-bold">
                 {obra.direccionObra}
               </p>
               <div className="mt-3">
-                <div className="flex items-center justify-between text-xs text-ink/50">
+                <div className="flex items-center justify-between text-xs text-ink-muted">
                   <span>Progreso</span>
                   <span>{obra.progreso}%</span>
                 </div>
@@ -72,29 +72,29 @@ export default async function ClienteDashboard() {
                   />
                 </div>
               </div>
-              <p className="mt-1 text-sm text-ink/50">
+              <p className="mt-1 text-sm text-ink-muted">
                 {obra.hitos.length} hitos registrados
               </p>
             </>
           ) : (
-            <p className="mt-3 text-sm text-ink/50">
+            <p className="mt-3 text-sm text-ink-muted">
               Todavía no tenés una obra activa.
             </p>
           )}
         </div>
 
         <div className="rounded border border-border bg-surface p-6">
-          <p className="section-label text-ink/40">CONTRATOS</p>
+          <p className="section-label text-ink-faint">CONTRATOS</p>
           <p className="mt-3 font-heading text-4xl font-bold">
             {obras.filter((o) => o.contrato).length}
           </p>
-          <p className="mt-1 text-sm text-ink/50">Contratos activos</p>
+          <p className="mt-1 text-sm text-ink-muted">Contratos activos</p>
         </div>
 
         <div className="rounded border border-border bg-surface p-6">
-          <p className="section-label text-ink/40">PROYECTOS</p>
+          <p className="section-label text-ink-faint">PROYECTOS</p>
           <p className="mt-3 font-heading text-4xl font-bold">{totalObras}</p>
-          <p className="mt-1 text-sm text-ink/50">
+          <p className="mt-1 text-sm text-ink-muted">
             Proyectos completados
           </p>
         </div>
@@ -104,25 +104,25 @@ export default async function ClienteDashboard() {
         <div className="rounded border border-border bg-surface p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="section-label text-ink/40">OBRA ACTIVA</p>
+              <p className="section-label text-ink-faint">OBRA ACTIVA</p>
               <p className="mt-2 font-heading text-2xl font-bold">{obra.direccionObra}</p>
-              <p className="mt-1 text-sm text-ink/50">
+              <p className="mt-1 text-sm text-ink-muted">
                 Inicio:{" "}
                 {new Date(obra.fechaInicio).toLocaleDateString("es-AR")}
                 {obra.fechaFinEstimada
                   ? ` - Fin estimado: ${new Date(obra.fechaFinEstimada).toLocaleDateString("es-AR")}`
                   : ""}
               </p>
-              <p className="mt-1 text-sm text-ink/50">
+              <p className="mt-1 text-sm text-ink-muted">
                 Estado: {obra.estado.replace(/_/g, " ")}
               </p>
             </div>
             <div className="text-right">
-              <p className="section-label text-ink/40">PROGRESO TOTAL</p>
+              <p className="section-label text-ink-faint">PROGRESO TOTAL</p>
               <p className="mt-2 font-heading text-5xl font-bold text-accent-strong">
                 {maxProgreso}%
               </p>
-              <p className="mt-1 text-sm text-ink/50">
+              <p className="mt-1 text-sm text-ink-muted">
                 Max de tus obras
               </p>
             </div>

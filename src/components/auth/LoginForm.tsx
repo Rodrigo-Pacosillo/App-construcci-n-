@@ -49,14 +49,14 @@ export function LoginForm({ callbackUrl }: { callbackUrl: string }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label htmlFor="email" className="section-label block text-ink/40">
+        <label htmlFor="email" className="section-label block text-ink-faint">
           Email
         </label>
         <input id="email" name="email" type="email" required className={INPUT_CLASS} />
       </div>
 
       <div>
-        <label htmlFor="password" className="section-label block text-ink/40">
+        <label htmlFor="password" className="section-label block text-ink-faint">
           Contraseña
         </label>
         <input id="password" name="password" type="password" required className={INPUT_CLASS} />
@@ -72,7 +72,7 @@ export function LoginForm({ callbackUrl }: { callbackUrl: string }) {
         {loading ? "Entrando..." : "Entrar"}
       </button>
 
-      <p className="text-center text-sm text-ink/50">
+      <p className="text-center text-sm text-ink-muted">
         ¿No tenés cuenta?{" "}
         <Link href="/registro" className="text-accent-strong hover:underline">
           Creá una

@@ -26,14 +26,14 @@ export default async function ClientContratosPage() {
   return (
     <div className="space-y-6">
       <div>
-        <p className="section-label mb-2 text-ink/40">CONTRATOS</p>
+        <p className="section-label mb-2 text-ink-faint">CONTRATOS</p>
         <h1 className="font-heading text-3xl font-bold">
           Mis contratos
         </h1>
       </div>
 
       {contratos.length === 0 ? (
-        <p className="py-12 text-center text-ink/50">
+        <p className="py-12 text-center text-ink-muted">
           No tenés contratos activos.
         </p>
       ) : (
@@ -45,11 +45,11 @@ export default async function ClientContratosPage() {
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="section-label text-ink/40">CONTRATO</p>
+                  <p className="section-label text-ink-faint">CONTRATO</p>
                   <h2 className="mt-1 font-heading text-lg font-bold">
                     {c.cotizacion?.tipoObra.replace(/_/g, " ") || "Obra sin cotización"}
                   </h2>
-                  <p className="mt-1 text-sm text-ink/50">
+                  <p className="mt-1 text-sm text-ink-muted">
                     {c.fechaFirma
                       ? `Firmado el ${new Date(c.fechaFirma).toLocaleDateString("es-AR")}`
                       : "Fecha de firma no registrada"}

@@ -27,7 +27,7 @@ export function CotizacionesLista({ cotizaciones }: { cotizaciones: Cotizacion[]
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="section-label mb-2 text-ink/40">COTIZACIONES</p>
+          <p className="section-label mb-2 text-ink-faint">COTIZACIONES</p>
           <h1 className="font-heading text-3xl font-bold">Mis cotizaciones</h1>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -38,7 +38,7 @@ export function CotizacionesLista({ cotizaciones }: { cotizaciones: Cotizacion[]
               className={`rounded px-3 py-1 text-xs font-medium transition-colors ${
                 filtro === filtroActual
                   ? "bg-ink text-white"
-                  : "bg-ink/5 text-ink/50"
+                  : "bg-ink/5 text-ink-muted"
               }`}
             >
               {filtroActual === "todos"
@@ -50,7 +50,7 @@ export function CotizacionesLista({ cotizaciones }: { cotizaciones: Cotizacion[]
       </div>
 
       {filtradas.length === 0 ? (
-        <p className="py-12 text-center text-ink/50">
+        <p className="py-12 text-center text-ink-muted">
           No tenés cotizaciones registradas.
         </p>
       ) : (
@@ -62,15 +62,15 @@ export function CotizacionesLista({ cotizaciones }: { cotizaciones: Cotizacion[]
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="section-label text-ink/40">COTIZACIÓN</p>
+                  <p className="section-label text-ink-faint">COTIZACIÓN</p>
                   <h2 className="mt-1 font-heading text-lg font-bold">
                     {c.tipoObra.replace(/_/g, " ")}
                   </h2>
-                  <p className="mt-1 text-sm text-ink/50">
+                  <p className="mt-1 text-sm text-ink-muted">
                     {c.tipoConstruccion.replace(/_/g, " ")} ·{" "}
                     {c.rangoM2.replace(/_/g, " ")}
                   </p>
-                  <p className="mt-1 text-sm text-ink/50">
+                  <p className="mt-1 text-sm text-ink-muted">
                     {c.ubicacionObra || "Ubicación no especificada"}
                   </p>
                 </div>

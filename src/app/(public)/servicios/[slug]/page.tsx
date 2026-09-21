@@ -60,7 +60,7 @@ export default async function ServicioPage({
       <div className="mx-auto max-w-3xl px-4 lg:px-8">
         <Link
           href="/servicios"
-          className="section-label text-ink/40 hover:text-ink"
+          className="section-label text-ink-faint hover:text-ink"
         >
           ← Servicios
         </Link>
@@ -69,13 +69,13 @@ export default async function ServicioPage({
           {servicio.titulo}
         </h1>
 
-        <p className="mt-6 text-lg text-ink/60">
+        <p className="mt-6 text-lg text-ink-muted">
           {servicio.descripcion}
         </p>
 
         <div className="mt-12 rounded border border-border bg-surface p-8">
-          <p className="section-label text-ink/40">¿POR QUÉ ELEGIRNOS?</p>
-          <ul className="mt-4 space-y-3 text-sm text-ink/60">
+          <p className="section-label text-ink-faint">¿POR QUÉ ELEGIRNOS?</p>
+          <ul className="mt-4 space-y-3 text-sm text-ink-muted">
             <li className="flex items-start gap-2">
               <span className="text-accent-strong">✓</span>
               Equipo con experiencia comprobada en construcción en seco

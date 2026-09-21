@@ -20,7 +20,7 @@ export async function TestimoniosSection() {
   return (
     <section className="py-16 lg:py-24 overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 lg:px-8">
-        <p className="section-label mb-4 text-ink/40">04 / TESTIMONIOS</p>
+        <p className="section-label mb-4 text-ink-faint">04 / TESTIMONIOS</p>
         <h2 className="font-heading text-4xl font-bold md:text-5xl">
           Qué dicen nuestros clientes
         </h2>

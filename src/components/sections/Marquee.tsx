@@ -31,7 +31,7 @@ export function Marquee() {
         {[...ESPECIALIDADES, ...ESPECIALIDADES].map((esp, i) => (
           <span
             key={i}
-            className="mx-8 section-label text-lg text-ink/70"
+            className="mx-8 section-label text-lg text-ink-muted"
           >
             {esp}
           </span>

@@ -15,11 +15,11 @@ export default async function AdminDashboard() {
   return (
     <div>
       <h1 className="font-heading text-3xl font-bold">Dashboard</h1>
-      <p className="mt-2 text-ink/50">Bienvenido, {session.user?.name || "Admin"}</p>
+      <p className="mt-2 text-ink-muted">Bienvenido, {session.user?.name || "Admin"}</p>
 
       {/* Embudo */}
       <div className="mt-8">
-        <p className="section-label mb-4 text-ink/40">EMBUDO DE COTIZACIONES</p>
+        <p className="section-label mb-4 text-ink-faint">EMBUDO DE COTIZACIONES</p>
         <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
           {estadosOrdenados.map((estado) => (
             <div
@@ -40,32 +40,32 @@ export default async function AdminDashboard() {
       {/* Stats */}
       <div className="mt-8 grid gap-4 sm:grid-cols-3">
         <div className="rounded border border-border bg-surface p-6">
-          <p className="section-label text-ink/40">TOTAL COTIZACIONES</p>
+          <p className="section-label text-ink-faint">TOTAL COTIZACIONES</p>
           <p className="mt-2 font-heading text-3xl font-bold">{stats.totalCotizaciones}</p>
         </div>
         <div className="rounded border border-border bg-surface p-6">
-          <p className="section-label text-ink/40">PROYECTOS</p>
+          <p className="section-label text-ink-faint">PROYECTOS</p>
           <p className="mt-2 font-heading text-3xl font-bold">{stats.proyectos}</p>
         </div>
         <div className="rounded border border-border bg-surface p-6">
-          <p className="section-label text-ink/40">TESTIMONIOS PUBLICADOS</p>
+          <p className="section-label text-ink-faint">TESTIMONIOS PUBLICADOS</p>
           <p className="mt-2 font-heading text-3xl font-bold">{stats.testimonios}</p>
         </div>
       </div>
 
       {/* Cotizaciones recientes */}
       <div className="mt-8">
-        <p className="section-label mb-4 text-ink/40">ULTIMAS COTIZACIONES</p>
+        <p className="section-label mb-4 text-ink-faint">ULTIMAS COTIZACIONES</p>
         <div className="rounded border border-border bg-surface">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="px-4 py-3 section-label text-ink/40">Cliente</th>
-                  <th className="px-4 py-3 section-label text-ink/40">Tipo</th>
-                  <th className="px-4 py-3 section-label text-ink/40">Origen</th>
-                  <th className="px-4 py-3 section-label text-ink/40">Estado</th>
-                  <th className="px-4 py-3 section-label text-ink/40">Fecha</th>
+                  <th className="px-4 py-3 section-label text-ink-faint">Cliente</th>
+                  <th className="px-4 py-3 section-label text-ink-faint">Tipo</th>
+                  <th className="px-4 py-3 section-label text-ink-faint">Origen</th>
+                  <th className="px-4 py-3 section-label text-ink-faint">Estado</th>
+                  <th className="px-4 py-3 section-label text-ink-faint">Fecha</th>
                 </tr>
               </thead>
               <tbody>
@@ -79,14 +79,14 @@ export default async function AdminDashboard() {
                         {ESTADO_LABELS[c.estado as keyof typeof ESTADO_LABELS] || c.estado}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-ink/40">
+                    <td className="px-4 py-3 text-ink-faint">
                       {new Date(c.creadoEn).toLocaleDateString("es-AR")}
                     </td>
                   </tr>
                 ))}
                 {cotizaciones.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-4 py-8 text-center text-ink/30">
+                    <td colSpan={5} className="px-4 py-8 text-center text-ink-faint">
                       No hay cotizaciones aun
                     </td>
                   </tr>

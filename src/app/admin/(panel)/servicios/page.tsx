@@ -14,7 +14,7 @@ export default async function ServiciosAdminPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-heading text-3xl font-bold">Servicios</h1>
-          <p className="mt-1 text-ink/50">{servicios.length} servicios en total</p>
+          <p className="mt-1 text-ink-muted">{servicios.length} servicios en total</p>
         </div>
       </div>
 

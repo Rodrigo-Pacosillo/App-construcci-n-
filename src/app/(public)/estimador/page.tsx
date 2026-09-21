@@ -82,11 +82,11 @@ export default function EstimadorPage() {
   return (
     <div className="py-24 lg:py-32">
       <div className="mx-auto max-w-2xl px-4 lg:px-8">
-        <p className="section-label mb-4 text-ink/40">ESTIMADOR</p>
+        <p className="section-label mb-4 text-ink-faint">ESTIMADOR</p>
         <h1 className="font-heading text-4xl font-bold md:text-5xl">
           Estimá tu obra
         </h1>
-        <p className="mt-4 text-ink/50">
+        <p className="mt-4 text-ink-muted">
           En 3 pasos tenés una referencia de costo por metro cuadrado.
         </p>
 
@@ -104,7 +104,7 @@ export default function EstimadorPage() {
 
         <div className="mt-12">
           {loading ? (
-            <p className="text-center text-ink/40">Cargando precios...</p>
+            <p className="text-center text-ink-faint">Cargando precios...</p>
           ) : paso < 2 ? (
             <>
               <h2 className="font-heading text-2xl font-bold">
@@ -128,7 +128,7 @@ export default function EstimadorPage() {
                       }`}
                     >
                       <p className="font-medium">{opt.label}</p>
-                      <p className="text-sm text-ink/40">{opt.desc}</p>
+                      <p className="text-sm text-ink-faint">{opt.desc}</p>
                     </button>
                   );
                 })}
@@ -148,24 +148,24 @@ export default function EstimadorPage() {
               </h2>
               {resultado && (
                 <div className="mt-6 rounded border border-border bg-surface p-8 text-center">
-                  <p className="section-label text-ink/40">
+                  <p className="section-label text-ink-faint">
                     {tipo === "seco" ? "STEEL FRAME" : "TRADICIONAL"} ·{" "}
                     {M2_LABELS[m2 || ""]}
                   </p>
                   <p className="mt-4 font-heading text-4xl font-bold text-accent-strong">
                     {formatCurrency(resultado.min)} - {formatCurrency(resultado.max)}
                   </p>
-                  <p className="mt-2 text-sm text-ink/40">
+                  <p className="mt-2 text-sm text-ink-faint">
                     Por metro cuadrado (referencia)
                   </p>
-                  <p className="mt-1 text-sm text-ink/40">
+                  <p className="mt-1 text-sm text-ink-faint">
                     Total estimado:{" "}
                     {formatCurrency(resultado.min * m2Num)} -{" "}
                     {formatCurrency(resultado.max * m2Num)}
                   </p>
                 </div>
               )}
-              <p className="mt-6 text-center text-sm text-ink/40">
+              <p className="mt-6 text-center text-sm text-ink-faint">
                 Esta estimación es orientativa. El precio final depende de
                 la complejidad, acabados y condiciones del terreno.
               </p>

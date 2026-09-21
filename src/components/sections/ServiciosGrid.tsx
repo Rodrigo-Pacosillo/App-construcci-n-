@@ -29,13 +29,13 @@ export function ServiciosGrid({ servicios }: { servicios: Servicio[] }) {
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_var(--mouse-x,50%)_var(--mouse-y,50%),rgba(255,179,0,0.06)_0%,transparent_50%)]" />
             </div>
 
-            <span className="relative section-label text-ink/20">
+            <span className="relative section-label text-ink-faint">
               {String(i + 1).padStart(2, "0")}
             </span>
             <h3 className="relative mt-3 font-heading text-xl font-bold">
               {servicio.titulo}
             </h3>
-            <p className="relative mt-2 text-sm text-ink/50 line-clamp-3">
+            <p className="relative mt-2 text-sm text-ink-muted line-clamp-3">
               {servicio.descripcion}
             </p>
             <span className="relative mt-4 inline-block text-xs text-accent-strong opacity-0 transition-opacity group-hover:opacity-100">

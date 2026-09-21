@@ -26,14 +26,14 @@ export default async function ClientProyectosPage() {
   return (
     <div className="space-y-6">
       <div>
-        <p className="section-label mb-2 text-ink/40">PROYECTOS</p>
+        <p className="section-label mb-2 text-ink-faint">PROYECTOS</p>
         <h1 className="font-heading text-3xl font-bold">
           Mis proyectos
         </h1>
       </div>
 
       {proyectos.length === 0 ? (
-        <p className="py-12 text-center text-ink/50">
+        <p className="py-12 text-center text-ink-muted">
           No tenés proyectos registrados.
         </p>
       ) : (

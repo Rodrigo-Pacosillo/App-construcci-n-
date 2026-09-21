@@ -92,7 +92,7 @@ export function PerfilForm({ inicial }: { inicial: PerfilInicial }) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <p className="section-label mb-2 text-ink/40">PERFIL</p>
+          <p className="section-label mb-2 text-ink-faint">PERFIL</p>
           <h1 className="font-heading text-3xl font-bold">Mis datos</h1>
         </div>
         <button
@@ -115,7 +115,7 @@ export function PerfilForm({ inicial }: { inicial: PerfilInicial }) {
             className={`px-4 py-2 text-sm font-medium transition-colors ${
               activeTab === tab
                 ? "bg-ink/5 text-ink"
-                : "text-ink/60 hover:bg-ink/5 hover:text-ink"
+                : "text-ink-muted hover:bg-ink/5 hover:text-ink"
             }`}
           >
             {tab === "datos" ? "Datos personales" : "Cambiar contraseña"}
@@ -126,7 +126,7 @@ export function PerfilForm({ inicial }: { inicial: PerfilInicial }) {
       {activeTab === "datos" && (
         <form onSubmit={handleUpdatePerfil} className="space-y-6">
           <div>
-            <label htmlFor="nombre" className="section-label block text-ink/40">
+            <label htmlFor="nombre" className="section-label block text-ink-faint">
               Nombre y apellido
             </label>
             <input
@@ -140,7 +140,7 @@ export function PerfilForm({ inicial }: { inicial: PerfilInicial }) {
           </div>
 
           <div>
-            <label htmlFor="whatsapp" className="section-label block text-ink/40">
+            <label htmlFor="whatsapp" className="section-label block text-ink-faint">
               WhatsApp
             </label>
             <input
@@ -155,7 +155,7 @@ export function PerfilForm({ inicial }: { inicial: PerfilInicial }) {
           </div>
 
           <div>
-            <label htmlFor="ciudad" className="section-label block text-ink/40">
+            <label htmlFor="ciudad" className="section-label block text-ink-faint">
               Ciudad (opcional)
             </label>
             <input
@@ -183,7 +183,7 @@ export function PerfilForm({ inicial }: { inicial: PerfilInicial }) {
       {activeTab === "password" && (
         <form onSubmit={handleChangePassword} className="space-y-6">
           <div>
-            <label htmlFor="password" className="section-label block text-ink/40">
+            <label htmlFor="password" className="section-label block text-ink-faint">
               Nueva contraseña
             </label>
             <input
@@ -198,7 +198,7 @@ export function PerfilForm({ inicial }: { inicial: PerfilInicial }) {
           </div>
 
           <div>
-            <label htmlFor="confirmPassword" className="section-label block text-ink/40">
+            <label htmlFor="confirmPassword" className="section-label block text-ink-faint">
               Confirmar contraseña
             </label>
             <input

@@ -18,11 +18,11 @@ export async function CertificacionesSection() {
   return (
     <section className="py-16 lg:py-24">
       <div className="mx-auto max-w-7xl px-4 lg:px-8">
-        <p className="section-label mb-4 text-ink/40">03 / CERTIFICACIONES</p>
+        <p className="section-label mb-4 text-ink-faint">03 / CERTIFICACIONES</p>
         <h2 className="font-heading text-4xl font-bold md:text-5xl">
           Confianza garantizada
         </h2>
-        <p className="mt-4 max-w-2xl text-ink/50">
+        <p className="mt-4 max-w-2xl text-ink-muted">
           Habilitaciones y seguros que respaldan cada obra.
         </p>
 
@@ -33,14 +33,14 @@ export async function CertificacionesSection() {
               className="flex flex-col rounded border border-border bg-surface p-6"
             >
               <div className="flex aspect-[4/3] items-center justify-center rounded border border-dashed border-ink/20 bg-ink/5">
-                <span className="section-label text-ink/30">
+                <span className="section-label text-ink-faint">
                   CERTIFICADO — IMAGEN
                 </span>
               </div>
               <h3 className="mt-4 font-heading text-lg font-bold">
                 {certificacion.titulo}
               </h3>
-              <p className="mt-2 text-sm text-ink/50">
+              <p className="mt-2 text-sm text-ink-muted">
                 {certificacion.descripcion}
               </p>
             </div>

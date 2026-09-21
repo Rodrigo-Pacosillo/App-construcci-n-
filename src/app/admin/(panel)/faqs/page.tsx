@@ -14,7 +14,7 @@ export default async function FaqsAdminPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-heading text-3xl font-bold">FAQs</h1>
-          <p className="mt-1 text-ink/50">{faqs.length} FAQs en total</p>
+          <p className="mt-1 text-ink-muted">{faqs.length} FAQs en total</p>
         </div>
       </div>
 

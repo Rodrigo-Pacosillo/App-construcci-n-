@@ -65,35 +65,35 @@ export function HeroBlueprint() {
         strokeWidth="1"
       >
         {/* Rieles */}
-        <line className="rail" x1="20" y1="280" x2="380" y2="280" strokeDasharray="400" strokeDashoffset="400" stroke="rgba(255,179,0,0.6)" />
-        <line className="rail" x1="20" y1="20" x2="380" y2="20" strokeDasharray="400" strokeDashoffset="400" stroke="rgba(255,179,0,0.6)" />
+        <line className="rail" x1="20" y1="280" x2="380" y2="280" strokeDasharray="400" strokeDashoffset="400" stroke="var(--bp-accent)" />
+        <line className="rail" x1="20" y1="20" x2="380" y2="20" strokeDasharray="400" strokeDashoffset="400" stroke="var(--bp-accent)" />
 
         {/* Parantes */}
-        <line className="stud" x1="20" y1="20" x2="20" y2="280" strokeDasharray="200" strokeDashoffset="200" stroke="rgba(255,255,255,0.4)" />
-        <line className="stud" x1="100" y1="20" x2="100" y2="280" strokeDasharray="200" strokeDashoffset="200" stroke="rgba(255,255,255,0.4)" />
-        <line className="stud" x1="180" y1="20" x2="180" y2="280" strokeDasharray="200" strokeDashoffset="200" stroke="rgba(255,255,255,0.4)" />
-        <line className="stud" x1="260" y1="20" x2="260" y2="280" strokeDasharray="200" strokeDashoffset="200" stroke="rgba(255,255,255,0.4)" />
-        <line className="stud" x1="340" y1="20" x2="340" y2="280" strokeDasharray="200" strokeDashoffset="200" stroke="rgba(255,255,255,0.4)" />
-        <line className="stud" x1="380" y1="20" x2="380" y2="280" strokeDasharray="200" strokeDashoffset="200" stroke="rgba(255,255,255,0.4)" />
+        <line className="stud" x1="20" y1="20" x2="20" y2="280" strokeDasharray="200" strokeDashoffset="200" stroke="var(--bp-stud)" />
+        <line className="stud" x1="100" y1="20" x2="100" y2="280" strokeDasharray="200" strokeDashoffset="200" stroke="var(--bp-stud)" />
+        <line className="stud" x1="180" y1="20" x2="180" y2="280" strokeDasharray="200" strokeDashoffset="200" stroke="var(--bp-stud)" />
+        <line className="stud" x1="260" y1="20" x2="260" y2="280" strokeDasharray="200" strokeDashoffset="200" stroke="var(--bp-stud)" />
+        <line className="stud" x1="340" y1="20" x2="340" y2="280" strokeDasharray="200" strokeDashoffset="200" stroke="var(--bp-stud)" />
+        <line className="stud" x1="380" y1="20" x2="380" y2="280" strokeDasharray="200" strokeDashoffset="200" stroke="var(--bp-stud)" />
 
         {/* Dinteles */}
-        <line className="header" x1="180" y1="80" x2="260" y2="80" strokeDasharray="300" strokeDashoffset="300" stroke="rgba(255,179,0,0.4)" />
-        <line className="header" x1="180" y1="200" x2="260" y2="200" strokeDasharray="300" strokeDashoffset="300" stroke="rgba(255,179,0,0.4)" />
+        <line className="header" x1="180" y1="80" x2="260" y2="80" strokeDasharray="300" strokeDashoffset="300" stroke="var(--bp-accent)" />
+        <line className="header" x1="180" y1="200" x2="260" y2="200" strokeDasharray="300" strokeDashoffset="300" stroke="var(--bp-accent)" />
 
-        {/* Paños (aislación) */}
-        <rect className="panel" x="25" y="25" width="70" height="250" fill="rgba(255,179,0,0.08)" opacity="0" />
-        <rect className="panel" x="105" y="25" width="70" height="250" fill="rgba(255,179,0,0.08)" opacity="0" />
-        <rect className="panel" x="265" y="25" width="70" height="250" fill="rgba(255,179,0,0.08)" opacity="0" />
-        <rect className="panel" x="345" y="25" width="30" height="250" fill="rgba(255,179,0,0.08)" opacity="0" />
+         {/* Paños (aislación) */}
+        <rect className="panel" x="25" y="25" width="70" height="250" fill="var(--bp-panel)" opacity="0" />
+        <rect className="panel" x="105" y="25" width="70" height="250" fill="var(--bp-panel)" opacity="0" />
+        <rect className="panel" x="265" y="25" width="70" height="250" fill="var(--bp-panel)" opacity="0" />
+        <rect className="panel" x="345" y="25" width="30" height="250" fill="var(--bp-panel)" opacity="0" />
 
         {/* Placas */}
-        <rect className="plate" x="25" y="25" width="70" height="250" fill="rgba(255,255,255,0.05)" opacity="0" />
-        <rect className="plate" x="105" y="25" width="70" height="250" fill="rgba(255,255,255,0.05)" opacity="0" />
-        <rect className="plate" x="265" y="25" width="70" height="250" fill="rgba(255,255,255,0.05)" opacity="0" />
-        <rect className="plate" x="345" y="25" width="30" height="250" fill="rgba(255,255,255,0.05)" opacity="0" />
+        <rect className="plate" x="25" y="25" width="70" height="250" fill="var(--bp-plate)" opacity="0" />
+        <rect className="plate" x="105" y="25" width="70" height="250" fill="var(--bp-plate)" opacity="0" />
+        <rect className="plate" x="265" y="25" width="70" height="250" fill="var(--bp-plate)" opacity="0" />
+        <rect className="plate" x="345" y="25" width="30" height="250" fill="var(--bp-plate)" opacity="0" />
 
         {/* Ventana */}
-        <rect className="window-glow" x="185" y="85" width="70" height="110" fill="rgba(255,179,0,0.3)" opacity="0" rx="2" />
+        <rect className="window-glow" x="185" y="85" width="70" height="110" fill="var(--bp-glow)" opacity="0" rx="2" />
       </svg>
     </div>
   );

@@ -22,7 +22,7 @@ export async function FaqSection() {
   return (
     <section className="py-24 lg:py-32">
       <div className="mx-auto max-w-3xl px-4 lg:px-8">
-        <p className="section-label mb-4 text-ink/40">05 / PREGUNTAS FRECUENTES</p>
+        <p className="section-label mb-4 text-ink-faint">05 / PREGUNTAS FRECUENTES</p>
         <h2 className="font-heading text-4xl font-bold md:text-5xl">
           FAQ
         </h2>
@@ -35,9 +35,9 @@ export async function FaqSection() {
             >
               <summary className="cursor-pointer px-6 py-4 text-sm font-medium list-none flex items-center justify-between">
                 {sanitizeHTML(faq.pregunta)}
-                <span className="text-ink/30 transition-transform group-open:rotate-45">+</span>
+                <span className="text-ink-faint transition-transform group-open:rotate-45">+</span>
               </summary>
-              <div className="border-t border-border px-6 py-4 text-sm text-ink/60">
+              <div className="border-t border-border px-6 py-4 text-sm text-ink-muted">
                 {sanitizeHTML(faq.respuesta)}
               </div>
             </details>

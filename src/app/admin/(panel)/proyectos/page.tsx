@@ -14,7 +14,7 @@ export default async function ProyectosAdminPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-heading text-3xl font-bold">Proyectos</h1>
-          <p className="mt-1 text-ink/50">{proyectos.length} proyectos en total</p>
+          <p className="mt-1 text-ink-muted">{proyectos.length} proyectos en total</p>
         </div>
       </div>
 

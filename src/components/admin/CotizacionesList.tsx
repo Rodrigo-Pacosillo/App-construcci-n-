@@ -38,7 +38,7 @@ export function CotizacionesList({ cotizaciones }: { cotizaciones: Cotizacion[] 
         <button
           onClick={() => setFiltro("todos")}
           className={`rounded px-3 py-1 text-xs font-medium ${
-            filtro === "todos" ? "bg-ink text-white" : "bg-ink/5 text-ink/50"
+            filtro === "todos" ? "bg-ink text-white" : "bg-ink/5 text-ink-muted"
           }`}
         >
           Todos ({cotizaciones.length})
@@ -50,7 +50,7 @@ export function CotizacionesList({ cotizaciones }: { cotizaciones: Cotizacion[] 
               key={estado}
               onClick={() => setFiltro(estado)}
               className={`rounded px-3 py-1 text-xs font-medium ${
-                filtro === estado ? "bg-ink text-white" : "bg-ink/5 text-ink/50"
+                filtro === estado ? "bg-ink text-white" : "bg-ink/5 text-ink-muted"
               }`}
             >
               {ESTADO_LABELS[estado]} ({count})
@@ -65,13 +65,13 @@ export function CotizacionesList({ cotizaciones }: { cotizaciones: Cotizacion[] 
           <table className="w-full text-left text-sm">
             <thead>
               <tr className="border-b border-border">
-                <th className="px-4 py-3 section-label text-ink/40">Cliente</th>
-                <th className="px-4 py-3 section-label text-ink/40">Tipo</th>
-                <th className="px-4 py-3 section-label text-ink/40">M2</th>
-                <th className="px-4 py-3 section-label text-ink/40">Origen</th>
-                <th className="px-4 py-3 section-label text-ink/40">Estado</th>
-                <th className="px-4 py-3 section-label text-ink/40">Monto</th>
-                <th className="px-4 py-3 section-label text-ink/40">Acciones</th>
+                <th className="px-4 py-3 section-label text-ink-faint">Cliente</th>
+                <th className="px-4 py-3 section-label text-ink-faint">Tipo</th>
+                <th className="px-4 py-3 section-label text-ink-faint">M2</th>
+                <th className="px-4 py-3 section-label text-ink-faint">Origen</th>
+                <th className="px-4 py-3 section-label text-ink-faint">Estado</th>
+                <th className="px-4 py-3 section-label text-ink-faint">Monto</th>
+                <th className="px-4 py-3 section-label text-ink-faint">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -79,11 +79,11 @@ export function CotizacionesList({ cotizaciones }: { cotizaciones: Cotizacion[] 
                 <tr key={c.id} className="border-b border-border last:border-0">
                   <td className="px-4 py-3">
                     <p className="font-medium">{c.cliente?.nombre || "—"}</p>
-                    <p className="text-xs text-ink/40">{c.cliente?.whatsapp}</p>
+                    <p className="text-xs text-ink-faint">{c.cliente?.whatsapp}</p>
                   </td>
-                  <td className="px-4 py-3 capitalize text-ink/60">{c.tipoObra.replace("_", " ")}</td>
-                  <td className="px-4 py-3 text-ink/60">{c.rangoM2.replace("m", "").replace("_", "-").replace("mas", "+")} m2</td>
-                  <td className="px-4 py-3 capitalize text-ink/60">{c.origen}</td>
+                  <td className="px-4 py-3 capitalize text-ink-muted">{c.tipoObra.replace("_", " ")}</td>
+                  <td className="px-4 py-3 text-ink-muted">{c.rangoM2.replace("m", "").replace("_", "-").replace("mas", "+")} m2</td>
+                  <td className="px-4 py-3 capitalize text-ink-muted">{c.origen}</td>
                   <td className="px-4 py-3">
                     <select
                       value={c.estado}
@@ -96,19 +96,19 @@ export function CotizacionesList({ cotizaciones }: { cotizaciones: Cotizacion[] 
                       ))}
                     </select>
                   </td>
-                  <td className="px-4 py-3 text-ink/60">
+                  <td className="px-4 py-3 text-ink-muted">
                     {c.montoEstimado
                       ? `$${c.montoEstimado.toLocaleString("es-AR")}`
                       : "—"}
                   </td>
                   <td className="px-4 py-3">
-                    <span className="text-xs text-ink/30">{c.ubicacionObra || "—"}</span>
+                    <span className="text-xs text-ink-faint">{c.ubicacionObra || "—"}</span>
                   </td>
                 </tr>
               ))}
               {filtradas.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-ink/30">
+                  <td colSpan={7} className="px-4 py-8 text-center text-ink-faint">
                     No hay cotizaciones
                   </td>
                 </tr>

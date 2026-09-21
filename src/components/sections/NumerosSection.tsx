@@ -46,7 +46,7 @@ export function NumerosSection() {
   return (
     <section className="py-16 lg:py-24">
       <div className="mx-auto max-w-7xl px-4 lg:px-8">
-        <p className="section-label mb-4 text-ink/40">05 / RESULTADOS</p>
+        <p className="section-label mb-4 text-ink-faint">05 / RESULTADOS</p>
         <h2 className="font-heading text-4xl font-bold md:text-5xl">
           Nuestros resultados
         </h2>
@@ -57,7 +57,7 @@ export function NumerosSection() {
               <p className="font-heading text-5xl font-bold text-accent-strong">
                 <AnimatedNumber value={num.valor} suffix={num.sufijo} />
               </p>
-              <p className="mt-2 section-label text-ink/40">{num.label}</p>
+              <p className="mt-2 section-label text-ink-faint">{num.label}</p>
             </div>
           ))}
         </div>

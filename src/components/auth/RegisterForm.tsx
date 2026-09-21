@@ -48,14 +48,14 @@ export function RegisterForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label htmlFor="nombre" className="section-label block text-ink/40">
+        <label htmlFor="nombre" className="section-label block text-ink-faint">
           Nombre y apellido
         </label>
         <input id="nombre" name="nombre" type="text" required className={INPUT_CLASS} />
       </div>
 
       <div>
-        <label htmlFor="whatsapp" className="section-label block text-ink/40">
+        <label htmlFor="whatsapp" className="section-label block text-ink-faint">
           WhatsApp
         </label>
         <input
@@ -69,21 +69,21 @@ export function RegisterForm() {
       </div>
 
       <div>
-        <label htmlFor="email" className="section-label block text-ink/40">
+        <label htmlFor="email" className="section-label block text-ink-faint">
           Email
         </label>
         <input id="email" name="email" type="email" required className={INPUT_CLASS} />
       </div>
 
       <div>
-        <label htmlFor="ciudad" className="section-label block text-ink/40">
+        <label htmlFor="ciudad" className="section-label block text-ink-faint">
           Ciudad (opcional)
         </label>
         <input id="ciudad" name="ciudad" type="text" className={INPUT_CLASS} />
       </div>
 
       <div>
-        <label htmlFor="password" className="section-label block text-ink/40">
+        <label htmlFor="password" className="section-label block text-ink-faint">
           Contraseña
         </label>
         <input
@@ -97,7 +97,7 @@ export function RegisterForm() {
       </div>
 
       <div>
-        <label htmlFor="confirmPassword" className="section-label block text-ink/40">
+        <label htmlFor="confirmPassword" className="section-label block text-ink-faint">
           Repetir contraseña
         </label>
         <input
@@ -120,7 +120,7 @@ export function RegisterForm() {
         {loading ? "Creando cuenta..." : "Crear cuenta"}
       </button>
 
-      <p className="text-center text-sm text-ink/50">
+      <p className="text-center text-sm text-ink-muted">
         ¿Ya tenés cuenta?{" "}
         <Link href="/login" className="text-accent-strong hover:underline">
           Ingresá

@@ -37,11 +37,11 @@ export default async function ServiciosPage() {
   return (
     <div className="py-24 lg:py-32">
       <div className="mx-auto max-w-7xl px-4 lg:px-8">
-        <p className="section-label mb-4 text-ink/40">SERVICIOS</p>
+        <p className="section-label mb-4 text-ink-faint">SERVICIOS</p>
         <h1 className="font-heading text-4xl font-bold md:text-5xl">
           Nuestros servicios
         </h1>
-        <p className="mt-4 max-w-2xl text-ink/50">
+        <p className="mt-4 max-w-2xl text-ink-muted">
           Ofrecemos soluciones completas en construcción en seco.
           Cada servicio está respaldado por años de experiencia.
         </p>
@@ -53,13 +53,13 @@ export default async function ServiciosPage() {
               href={`/servicios/${servicio.slug}`}
               className="group rounded border border-border bg-surface p-8 transition-colors hover:border-accent"
             >
-              <span className="section-label text-ink/20">
+              <span className="section-label text-ink-faint">
                 {String(i + 1).padStart(2, "0")}
               </span>
               <h2 className="mt-4 font-heading text-2xl font-bold">
                 {servicio.titulo}
               </h2>
-              <p className="mt-3 text-sm text-ink/50">
+              <p className="mt-3 text-sm text-ink-muted">
                 {servicio.descripcion}
               </p>
               <span className="mt-6 inline-block text-xs text-accent-strong opacity-0 transition-opacity group-hover:opacity-100">

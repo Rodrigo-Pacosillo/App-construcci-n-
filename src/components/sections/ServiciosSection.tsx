@@ -20,7 +20,7 @@ export async function ServiciosSection() {
   return (
     <section className="py-16 lg:py-24">
       <div className="mx-auto max-w-7xl px-4 lg:px-8">
-        <p className="section-label mb-4 text-ink/40">01 / SERVICIOS</p>
+        <p className="section-label mb-4 text-ink-faint">01 / SERVICIOS</p>
         <h2 className="font-heading text-4xl font-bold md:text-5xl">
           Lo que hacemos
         </h2>

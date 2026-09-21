@@ -14,7 +14,7 @@ export default async function CotizacionesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-heading text-3xl font-bold">Cotizaciones</h1>
-          <p className="mt-1 text-ink/50">{cotizaciones.length} cotizaciones en total</p>
+          <p className="mt-1 text-ink-muted">{cotizaciones.length} cotizaciones en total</p>
         </div>
       </div>
 

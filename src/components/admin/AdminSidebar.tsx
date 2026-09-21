@@ -33,10 +33,10 @@ const ICONS: Record<string, LucideIcon> = {
 function SidebarFooter({ email }: { email: string }) {
   return (
     <div className="border-t border-border p-4">
-      <p className="truncate text-xs text-ink/40">{email}</p>
+      <p className="truncate text-xs text-ink-faint">{email}</p>
       <button
         onClick={() => signOut({ callbackUrl: "/" })}
-        className="mt-2 flex w-full items-center gap-3 rounded px-3 py-2 text-sm text-ink/60 transition-colors hover:bg-ink/5 hover:text-ink"
+        className="mt-2 flex w-full items-center gap-3 rounded px-3 py-2 text-sm text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink"
       >
         <LogOut className="h-4 w-4 shrink-0" />
         Salir
@@ -87,7 +87,7 @@ export function AdminSidebar({ email }: { email: string }) {
                     key={item.href}
                     href={item.href}
                     onClick={() => setOpen(false)}
-                    className="flex items-center gap-3 rounded px-3 py-2 text-sm text-ink/60 transition-colors hover:bg-ink/5 hover:text-ink"
+                    className="flex items-center gap-3 rounded px-3 py-2 text-sm text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink"
                   >
                     {Icon && <Icon className="h-4 w-4 shrink-0" />}
                     {item.label}
@@ -116,7 +116,7 @@ export function AdminSidebar({ email }: { email: string }) {
               <Link
                 key={item.href}
                 href={item.href}
-                className="flex items-center gap-3 rounded px-3 py-2 text-sm text-ink/60 transition-colors hover:bg-ink/5 hover:text-ink"
+                className="flex items-center gap-3 rounded px-3 py-2 text-sm text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink"
               >
                 {Icon && <Icon className="h-4 w-4 shrink-0" />}
                 {item.label}

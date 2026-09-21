@@ -16,6 +16,8 @@
   /* Ink — semantic alias used by most components
      (text-ink, text-ink/40, bg-ink/5, border-ink/*) */
   --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
 
   /* Dark theme */
   --color-background-dark: var(--bg-dark);
@@ -36,12 +38,26 @@
 }
 
 :root {
-  /* Light */
+  /* Light — printed plan */
   --bg: #FAFAF8;
   --ink: #17181A;
+  --ink-muted: #33363B;
+  --ink-faint: #56595F;
   --surface: #FFFFFF;
   --border-color: #DDD8CF;
   --accent-strong: #B45309;
+
+  /* Blocks — rotate with theme (light: paper, dark: blueprint) */
+  --block-bg: var(--bg);
+  --block-radial: radial-gradient(ellipse at 50% 50%, rgba(255, 179, 0, 0.02) 0%, transparent 70%);
+
+  /* Blueprint drawing — light variant */
+  --bp-stud: rgba(38, 39, 43, 0.45);
+  --bp-accent: rgba(180, 83, 9, 0.55);
+  --bp-panel: rgba(180, 83, 9, 0.1);
+  --bp-plate: rgba(38, 39, 43, 0.05);
+  --bp-glow: rgba(180, 83, 9, 0.35);
+  --bp-grid: rgba(38, 39, 43, 0.1);
 
   /* Dark */
   --bg-dark: #0F1013;
@@ -53,15 +69,31 @@
 .dark {
   --bg: #0F1013;
   --ink: #F2F1EC;
+  --ink-muted: #A6A6A3;
+  --ink-faint: #8F8F8A;
   --surface: #15171B;
   --border-color: #23262B;
   --accent-strong: #FFB300;
+
+  /* Blocks — dark blueprint */
+  --block-bg: #0C0D10;
+  --block-radial: radial-gradient(ellipse at 50% 50%, rgba(255, 179, 0, 0.035) 0%, transparent 70%);
+
+  /* Blueprint drawing — dark variant */
+  --bp-stud: rgba(255, 255, 255, 0.4);
+  --bp-accent: rgba(255, 179, 0, 0.6);
+  --bp-panel: rgba(255, 179, 0, 0.08);
+  --bp-plate: rgba(255, 255, 255, 0.05);
+  --bp-glow: rgba(255, 179, 0, 0.3);
+  --bp-grid: rgba(255, 255, 255, 0.1);
 }
 
-/* Always-dark blocks (hero, footer, portfolio) */
+/* Blocks — theme-aware (light: printed plan; dark: dark blueprint).
+   `block-dark` is kept as an alias for contexts that need it. */
+.block,
 .block-dark {
-  background-color: #0C0D10;
-  background-image: radial-gradient(ellipse at 50% 50%, rgba(255, 179, 0, 0.035) 0%, transparent 70%);
+  background-color: var(--block-bg);
+  background-image: var(--block-radial);
 }
 
 /* Accent button */

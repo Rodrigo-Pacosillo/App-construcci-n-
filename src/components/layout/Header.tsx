@@ -22,7 +22,7 @@ export function Header() {
             <Link
               key={item.href}
               href={item.href}
-              className="section-label text-ink/60 transition-colors hover:text-ink"
+              className="section-label text-ink-muted transition-colors hover:text-ink"
             >
               {item.label}
             </Link>
@@ -32,7 +32,7 @@ export function Header() {
         <div className="flex items-center gap-3">
           <Link
             href="/login"
-            className="section-label hidden text-ink/60 transition-colors hover:text-ink md:inline"
+            className="section-label hidden text-ink-muted transition-colors hover:text-ink md:inline"
           >
             Ingreso
           </Link>
@@ -63,7 +63,7 @@ export function Header() {
               key={item.href}
               href={item.href}
               onClick={() => setMobileOpen(false)}
-              className="block py-2 section-label text-ink/60 transition-colors hover:text-ink"
+              className="block py-2 section-label text-ink-muted transition-colors hover:text-ink"
             >
               {item.label}
             </Link>

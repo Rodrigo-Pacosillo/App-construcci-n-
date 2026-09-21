@@ -59,8 +59,8 @@ export default async function ClientObraPage() {
   if (!obra) {
     return (
       <div className="py-12 text-center">
-        <p className="section-label text-ink/40">OBRA ACTIVA</p>
-        <p className="mt-4 text-ink/50">
+        <p className="section-label text-ink-faint">OBRA ACTIVA</p>
+        <p className="mt-4 text-ink-muted">
           No tenés una obra activa registrada.
         </p>
         <Link
@@ -89,14 +89,14 @@ export default async function ClientObraPage() {
       <div className="rounded border border-border bg-surface p-6">
         <div className="flex items-start justify-between">
           <div>
-            <p className="section-label text-ink/40">OBRA ACTIVA</p>
+            <p className="section-label text-ink-faint">OBRA ACTIVA</p>
             <h1 className="mt-1 font-heading text-2xl font-bold">
               {obra.direccionObra}
             </h1>
-            <p className="mt-2 text-sm text-ink/50">
+            <p className="mt-2 text-sm text-ink-muted">
               Contrato #{obra.contrato?.id.slice(0, 8)} · Plazo: {totalDiasEstimados} días
             </p>
-            <p className="mt-1 text-sm text-ink/50">
+            <p className="mt-1 text-sm text-ink-muted">
               Estado: {obra.estado.replace(/_/g, " ")}
             </p>
           </div>
@@ -105,7 +105,7 @@ export default async function ClientObraPage() {
             <p className="mt-1 font-heading text-4xl font-bold text-accent-strong">
               {obra.progreso}%
             </p>
-            <p className="mt-1 text-sm text-ink/50">
+            <p className="mt-1 text-sm text-ink-muted">
               Inicio: {formatDate(fechaInicio)}
             </p>
           </div>
@@ -115,16 +115,16 @@ export default async function ClientObraPage() {
       {contrato && (
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="rounded border border-border bg-surface p-6">
-            <p className="section-label text-ink/40">CONTRATO</p>
+            <p className="section-label text-ink-faint">CONTRATO</p>
             <p className="mt-2 font-heading text-lg font-bold">
               Acordado: ${Number(contrato.montoTotal).toLocaleString("es-AR")}
             </p>
-            <p className="mt-1 text-sm text-ink/50">
+            <p className="mt-1 text-sm text-ink-muted">
               {formatDate(contrato.fechaFirma)}
             </p>
           </div>
           <div className="rounded border border-border bg-surface p-6">
-            <p className="section-label text-ink/40">UBICACIÓN</p>
+            <p className="section-label text-ink-faint">UBICACIÓN</p>
             <p className="mt-2 text-ink/90">{obra.direccionObra}</p>
           </div>
         </div>
@@ -134,8 +134,8 @@ export default async function ClientObraPage() {
         <div className="space-y-6">
           <div>
             <div className="flex items-center justify-between">
-              <p className="section-label text-ink/40">HITOS</p>
-              <p className="text-sm text-ink/50">{hitos.length} registrados</p>
+              <p className="section-label text-ink-faint">HITOS</p>
+              <p className="text-sm text-ink-muted">{hitos.length} registrados</p>
             </div>
             <div className="mt-6 relative">
               <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-ink/10" />
@@ -159,8 +159,8 @@ export default async function ClientObraPage() {
                           )}
                         </div>
                       </div>
-                      <p className="mt-1 text-sm text-ink/60">{h.descripcion}</p>
-                      <p className="mt-2 text-xs text-ink/40">{formatDate(h.fecha)}</p>
+                      <p className="mt-1 text-sm text-ink-muted">{h.descripcion}</p>
+                      <p className="mt-2 text-xs text-ink-faint">{formatDate(h.fecha)}</p>
                     </div>
                   </div>
                 ))}
@@ -172,7 +172,7 @@ export default async function ClientObraPage() {
 
       {pagos.length > 0 && (
         <div className="space-y-4">
-          <p className="section-label text-ink/40">PAGOS</p>
+          <p className="section-label text-ink-faint">PAGOS</p>
           <div className="space-y-3">
             {pagos.map((p) => (
               <div
@@ -181,13 +181,13 @@ export default async function ClientObraPage() {
               >
                 <div>
                   <p className="font-heading font-medium">{p.concepto}</p>
-                  <p className="text-sm text-ink/50">{formatDate(p.fecha)}</p>
+                  <p className="text-sm text-ink-muted">{formatDate(p.fecha)}</p>
                 </div>
                 <div className="text-right">
                   <p className="font-heading text-lg font-bold">
                     ${Number(p.monto).toLocaleString("es-AR")}
                   </p>
-                  <span className="inline-flex items-center gap-1 text-xs text-ink/60">
+                  <span className="inline-flex items-center gap-1 text-xs text-ink-muted">
                     {p.estado === "confirmado" ? (
                       <>
                         <CheckCircle className="h-3 w-3" />

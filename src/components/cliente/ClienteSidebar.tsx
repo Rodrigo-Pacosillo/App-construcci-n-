@@ -32,7 +32,7 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
             key={item.id}
             href={item.href}
             onClick={onNavigate}
-            className="flex items-center gap-3 rounded px-3 py-2 text-sm text-ink/60 transition-colors hover:bg-ink/5 hover:text-ink"
+            className="flex items-center gap-3 rounded px-3 py-2 text-sm text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink"
           >
             <Icon className="h-4 w-4 shrink-0" />
             {item.label}
@@ -71,10 +71,10 @@ export function ClienteSidebar({ email }: { email: string }) {
           <NavLinks />
         </nav>
         <div className="shrink-0 border-t border-border p-4">
-          <p className="truncate text-xs text-ink/40">{email}</p>
+          <p className="truncate text-xs text-ink-faint">{email}</p>
           <button
             onClick={() => signOut({ callbackUrl: "/" })}
-            className="mt-2 flex w-full items-center gap-3 rounded px-3 py-2 text-sm text-ink/60 transition-colors hover:bg-ink/5 hover:text-ink"
+            className="mt-2 flex w-full items-center gap-3 rounded px-3 py-2 text-sm text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink"
           >
             <LogOut className="h-4 w-4 shrink-0" />
             Salir
@@ -101,13 +101,13 @@ export function ClienteSidebar({ email }: { email: string }) {
             <NavLinks onNavigate={() => setOpen(false)} />
           </div>
           <div className="shrink-0 border-t border-border p-4">
-            <p className="truncate text-xs text-ink/40">{email}</p>
+            <p className="truncate text-xs text-ink-faint">{email}</p>
             <button
               onClick={() => {
                 signOut({ callbackUrl: "/" });
                 setOpen(false);
               }}
-              className="mt-2 flex w-full items-center gap-3 rounded px-3 py-2 text-sm text-ink/60 transition-colors hover:bg-ink/5 hover:text-ink"
+              className="mt-2 flex w-full items-center gap-3 rounded px-3 py-2 text-sm text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink"
             >
               <LogOut className="h-4 w-4 shrink-0" />
               Salir

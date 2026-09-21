@@ -103,19 +103,19 @@ export function ServiciosList({ servicios }: { servicios: Servicio[] }) {
           <table className="w-full text-left text-sm">
             <thead>
               <tr className="border-b border-border">
-                <th className="px-4 py-3 section-label text-ink/40">Orden</th>
-                <th className="px-4 py-3 section-label text-ink/40">Titulo</th>
-                <th className="px-4 py-3 section-label text-ink/40">Slug</th>
-                <th className="px-4 py-3 section-label text-ink/40">Activo</th>
-                <th className="px-4 py-3 section-label text-ink/40">Acciones</th>
+                <th className="px-4 py-3 section-label text-ink-faint">Orden</th>
+                <th className="px-4 py-3 section-label text-ink-faint">Titulo</th>
+                <th className="px-4 py-3 section-label text-ink-faint">Slug</th>
+                <th className="px-4 py-3 section-label text-ink-faint">Activo</th>
+                <th className="px-4 py-3 section-label text-ink-faint">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {servicios.map((s) => (
                 <tr key={s.id} className="border-b border-border last:border-0">
-                  <td className="px-4 py-3 text-ink/40">{s.orden}</td>
+                  <td className="px-4 py-3 text-ink-faint">{s.orden}</td>
                   <td className="px-4 py-3 font-medium">{s.titulo}</td>
-                  <td className="px-4 py-3 text-ink/40">{s.slug}</td>
+                  <td className="px-4 py-3 text-ink-faint">{s.slug}</td>
                   <td className="px-4 py-3">
                     <button
                       type="button"
@@ -145,7 +145,7 @@ export function ServiciosList({ servicios }: { servicios: Servicio[] }) {
               ))}
               {servicios.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-ink/30">
+                  <td colSpan={5} className="px-4 py-8 text-center text-ink-faint">
                     No hay servicios aun
                   </td>
                 </tr>

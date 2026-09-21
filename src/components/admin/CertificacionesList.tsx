@@ -117,12 +117,12 @@ export function CertificacionesList({
           <table className="w-full text-left text-sm">
             <thead>
               <tr className="border-b border-border">
-                <th className="px-4 py-3 section-label text-ink/40">Título</th>
-                <th className="px-4 py-3 section-label text-ink/40">
+                <th className="px-4 py-3 section-label text-ink-faint">Título</th>
+                <th className="px-4 py-3 section-label text-ink-faint">
                   Descripción
                 </th>
-                <th className="px-4 py-3 section-label text-ink/40">Activo</th>
-                <th className="px-4 py-3 section-label text-ink/40">
+                <th className="px-4 py-3 section-label text-ink-faint">Activo</th>
+                <th className="px-4 py-3 section-label text-ink-faint">
                   Acciones
                 </th>
               </tr>
@@ -136,7 +136,7 @@ export function CertificacionesList({
                   <td className="max-w-xs px-4 py-3 font-medium line-clamp-1">
                     {c.titulo}
                   </td>
-                  <td className="max-w-md px-4 py-3 text-ink/60 line-clamp-2">
+                  <td className="max-w-md px-4 py-3 text-ink-muted line-clamp-2">
                     {c.descripcion}
                   </td>
                   <td className="px-4 py-3">
@@ -183,7 +183,7 @@ export function CertificacionesList({
                 <tr>
                   <td
                     colSpan={4}
-                    className="px-4 py-8 text-center text-ink/30"
+                    className="px-4 py-8 text-center text-ink-faint"
                   >
                     No hay certificaciones aún
                   </td>

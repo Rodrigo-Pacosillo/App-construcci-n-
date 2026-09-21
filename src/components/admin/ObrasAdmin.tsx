@@ -85,10 +85,10 @@ function ProgresoEditor({
         }}
         className="w-20 rounded border border-border bg-background px-2 py-1 text-sm outline-none focus:border-accent"
       />
-      <button onClick={() => onSave(val)} className="text-xs text-ink/60 hover:underline">
+      <button onClick={() => onSave(val)} className="text-xs text-ink-muted hover:underline">
         OK
       </button>
-      <button onClick={onCancel} className="text-xs text-ink/40 hover:underline">
+      <button onClick={onCancel} className="text-xs text-ink-faint hover:underline">
         Cancelar
       </button>
     </span>
@@ -261,7 +261,7 @@ export function ObrasAdmin({
 
       <div className="space-y-4">
         {obras.length === 0 && (
-          <div className="rounded border border-border bg-surface p-8 text-center text-ink/30">
+          <div className="rounded border border-border bg-surface p-8 text-center text-ink-faint">
             No hay obras registradas
           </div>
         )}
@@ -284,7 +284,7 @@ export function ObrasAdmin({
                     {ESTADO_OBRA_LABELS[obra.estado]}
                   </span>
                 </div>
-                <p className="mt-1 text-sm text-ink/50">
+                <p className="mt-1 text-sm text-ink-muted">
                   {obra.cliente?.nombre ?? "Sin cliente"} · Desde{" "}
                   {fmtFecha(obra.fechaInicio)}
                   {obra.fechaFinEstimada
@@ -299,7 +299,7 @@ export function ObrasAdmin({
                 <span className="text-2xl font-bold text-accent-strong">
                   {obra.progreso}%
                 </span>
-                <span className="text-ink/40">{expanded === obra.id ? "▾" : "▸"}</span>
+                <span className="text-ink-faint">{expanded === obra.id ? "▾" : "▸"}</span>
               </div>
             </button>
 
@@ -307,7 +307,7 @@ export function ObrasAdmin({
               <div className="border-t border-border p-4 space-y-6">
                 {/* Edición rápida */}
                 <div className="flex flex-wrap items-center gap-3">
-                  <label className="section-label text-ink/40 text-xs">
+                  <label className="section-label text-ink-faint text-xs">
                     Estado
                   </label>
                   <select
@@ -332,7 +332,7 @@ export function ObrasAdmin({
                   ) : (
                     <button
                       onClick={() => setProgresoEdit(obra.id)}
-                      className="rounded bg-ink/5 px-2 py-1 text-xs text-ink/60 hover:text-ink"
+                      className="rounded bg-ink/5 px-2 py-1 text-xs text-ink-muted hover:text-ink"
                     >
                       Progreso: {obra.progreso}% ✎
                     </button>
@@ -350,12 +350,12 @@ export function ObrasAdmin({
                 {/* Hitos */}
                 <div>
                   <div className="flex items-center justify-between">
-                    <p className="section-label text-ink/40">
+                    <p className="section-label text-ink-faint">
                       HITOS ({obra.hitos.length})
                     </p>
                     <button
                       onClick={() => setAddHitoFor(addHitoFor === obra.id ? null : obra.id)}
-                      className="text-xs text-ink/50 hover:text-ink"
+                      className="text-xs text-ink-muted hover:text-ink"
                     >
                       {addHitoFor === obra.id ? "Cancelar" : "+ Agregar hito"}
                     </button>
@@ -386,7 +386,7 @@ export function ObrasAdmin({
                           required
                           className="rounded border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-accent"
                         />
-                        <label className="flex items-center gap-2 text-sm text-ink/60">
+                        <label className="flex items-center gap-2 text-sm text-ink-muted">
                           <input
                             name="visibleCliente"
                             type="checkbox"
@@ -414,8 +414,8 @@ export function ObrasAdmin({
                       >
                         <div>
                           <p className="font-medium">{h.titulo}</p>
-                          <p className="text-sm text-ink/50">{h.descripcion}</p>
-                          <p className="mt-1 text-xs text-ink/40">
+                          <p className="text-sm text-ink-muted">{h.descripcion}</p>
+                          <p className="mt-1 text-xs text-ink-faint">
                             {fmtFecha(h.fecha)}
                           </p>
                         </div>
@@ -450,7 +450,7 @@ export function ObrasAdmin({
                       </div>
                     ))}
                     {obra.hitos.length === 0 && (
-                      <p className="text-sm text-ink/30">Sin hitos registrados</p>
+                      <p className="text-sm text-ink-faint">Sin hitos registrados</p>
                     )}
                   </div>
                 </div>
@@ -458,12 +458,12 @@ export function ObrasAdmin({
                 {/* Pagos */}
                 <div>
                   <div className="flex items-center justify-between">
-                    <p className="section-label text-ink/40">
+                    <p className="section-label text-ink-faint">
                       PAGOS ({obra.pagos.length})
                     </p>
                     <button
                       onClick={() => setAddPagoFor(addPagoFor === obra.id ? null : obra.id)}
-                      className="text-xs text-ink/50 hover:text-ink"
+                      className="text-xs text-ink-muted hover:text-ink"
                     >
                       {addPagoFor === obra.id ? "Cancelar" : "+ Agregar pago"}
                     </button>
@@ -526,7 +526,7 @@ export function ObrasAdmin({
                       >
                         <div>
                           <p className="font-medium">{p.concepto}</p>
-                          <p className="text-sm text-ink/50">
+                          <p className="text-sm text-ink-muted">
                             ${p.monto.toLocaleString("es-AR")} · {fmtFecha(p.fecha)}
                           </p>
                         </div>
@@ -562,7 +562,7 @@ export function ObrasAdmin({
                       </div>
                     ))}
                     {obra.pagos.length === 0 && (
-                      <p className="text-sm text-ink/30">Sin pagos registrados</p>
+                      <p className="text-sm text-ink-faint">Sin pagos registrados</p>
                     )}
                   </div>
                 </div>

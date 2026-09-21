@@ -19,10 +19,10 @@ export async function ProyectosSection() {
   const proyectos = await getProyectos();
 
   return (
-    <section className="block-dark py-16 lg:py-24">
+    <section className="block py-16 lg:py-24">
       <div className="mx-auto max-w-7xl px-4 lg:px-8">
-        <p className="section-label mb-4 text-white/40">02 / PROYECTOS</p>
-        <h2 className="font-heading text-4xl font-bold text-white md:text-5xl">
+        <p className="section-label mb-4 text-ink-faint">02 / PROYECTOS</p>
+        <h2 className="font-heading text-4xl font-bold text-ink md:text-5xl">
           Obras destacadas
         </h2>
 
@@ -31,7 +31,7 @@ export async function ProyectosSection() {
             <Link
               key={proyecto.id}
               href={`/proyectos/${proyecto.slug}`}
-              className="group relative overflow-hidden rounded border border-white/10 bg-white/5"
+              className="group relative overflow-hidden rounded border border-border bg-surface"
             >
               <div className="aspect-[4/3] bg-white/5" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
@@ -53,7 +53,7 @@ export async function ProyectosSection() {
         <div className="mt-8 text-center">
           <Link
             href="/proyectos"
-            className="inline-flex items-center justify-center rounded border border-white/20 px-6 py-3 text-sm font-medium text-white transition-colors hover:border-white/40"
+            className="inline-flex items-center justify-center rounded border border-ink/25 px-6 py-3 text-sm font-medium text-ink transition-colors hover:border-ink/40"
           >
             Ver todos los proyectos
           </Link>

@@ -26,7 +26,7 @@ export function ClienteTabs() {
 
   return (
     <div className="border-b border-border bg-surface p-4 lg:p-6">
-      <p className="section-label mb-3 text-ink/40">SECCIONES</p>
+      <p className="section-label mb-3 text-ink-faint">SECCIONES</p>
       <div className="flex flex-wrap gap-2">
         {TABS.map((tab) => {
           const Icon = tab.icon;
@@ -38,7 +38,7 @@ export function ClienteTabs() {
               className={`flex items-center gap-2 rounded px-4 py-2 text-sm font-medium transition-colors ${
                 isActiveTab
                   ? "bg-ink/5 text-ink"
-                  : "text-ink/60 hover:bg-ink/5 hover:text-ink"
+                  : "text-ink-muted hover:bg-ink/5 hover:text-ink"
               }`}
             >
               {Icon && <Icon className="h-4 w-4 shrink-0" />}

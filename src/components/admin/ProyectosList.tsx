@@ -41,13 +41,13 @@ export function ProyectosList({ proyectos }: { proyectos: Proyecto[] }) {
         <table className="w-full text-left text-sm">
           <thead>
             <tr className="border-b border-border">
-              <th className="px-4 py-3 section-label text-ink/40">Proyecto</th>
-              <th className="px-4 py-3 section-label text-ink/40">Tipo</th>
-              <th className="px-4 py-3 section-label text-ink/40">M2</th>
-              <th className="px-4 py-3 section-label text-ink/40">Dias</th>
-              <th className="px-4 py-3 section-label text-ink/40">Publicado</th>
-              <th className="px-4 py-3 section-label text-ink/40">Destacado</th>
-              <th className="px-4 py-3 section-label text-ink/40">Acciones</th>
+              <th className="px-4 py-3 section-label text-ink-faint">Proyecto</th>
+              <th className="px-4 py-3 section-label text-ink-faint">Tipo</th>
+              <th className="px-4 py-3 section-label text-ink-faint">M2</th>
+              <th className="px-4 py-3 section-label text-ink-faint">Dias</th>
+              <th className="px-4 py-3 section-label text-ink-faint">Publicado</th>
+              <th className="px-4 py-3 section-label text-ink-faint">Destacado</th>
+              <th className="px-4 py-3 section-label text-ink-faint">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -55,11 +55,11 @@ export function ProyectosList({ proyectos }: { proyectos: Proyecto[] }) {
               <tr key={p.id} className="border-b border-border last:border-0">
                 <td className="px-4 py-3">
                   <p className="font-medium">{p.titulo}</p>
-                  <p className="text-xs text-ink/40">{p.ubicacion}</p>
+                  <p className="text-xs text-ink-faint">{p.ubicacion}</p>
                 </td>
-                <td className="px-4 py-3 capitalize text-ink/60">{p.tipoConstruccion}</td>
-                <td className="px-4 py-3 text-ink/60">{p.m2Construidos}</td>
-                <td className="px-4 py-3 text-ink/60">{p.diasEjecucion}</td>
+                <td className="px-4 py-3 capitalize text-ink-muted">{p.tipoConstruccion}</td>
+                <td className="px-4 py-3 text-ink-muted">{p.m2Construidos}</td>
+                <td className="px-4 py-3 text-ink-muted">{p.diasEjecucion}</td>
                 <td className="px-4 py-3">
 <button
                       type="button"
@@ -104,7 +104,7 @@ export function ProyectosList({ proyectos }: { proyectos: Proyecto[] }) {
             ))}
             {proyectos.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-ink/30">
+                <td colSpan={7} className="px-4 py-8 text-center text-ink-faint">
                   No hay proyectos aun
                 </td>
               </tr>

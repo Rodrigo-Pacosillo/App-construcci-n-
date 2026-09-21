@@ -38,7 +38,7 @@ export default function CotizacionPage() {
           <h1 className="font-heading text-3xl font-bold">
             Tu solicitud fue enviada
           </h1>
-          <p className="mt-4 text-ink/50">
+          <p className="mt-4 text-ink-muted">
             Te contactamos en menos de 24 horas para coordinar una visita técnica.
           </p>
         </div>
@@ -49,18 +49,18 @@ export default function CotizacionPage() {
   return (
     <div className="py-24 lg:py-32">
       <div className="mx-auto max-w-2xl px-4 lg:px-8">
-        <p className="section-label mb-4 text-ink/40">COTIZACION</p>
+        <p className="section-label mb-4 text-ink-faint">COTIZACION</p>
         <h1 className="font-heading text-4xl font-bold md:text-5xl">
           Pedí tu presupuesto
         </h1>
-        <p className="mt-4 text-ink/50">
+        <p className="mt-4 text-ink-muted">
           Completá el formulario y te contactamos en 24 horas.
         </p>
 
         <form onSubmit={handleSubmit} className="mt-12 space-y-6">
           <div className="grid gap-6 sm:grid-cols-2">
             <div>
-              <label htmlFor="nombre" className="section-label block text-ink/40">
+              <label htmlFor="nombre" className="section-label block text-ink-faint">
                 Nombre
               </label>
               <input
@@ -72,7 +72,7 @@ export default function CotizacionPage() {
               />
             </div>
             <div>
-              <label htmlFor="whatsapp" className="section-label block text-ink/40">
+              <label htmlFor="whatsapp" className="section-label block text-ink-faint">
                 WhatsApp
               </label>
               <input
@@ -86,7 +86,7 @@ export default function CotizacionPage() {
           </div>
 
           <div>
-            <label htmlFor="email" className="section-label block text-ink/40">
+            <label htmlFor="email" className="section-label block text-ink-faint">
               Email
             </label>
             <input
@@ -100,7 +100,7 @@ export default function CotizacionPage() {
 
           <div className="grid gap-6 sm:grid-cols-2">
             <div>
-              <label htmlFor="tipoObra" className="section-label block text-ink/40">
+              <label htmlFor="tipoObra" className="section-label block text-ink-faint">
                 Tipo de obra
               </label>
               <select
@@ -114,7 +114,7 @@ export default function CotizacionPage() {
               </select>
             </div>
             <div>
-              <label htmlFor="tipoConstruccion" className="section-label block text-ink/40">
+              <label htmlFor="tipoConstruccion" className="section-label block text-ink-faint">
                 Tipo de construcción
               </label>
               <select
@@ -131,7 +131,7 @@ export default function CotizacionPage() {
 
           <div className="grid gap-6 sm:grid-cols-2">
             <div>
-              <label htmlFor="rangoM2" className="section-label block text-ink/40">
+              <label htmlFor="rangoM2" className="section-label block text-ink-faint">
                 Superficie estimada
               </label>
               <select
@@ -147,7 +147,7 @@ export default function CotizacionPage() {
               </select>
             </div>
             <div>
-              <label htmlFor="plazoInicio" className="section-label block text-ink/40">
+              <label htmlFor="plazoInicio" className="section-label block text-ink-faint">
                 Cuándo querés empezar
               </label>
               <select
@@ -164,7 +164,7 @@ export default function CotizacionPage() {
           </div>
 
           <div>
-            <label htmlFor="ubicacion" className="section-label block text-ink/40">
+            <label htmlFor="ubicacion" className="section-label block text-ink-faint">
               Ubicación de la obra
             </label>
             <input
@@ -177,7 +177,7 @@ export default function CotizacionPage() {
           </div>
 
           <div>
-            <label htmlFor="descripcion" className="section-label block text-ink/40">
+            <label htmlFor="descripcion" className="section-label block text-ink-faint">
               Cuéntanos sobre tu proyecto
             </label>
             <textarea
