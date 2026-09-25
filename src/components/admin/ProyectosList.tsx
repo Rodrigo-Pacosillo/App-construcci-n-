@@ -69,7 +69,7 @@ export function ProyectosList({ proyectos }: { proyectos: Proyecto[] }) {
                       })}
                       disabled={isPending}
                     className={`rounded px-2 py-0.5 text-xs font-medium ${
-                      p.publicado ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-500"
+                      p.publicado ? "bg-accent text-ink" : "border border-border bg-surface text-ink-faint"
                     }`}
                   >
                     {p.publicado ? "Si" : "No"}
@@ -84,7 +84,7 @@ export function ProyectosList({ proyectos }: { proyectos: Proyecto[] }) {
                       })}
                       disabled={isPending}
                     className={`rounded px-2 py-0.5 text-xs font-medium ${
-                      p.destacado ? "bg-accent/20 text-accent-strong" : "bg-gray-100 text-gray-500"
+                      p.destacado ? "bg-accent text-ink" : "border border-border bg-surface text-ink-faint"
                     }`}
                   >
                     {p.destacado ? "Si" : "No"}

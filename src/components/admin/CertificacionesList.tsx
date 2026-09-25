@@ -152,8 +152,8 @@ export function CertificacionesList({
                       disabled={isPending}
                       className={`rounded px-2 py-0.5 text-xs font-medium ${
                         c.activo
-                          ? "bg-green-100 text-green-800"
-                          : "bg-gray-100 text-gray-500"
+                          ? "bg-accent text-ink"
+                          : "border border-border bg-surface text-ink-faint"
                       }`}
                     >
                       {c.activo ? "Activo" : "Inactivo"}
