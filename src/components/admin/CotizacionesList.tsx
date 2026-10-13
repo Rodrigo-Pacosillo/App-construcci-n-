@@ -14,7 +14,7 @@ type Cotizacion = {
   ubicacionObra: string | null;
   montoEstimado: number | null;
   creadoEn: Date;
-  cliente: { nombre: string; whatsapp: string; email: string | null } | null;
+  cliente: { nombre: string; apellidos: string; telefono: string; email: string | null } | null;
 };
 
 export function CotizacionesList({ cotizaciones }: { cotizaciones: Cotizacion[] }) {
@@ -78,8 +78,8 @@ export function CotizacionesList({ cotizaciones }: { cotizaciones: Cotizacion[] 
               {filtradas.map((c) => (
                 <tr key={c.id} className="border-b border-border last:border-0">
                   <td className="px-4 py-3">
-                    <p className="font-medium">{c.cliente?.nombre || "—"}</p>
-                    <p className="text-xs text-ink-faint">{c.cliente?.whatsapp}</p>
+                    <p className="font-medium">{c.cliente?.nombre || "—"} {c.cliente?.apellidos || ""}</p>
+                    <p className="text-xs text-ink-faint">{c.cliente?.telefono}</p>
                   </td>
                   <td className="px-4 py-3 capitalize text-ink-muted">{c.tipoObra.replace("_", " ")}</td>
                   <td className="px-4 py-3 text-ink-muted">{c.rangoM2.replace("m", "").replace("_", "-").replace("mas", "+")} m2</td>

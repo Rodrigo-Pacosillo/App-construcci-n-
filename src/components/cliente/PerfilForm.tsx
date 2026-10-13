@@ -7,7 +7,8 @@ import { z } from "zod";
 
 const perfilSchema = z.object({
   nombre: z.string().min(1, "El nombre es requerido").max(100, "Máximo 100 caracteres"),
-  whatsapp: z.string().min(1, "El WhatsApp es requerido").max(30, "Máximo 30 caracteres"),
+  apellidos: z.string().min(1, "Los apellidos son requeridos").max(100, "Máximo 100 caracteres"),
+  telefono: z.string().min(1, "El teléfono es requerido").max(30, "Máximo 30 caracteres"),
   ciudad: z.string().max(100, "Máximo 100 caracteres").optional().or(z.literal("")),
 });
 
@@ -25,7 +26,8 @@ type Tab = "datos" | "password";
 
 type PerfilInicial = {
   nombre: string;
-  whatsapp: string;
+  apellidos: string;
+  telefono: string;
   ciudad: string | null;
 };
 
@@ -33,7 +35,8 @@ export function PerfilForm({ inicial }: { inicial: PerfilInicial }) {
   const [activeTab, setActiveTab] = useState<Tab>("datos");
 
   const [nombre, setNombre] = useState(inicial.nombre);
-  const [whatsapp, setWhatsapp] = useState(inicial.whatsapp);
+  const [apellidos, setApellidos] = useState(inicial.apellidos);
+  const [telefono, setTelefono] = useState(inicial.telefono);
   const [ciudad, setCiudad] = useState(inicial.ciudad ?? "");
 
   const [password, setPassword] = useState("");
@@ -47,13 +50,13 @@ export function PerfilForm({ inicial }: { inicial: PerfilInicial }) {
     setError("");
     setSuccess("");
 
-    const parsed = perfilSchema.safeParse({ nombre, whatsapp, ciudad });
+    const parsed = perfilSchema.safeParse({ nombre, apellidos, telefono, ciudad });
     if (!parsed.success) {
       setError("Datos inválidos");
       return;
     }
 
-    const result = await updatePerfil({ nombre, whatsapp, ciudad: ciudad || null });
+    const result = await updatePerfil({ nombre, apellidos, telefono, ciudad: ciudad || null });
     if (result?.error) {
       setError(result.error);
       return;
@@ -125,46 +128,64 @@ export function PerfilForm({ inicial }: { inicial: PerfilInicial }) {
 
       {activeTab === "datos" && (
         <form onSubmit={handleUpdatePerfil} className="space-y-6">
-          <div>
-            <label htmlFor="nombre" className="section-label block text-ink-faint">
-              Nombre y apellido
-            </label>
-            <input
-              id="nombre"
-              type="text"
-              required
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              className="mt-1 block w-full rounded border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent"
-            />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label htmlFor="nombre" className="section-label block text-ink-faint">
+                Nombre(s)
+              </label>
+              <input
+                id="nombre"
+                type="text"
+                required
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
+                className="mt-1 block w-full rounded border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="apellidos" className="section-label block text-ink-faint">
+                Apellidos
+              </label>
+              <input
+                id="apellidos"
+                type="text"
+                required
+                value={apellidos}
+                onChange={(e) => setApellidos(e.target.value)}
+                className="mt-1 block w-full rounded border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent"
+              />
+            </div>
           </div>
 
-          <div>
-            <label htmlFor="whatsapp" className="section-label block text-ink-faint">
-              WhatsApp
-            </label>
-            <input
-              id="whatsapp"
-              type="tel"
-              required
-              value={whatsapp}
-              onChange={(e) => setWhatsapp(e.target.value)}
-              placeholder="+54 11 ..."
-              className="mt-1 block w-full rounded border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent"
-            />
-          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label htmlFor="telefono" className="section-label block text-ink-faint">
+                Teléfono
+              </label>
+              <input
+                id="telefono"
+                type="tel"
+                required
+                value={telefono}
+                onChange={(e) => setTelefono(e.target.value)}
+                placeholder="+54 11 ..."
+                className="mt-1 block w-full rounded border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent"
+              />
+            </div>
 
-          <div>
-            <label htmlFor="ciudad" className="section-label block text-ink-faint">
-              Ciudad (opcional)
-            </label>
-            <input
-              id="ciudad"
-              type="text"
-              value={ciudad}
-              onChange={(e) => setCiudad(e.target.value)}
-              className="mt-1 block w-full rounded border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent"
-            />
+            <div>
+              <label htmlFor="ciudad" className="section-label block text-ink-faint">
+                Ciudad (opcional)
+              </label>
+              <input
+                id="ciudad"
+                type="text"
+                value={ciudad}
+                onChange={(e) => setCiudad(e.target.value)}
+                className="mt-1 block w-full rounded border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent"
+              />
+            </div>
           </div>
 
           {error && <p className="text-sm text-red-500">{error}</p>}
@@ -172,7 +193,7 @@ export function PerfilForm({ inicial }: { inicial: PerfilInicial }) {
 
           <button
             type="submit"
-            disabled={!nombre || !whatsapp}
+            disabled={!nombre || !apellidos || !telefono}
             className="accent-btn w-full rounded py-2 text-sm font-medium transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             Guardar cambios

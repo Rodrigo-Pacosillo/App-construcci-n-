@@ -71,7 +71,12 @@ export default async function AdminDashboard() {
               <tbody>
                 {cotizaciones.map((c) => (
                   <tr key={c.id} className="border-b border-border last:border-0">
-                    <td className="px-4 py-3">{c.cliente?.nombre || "—"}</td>
+                    <td className="px-4 py-3">
+                    <p className="font-medium">{c.cliente?.nombre || "—"}</p>
+                    {c.cliente?.apellidos && (
+                      <p className="text-xs text-ink-faint">{c.cliente.apellidos}</p>
+                    )}
+                  </td>
                     <td className="px-4 py-3 capitalize">{c.tipoConstruccion}</td>
                     <td className="px-4 py-3 capitalize">{c.origen}</td>
                     <td className="px-4 py-3">

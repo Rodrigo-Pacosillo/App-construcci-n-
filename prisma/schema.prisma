@@ -63,6 +63,7 @@ enum EstadoPago {
 model Usuario {
   id           String   @id @default(cuid())
   nombre       String
+  apellidos    String
   email        String   @unique
   passwordHash String   @map("password_hash")
   rol          Rol      @default(cliente)
@@ -77,7 +78,8 @@ model Usuario {
 model Cliente {
   id       String   @id @default(cuid())
   nombre   String
-  whatsapp String
+  apellidos String
+  telefono String
   email    String?  @unique
   ciudad   String?
   creadoEn DateTime @default(now()) @map("creado_en")

@@ -17,7 +17,8 @@ export async function createCotizacion(formData: FormData) {
   // Parsear y validar datos con Zod
   const data = {
     nombre: formData.get("nombre") as string,
-    whatsapp: formData.get("whatsapp") as string,
+    apellidos: formData.get("apellidos") as string,
+    telefono: formData.get("telefono") as string,
     email: formData.get("email") as string,
     tipoObra: formData.get("tipoObra") as string,
     tipoConstruccion: formData.get("tipoConstruccion") as string,
@@ -36,7 +37,7 @@ export async function createCotizacion(formData: FormData) {
     };
   }
 
-  const { nombre, whatsapp, email, tipoObra, tipoConstruccion, rangoM2, ubicacionObra, descripcion, plazoInicio } =
+  const { nombre, apellidos, telefono, email, tipoObra, tipoConstruccion, rangoM2, ubicacionObra, descripcion, plazoInicio } =
     valid.data;
 
   // Resolver el cliente que respalda la cotización.
@@ -72,7 +73,8 @@ export async function createCotizacion(formData: FormData) {
         const cliente = await prisma.cliente.create({
           data: {
             nombre,
-            whatsapp,
+            apellidos,
+            telefono,
             email: email || null,
             ciudad: ubicacionObra?.split(",")[1]?.trim() || null,
           },

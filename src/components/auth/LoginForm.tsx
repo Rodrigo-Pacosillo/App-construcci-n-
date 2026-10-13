@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { signIn, getSession } from "next-auth/react";
 
 const INPUT_CLASS =
@@ -69,15 +68,9 @@ export function LoginForm({ callbackUrl }: { callbackUrl: string }) {
         disabled={loading}
         className="accent-btn w-full rounded py-2 text-sm font-medium transition-opacity hover:opacity-90 disabled:opacity-50"
       >
-        {loading ? "Entrando..." : "Entrar"}
+        {loading ? "Accediendo..." : "Acceder"}
       </button>
 
-      <p className="text-center text-sm text-ink-muted">
-        ¿No tenés cuenta?{" "}
-        <Link href="/registro" className="text-accent-strong hover:underline">
-          Creá una
-        </Link>
-      </p>
     </form>
   );
 }

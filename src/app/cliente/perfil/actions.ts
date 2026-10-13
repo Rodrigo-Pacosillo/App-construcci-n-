@@ -7,11 +7,13 @@ import bcrypt from "bcryptjs";
 
 export async function updatePerfil({
   nombre,
-  whatsapp,
+  apellidos,
+  telefono,
   ciudad,
 }: {
   nombre: string;
-  whatsapp: string;
+  apellidos: string;
+  telefono: string;
   ciudad: string | null;
 }) {
   const session = await auth();
@@ -30,14 +32,15 @@ export async function updatePerfil({
       where: { id: usuario.clienteId },
       data: {
         nombre,
-        whatsapp,
+        apellidos,
+        telefono,
         ciudad: ciudad || null,
       },
     });
 
     const usuarioActualizado = await prisma.usuario.update({
       where: { id: usuario.id },
-      data: { nombre },
+      data: { nombre, apellidos },
     });
 
     return { success: true, cliente, usuario: usuarioActualizado };

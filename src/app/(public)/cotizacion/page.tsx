@@ -61,7 +61,7 @@ export default function CotizacionPage() {
           <div className="grid gap-6 sm:grid-cols-2">
             <div>
               <label htmlFor="nombre" className="section-label block text-ink-faint">
-                Nombre
+                Nombre(s)
               </label>
               <input
                 id="nombre"
@@ -72,30 +72,44 @@ export default function CotizacionPage() {
               />
             </div>
             <div>
-              <label htmlFor="whatsapp" className="section-label block text-ink-faint">
-                WhatsApp
+              <label htmlFor="apellidos" className="section-label block text-ink-faint">
+                Apellidos
               </label>
               <input
-                id="whatsapp"
-                name="whatsapp"
+                id="apellidos"
+                name="apellidos"
                 required
-                maxLength={20}
+                maxLength={100}
                 className="mt-1 block w-full rounded border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent"
               />
             </div>
           </div>
 
-          <div>
-            <label htmlFor="email" className="section-label block text-ink-faint">
-              Email
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              maxLength={100}
-              className="mt-1 block w-full rounded border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent"
-            />
+          <div className="grid gap-6 sm:grid-cols-2">
+            <div>
+              <label htmlFor="telefono" className="section-label block text-ink-faint">
+                Teléfono
+              </label>
+              <input
+                id="telefono"
+                name="telefono"
+                required
+                maxLength={30}
+                className="mt-1 block w-full rounded border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent"
+              />
+            </div>
+            <div>
+              <label htmlFor="email" className="section-label block text-ink-faint">
+                Email
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                maxLength={100}
+                className="mt-1 block w-full rounded border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent"
+              />
+            </div>
           </div>
 
           <div className="grid gap-6 sm:grid-cols-2">

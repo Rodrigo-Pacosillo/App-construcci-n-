@@ -25,6 +25,7 @@ async function main() {
   const admin = await prisma.usuario.create({
     data: {
       nombre: "Admin",
+      apellidos: "Demo",
       email: "admin@demo.com",
       passwordHash,
       rol: Rol.admin,
@@ -36,61 +37,69 @@ async function main() {
   const clientes = await Promise.all([
     prisma.cliente.create({
       data: {
-        nombre: "Carlos Méndez",
-        whatsapp: "+54 11 5555-1234",
+        nombre: "Carlos",
+        apellidos: "Méndez",
+        telefono: "+54 11 5555-1234",
         email: "carlos.mendez@email.com",
         ciudad: "CABA",
       },
     }),
     prisma.cliente.create({
       data: {
-        nombre: "Laura Fernández",
-        whatsapp: "+54 11 5555-5678",
+        nombre: "Laura",
+        apellidos: "Fernández",
+        telefono: "+54 11 5555-5678",
         email: "laura.f@email.com",
         ciudad: "Belgrano",
       },
     }),
     prisma.cliente.create({
       data: {
-        nombre: "Roberto García",
-        whatsapp: "+54 11 5555-9012",
+        nombre: "Roberto",
+        apellidos: "García",
+        telefono: "+54 11 5555-9012",
         ciudad: "Vicente López",
       },
     }),
     prisma.cliente.create({
       data: {
-        nombre: "María López",
-        whatsapp: "+54 11 5555-3456",
+        nombre: "María",
+        apellidos: "López",
+        telefono: "+54 11 5555-3456",
         email: "maria.lopez@email.com",
         ciudad: "San Isidro",
       },
     }),
     prisma.cliente.create({
       data: {
-        nombre: "Juan Pérez",
-        whatsapp: "+54 11 5555-7890",
+        nombre: "Juan",
+        apellidos: "Pérez",
+        telefono: "+54 11 5555-7890",
         ciudad: "Tigre",
       },
     }),
     prisma.cliente.create({
       data: {
-        nombre: "Ana Rodríguez",
-        whatsapp: "+54 11 5555-2345",
+        nombre: "Ana",
+        apellidos: "Rodríguez",
+        telefono: "+54 11 5555-2345",
         email: "ana.r@email.com",
         ciudad: "Pilar",
       },
     }),
     prisma.cliente.create({
       data: {
-        nombre: "Diego Torres",
-        whatsapp: "+54 11 5555-6789",
+        nombre: "Diego",
+        apellidos: "Torres",
+        telefono: "+54 11 5555-6789",
         ciudad: "Escobar",
       },
     }),
     prisma.cliente.create({
       data: {
-        nombre: "Sofía Martínez",
-        whatsapp: "+54 11 5555-0123",
+        nombre: "Sofía",
+        apellidos: "Martínez",
+        telefono: "+54 11 5555-0123",
         email: "sofia.m@email.com",
         ciudad: "Quilmes",
       },
@@ -603,6 +612,7 @@ async function main() {
   const usuarioCliente = await prisma.usuario.create({
     data: {
       nombre: clientes[4].nombre,
+      apellidos: clientes[4].apellidos,
       email: "cliente@demo.com",
       passwordHash: clientePasswordHash,
       rol: Rol.cliente,

@@ -29,7 +29,7 @@ export async function getObras() {
       fechaInicio: o.fechaInicio.toISOString(),
       fechaFinEstimada: o.fechaFinEstimada?.toISOString() ?? null,
       cliente: o.cliente
-        ? { id: o.cliente.id, nombre: o.cliente.nombre }
+        ? { id: o.cliente.id, nombre: o.cliente.nombre, apellidos: o.cliente.apellidos }
         : null,
       contrato: o.contrato
         ? { id: o.contrato.id, montoTotal: Number(o.contrato.montoTotal) }
@@ -67,6 +67,7 @@ export async function getClientesParaObra() {
     return clientes.map((c) => ({
       id: c.id,
       nombre: c.nombre,
+      apellidos: c.apellidos,
     }));
   } catch (error) {
     console.error("Error en getClientesParaObra:", error);
@@ -87,7 +88,7 @@ export async function getContratosParaObra() {
     return contratos.map((c) => ({
       id: c.id,
       montoTotal: Number(c.montoTotal),
-      clienteNombre: c.cliente.nombre,
+      clienteNombre: `${c.cliente.nombre} ${c.cliente.apellidos}`,
     }));
   } catch (error) {
     console.error("Error en getContratosParaObra:", error);

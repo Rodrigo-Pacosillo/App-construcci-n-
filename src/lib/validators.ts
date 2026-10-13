@@ -24,7 +24,8 @@ export type CotizacionAdminInput = z.infer<typeof cotizacionAdminSchema>;
 // ─── Cotización (formulario público) ────────────────────────────────
 export const cotizacionFormSchema = z.object({
   nombre: z.string().min(1, "El nombre es requerido").max(100, "Máximo 100 caracteres"),
-  whatsapp: z.string().min(1, "El WhatsApp es requerido"),
+  apellidos: z.string().min(1, "Los apellidos son requeridos").max(100, "Máximo 100 caracteres"),
+  telefono: z.string().min(1, "El teléfono es requerido").max(30, "Máximo 30 caracteres"),
   email: z.string().email("Email inválido").optional(),
   tipoObra: z.enum(["vivienda_nueva", "ampliacion", "otro"]),
   tipoConstruccion: z.enum(["tradicional", "seco", "no_sabe"]),
@@ -39,7 +40,8 @@ export type CotizacionFormData = z.infer<typeof cotizacionFormSchema>;
 // ─── Cliente ───────────────────────────────────────────────────────
 export const clienteSchema = z.object({
   nombre: z.string().min(1, "El nombre es requerido"),
-  whatsapp: z.string().min(1, "El WhatsApp es requerido"),
+  apellidos: z.string().min(1, "Los apellidos son requeridos"),
+  telefono: z.string().min(1, "El teléfono es requerido").max(30, "Máximo 30 caracteres"),
   email: z.string().email("Email inválido").optional().or(z.literal("")),
   ciudad: z.string().optional(),
 });
@@ -138,26 +140,6 @@ export const loginSchema = z.object({
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;
-
-// ─── Registro de cliente ───────────────────────────────────────────
-export const registroSchema = z
-  .object({
-    nombre: z.string().min(1, "El nombre es requerido").max(100, "Máximo 100 caracteres"),
-    whatsapp: z.string().min(1, "El WhatsApp es requerido").max(30, "Máximo 30 caracteres"),
-    email: z.string().email("Email inválido"),
-    ciudad: z.string().max(100, "Máximo 100 caracteres").optional().or(z.literal("")),
-    password: z
-      .string()
-      .min(8, "La contraseña debe tener al menos 8 caracteres")
-      .max(72, "Máximo 72 caracteres"),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Las contraseñas no coinciden",
-    path: ["confirmPassword"],
-  });
-
-export type RegistroInput = z.infer<typeof registroSchema>;
 
 // ─── Obra activa (Fase 2) ──────────────────────────────────────────
 export const obraSchema = z.object({

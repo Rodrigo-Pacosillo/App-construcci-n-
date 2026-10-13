@@ -4,8 +4,8 @@ import { auth } from "@/lib/auth";
 import { LoginForm } from "@/components/auth/LoginForm";
 
 export const metadata: Metadata = {
-  title: "Ingresar",
-  description: "Accedé a tu cuenta para seguir tus cotizaciones y obras.",
+  title: "Acceder",
+  description: "Utilizá tu cuenta de cliente para gestionar tus cotizaciones y el avance de tu obra.",
   robots: { index: false, follow: false },
 };
 
@@ -33,9 +33,9 @@ export default async function LoginPage({
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
           <p className="section-label mb-2 text-ink-faint">MI CUENTA</p>
-          <h1 className="font-heading text-3xl font-bold">Ingresar</h1>
+          <h1 className="font-heading text-3xl font-bold">Acceder</h1>
           <p className="mt-2 text-sm text-ink-muted">
-            Accedé para seguir tus cotizaciones y el avance de tu obra.
+            Utilizá tu cuenta de cliente para gestionar tus cotizaciones y el avance de tu obra.
           </p>
         </div>
 

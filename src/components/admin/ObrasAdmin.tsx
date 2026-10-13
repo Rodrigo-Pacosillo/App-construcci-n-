@@ -32,7 +32,7 @@ type Obra = {
   progreso: number;
   fechaInicio: string;
   fechaFinEstimada: string | null;
-  cliente: { id: string; nombre: string } | null;
+  cliente: { id: string; nombre: string; apellidos: string } | null;
   contrato: { id: string; montoTotal: number } | null;
   hitos: {
     id: string;
@@ -50,7 +50,7 @@ type Obra = {
   }[];
 };
 
-type Cliente = { id: string; nombre: string };
+type Cliente = { id: string; nombre: string; apellidos: string };
 type Contrato = { id: string; montoTotal: number; clienteNombre: string };
 
 const fmtFecha = (iso: string) =>
@@ -193,7 +193,7 @@ export function ObrasAdmin({
               </option>
               {clientes.map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.nombre}
+                  {c.nombre} {c.apellidos}
                 </option>
               ))}
             </select>
@@ -285,7 +285,7 @@ export function ObrasAdmin({
                   </span>
                 </div>
                 <p className="mt-1 text-sm text-ink-muted">
-                  {obra.cliente?.nombre ?? "Sin cliente"} · Desde{" "}
+                  {obra.cliente?.nombre ?? "Sin cliente"} {obra.cliente?.apellidos ?? ""} · Desde{" "}
                   {fmtFecha(obra.fechaInicio)}
                   {obra.fechaFinEstimada
                     ? ` · Hasta ${fmtFecha(obra.fechaFinEstimada)}`

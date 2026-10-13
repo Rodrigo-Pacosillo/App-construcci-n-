@@ -1,0 +1,1 @@
+DATABASE_URL="postgresql://neondb_owner:npg_XM4UkfQNK7Dw@ep-tiny-flower-b41ff1gh-pooler.c-6.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require" AUTH_SECRET="EmGW2m/FgWTDUF7ucyHfd9J7SLk5wfOl78iA3XUASVg=" curl -s http://localhost:3000/login

@@ -20,7 +20,8 @@ export default async function ClientePerfilPage() {
     <PerfilForm
       inicial={{
         nombre: usuario.cliente.nombre,
-        whatsapp: usuario.cliente.whatsapp,
+        apellidos: usuario.cliente.apellidos,
+        telefono: usuario.cliente.telefono,
         ciudad: usuario.cliente.ciudad,
       }}
     />

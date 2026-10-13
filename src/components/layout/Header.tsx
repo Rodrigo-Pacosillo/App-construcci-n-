@@ -34,7 +34,7 @@ export function Header() {
             href="/login"
             className="section-label hidden text-ink-muted transition-colors hover:text-ink md:inline"
           >
-            Ingreso
+            Acceder
           </Link>
 
           <button
@@ -73,7 +73,7 @@ export function Header() {
             onClick={() => setMobileOpen(false)}
             className="block py-2 section-label text-accent-strong"
           >
-            Ingreso
+            Acceder
           </Link>
         </nav>
       )}
