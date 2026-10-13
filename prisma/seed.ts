@@ -1,10 +1,16 @@
-import { PrismaClient, Rol, TipoObra, TipoConstruccion, RangoM2, PlazoInicio, FaseFoto, EstadoObra, EstadoPago } from "@prisma/client";
+import { PrismaClient, Rol, TipoObra, TipoConstruccion, RangoM2, PlazoInicio, FaseFoto, EstadoObra, EstadoPago, CargoEmpleado, EstadoHerramienta } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
 async function main() {
   console.log("🌱 Limpiando datos existentes...");
+  await prisma.prestamoHerramienta.deleteMany();
+  await prisma.materialObra.deleteMany();
+  await prisma.herramienta.deleteMany();
+  await prisma.material.deleteMany();
+  await prisma.asignacionObra.deleteMany();
+  await prisma.empleado.deleteMany();
   await prisma.pagoObra.deleteMany();
   await prisma.hitosObra.deleteMany();
   await prisma.obraActiva.deleteMany();
@@ -718,6 +724,281 @@ async function main() {
     }),
   ]);
   console.log(`   ✅ ${pagos.length} pagos de obra creados`);
+
+  console.log("👷 Creando empleados...");
+  const empleados = await Promise.all([
+    prisma.empleado.create({
+      data: {
+        nombre: "Martín",
+        apellidos: "Silva",
+        ci: "28.123.456",
+        telefono: "+54 11 6666-1111",
+        cargo: CargoEmpleado.ingeniero,
+        fechaIngreso: new Date("2022-03-15"),
+        salario: 1200000,
+        activo: true,
+      },
+    }),
+    prisma.empleado.create({
+      data: {
+        nombre: "Roberto",
+        apellidos: "Gómez",
+        ci: "30.789.012",
+        telefono: "+54 11 6666-2222",
+        cargo: CargoEmpleado.maestro_obra,
+        fechaIngreso: new Date("2021-08-10"),
+        salario: 950000,
+        activo: true,
+      },
+    }),
+    prisma.empleado.create({
+      data: {
+        nombre: "Carlos",
+        apellidos: "Díaz",
+        ci: "32.345.678",
+        telefono: "+54 11 6666-3333",
+        cargo: CargoEmpleado.albanil,
+        fechaIngreso: new Date("2023-01-20"),
+        salario: 750000,
+        activo: true,
+      },
+    }),
+    prisma.empleado.create({
+      data: {
+        nombre: "Lucas",
+        apellidos: "Fernández",
+        ci: "34.901.234",
+        telefono: "+54 11 6666-4444",
+        cargo: CargoEmpleado.electricista,
+        fechaIngreso: new Date("2023-06-05"),
+        salario: 850000,
+        activo: true,
+      },
+    }),
+    prisma.empleado.create({
+      data: {
+        nombre: "Andrea",
+        apellidos: "Paz",
+        ci: "29.567.890",
+        telefono: "+54 11 6666-5555",
+        cargo: CargoEmpleado.administrativo,
+        fechaIngreso: new Date("2020-11-01"),
+        salario: 800000,
+        activo: true,
+      },
+    }),
+  ]);
+  console.log(`   ✅ ${empleados.length} empleados creados`);
+
+  console.log("📋 Creando asignaciones de obra...");
+  const asignaciones = await Promise.all([
+    prisma.asignacionObra.create({
+      data: {
+        empleadoId: empleados[0].id,
+        obraId: obra.id,
+        rolEnObra: "Ingeniero a cargo",
+        fechaInicio: new Date("2026-07-01"),
+      },
+    }),
+    prisma.asignacionObra.create({
+      data: {
+        empleadoId: empleados[1].id,
+        obraId: obra.id,
+        rolEnObra: "Maestro de obra",
+        fechaInicio: new Date("2026-07-01"),
+      },
+    }),
+    prisma.asignacionObra.create({
+      data: {
+        empleadoId: empleados[2].id,
+        obraId: obra.id,
+        rolEnObra: "Albañil principal",
+        fechaInicio: new Date("2026-07-05"),
+      },
+    }),
+    prisma.asignacionObra.create({
+      data: {
+        empleadoId: empleados[3].id,
+        obraId: obra.id,
+        rolEnObra: "Electricista",
+        fechaInicio: new Date("2026-09-01"),
+      },
+    }),
+  ]);
+  console.log(`   ✅ ${asignaciones.length} asignaciones creadas`);
+
+  console.log("📦 Creando materiales...");
+  const materiales = await Promise.all([
+    prisma.material.create({
+      data: {
+        nombre: "Cemento Portland",
+        unidad: "bolsa",
+        stockActual: 150,
+        stockMinimo: 20,
+        precioUnitario: 8500,
+        activo: true,
+      },
+    }),
+    prisma.material.create({
+      data: {
+        nombre: "Arena de río",
+        unidad: "m3",
+        stockActual: 45,
+        stockMinimo: 10,
+        precioUnitario: 25000,
+        activo: true,
+      },
+    }),
+    prisma.material.create({
+      data: {
+        nombre: "Fierro corrugado 12mm",
+        unidad: "barra",
+        stockActual: 200,
+        stockMinimo: 30,
+        precioUnitario: 12000,
+        activo: true,
+      },
+    }),
+    prisma.material.create({
+      data: {
+        nombre: "Lana de vidrio 100mm",
+        unidad: "rollo",
+        stockActual: 80,
+        stockMinimo: 15,
+        precioUnitario: 15000,
+        activo: true,
+      },
+    }),
+    prisma.material.create({
+      data: {
+        nombre: "Placa de yeso 12.5mm",
+        unidad: "unidad",
+        stockActual: 300,
+        stockMinimo: 50,
+        precioUnitario: 4500,
+        activo: true,
+      },
+    }),
+  ]);
+  console.log(`   ✅ ${materiales.length} materiales creados`);
+
+  console.log("🏗️ Creando uso de materiales en obra...");
+  const materialesObra = await Promise.all([
+    prisma.materialObra.create({
+      data: {
+        obraId: obra.id,
+        materialId: materiales[0].id,
+        cantidad: 80,
+        precioUnitario: 8500,
+        fecha: new Date("2026-07-05"),
+      },
+    }),
+    prisma.materialObra.create({
+      data: {
+        obraId: obra.id,
+        materialId: materiales[1].id,
+        cantidad: 12,
+        precioUnitario: 25000,
+        fecha: new Date("2026-07-08"),
+      },
+    }),
+    prisma.materialObra.create({
+      data: {
+        obraId: obra.id,
+        materialId: materiales[2].id,
+        cantidad: 60,
+        precioUnitario: 12000,
+        fecha: new Date("2026-07-10"),
+      },
+    }),
+    prisma.materialObra.create({
+      data: {
+        obraId: obra.id,
+        materialId: materiales[3].id,
+        cantidad: 40,
+        precioUnitario: 15000,
+        fecha: new Date("2026-08-15"),
+      },
+    }),
+    prisma.materialObra.create({
+      data: {
+        obraId: obra.id,
+        materialId: materiales[4].id,
+        cantidad: 120,
+        precioUnitario: 4500,
+        fecha: new Date("2026-08-20"),
+      },
+    }),
+  ]);
+  console.log(`   ✅ ${materialesObra.length} usos de materiales creados`);
+
+  console.log("🔧 Creando herramientas...");
+  const herramientas = await Promise.all([
+    prisma.herramienta.create({
+      data: {
+        nombre: "Taladro percutor Bosch",
+        codigo: "HERR-001",
+        estado: EstadoHerramienta.disponible,
+        activo: true,
+      },
+    }),
+    prisma.herramienta.create({
+      data: {
+        nombre: "Mezcladora de cemento",
+        codigo: "HERR-002",
+        estado: EstadoHerramienta.en_uso,
+        activo: true,
+      },
+    }),
+    prisma.herramienta.create({
+      data: {
+        nombre: "Andamio modular 3m",
+        codigo: "HERR-003",
+        estado: EstadoHerramienta.disponible,
+        activo: true,
+      },
+    }),
+    prisma.herramienta.create({
+      data: {
+        nombre: "Amoladora angular",
+        codigo: "HERR-004",
+        estado: EstadoHerramienta.mantenimiento,
+        activo: true,
+      },
+    }),
+    prisma.herramienta.create({
+      data: {
+        nombre: "Nivel láser",
+        codigo: "HERR-005",
+        estado: EstadoHerramienta.disponible,
+        activo: true,
+      },
+    }),
+  ]);
+  console.log(`   ✅ ${herramientas.length} herramientas creadas`);
+
+  console.log("📝 Creando préstamos de herramientas...");
+  const prestamos = await Promise.all([
+    prisma.prestamoHerramienta.create({
+      data: {
+        herramientaId: herramientas[1].id,
+        empleadoId: empleados[2].id,
+        obraId: obra.id,
+        fechaSalida: new Date("2026-07-10"),
+        observaciones: "Para hormigón de fundaciones",
+      },
+    }),
+    prisma.prestamoHerramienta.create({
+      data: {
+        herramientaId: herramientas[0].id,
+        empleadoId: empleados[3].id,
+        obraId: obra.id,
+        fechaSalida: new Date("2026-09-01"),
+        observaciones: "Instalaciones eléctricas",
+      },
+    }),
+  ]);
+  console.log(`   ✅ ${prestamos.length} préstamos creados`);
 
   console.log("\n🎉 ¡Seed completado exitosamente!");
   console.log(`   Usuarios: 2 (admin@demo.com, cliente@demo.com)`);

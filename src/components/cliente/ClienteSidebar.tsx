@@ -6,26 +6,76 @@ import { signOut } from "next-auth/react";
 import {
   LayoutDashboard,
   FileText,
-  FolderOpen,
   MessageSquare,
   Wrench,
   LogOut,
   Menu,
   X,
+  ChevronDown,
+  ChevronRight,
+  FileCheck,
+  DollarSign,
+  FileText as FileTextIcon,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
-const NAV_ITEMS = [
+type NavItem = 
+  | { id: string; label: string; href: string; icon: LucideIcon; children?: never }
+  | { id: string; label: string; icon: LucideIcon; children: { id: string; label: string; href: string; icon: LucideIcon }[] };
+
+const NAV_ITEMS: NavItem[] = [
   { id: "dashboard", label: "Resumen", href: "/cliente", icon: LayoutDashboard },
+  { id: "obra", label: "Mi obra", icon: MessageSquare, children: [
+    { id: "avance", label: "Avance", href: "/cliente/avance", icon: FileCheck },
+    { id: "pagos", label: "Pagos", href: "/cliente/pagos", icon: DollarSign },
+    { id: "documentos", label: "Documentos", href: "/cliente/documentos", icon: FileTextIcon },
+  ]},
   { id: "cotizaciones", label: "Mis cotizaciones", href: "/cliente/cotizaciones", icon: FileText },
   { id: "contratos", label: "Mis contratos", href: "/cliente/contratos", icon: Wrench },
-  { id: "proyectos", label: "Mis proyectos", href: "/cliente/proyectos", icon: FolderOpen },
-  { id: "obra", label: "Mi obra", href: "/cliente/obra", icon: MessageSquare },
-] as const;
+];
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
+  const [expanded, setExpanded] = useState<string | null>("obra");
+
   return (
     <>
       {NAV_ITEMS.map((item) => {
+        if (item.children) {
+          const isExpanded = expanded === item.id;
+          return (
+            <div key={item.id}>
+              <button
+                onClick={() => setExpanded(isExpanded ? null : item.id)}
+                className="flex items-center justify-between w-full rounded px-3 py-2 text-sm text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink"
+              >
+                <span className="flex items-center gap-3">
+                  <item.icon className="h-4 w-4 shrink-0" />
+                  {item.label}
+                </span>
+                {isExpanded ? (
+                  <ChevronDown className="h-4 w-4 shrink-0 text-ink-faint" />
+                ) : (
+                  <ChevronRight className="h-4 w-4 shrink-0 text-ink-faint" />
+                )}
+              </button>
+              {isExpanded && (
+                <div className="mt-1 ml-7 space-y-1 border-l border-border pl-3">
+                  {item.children.map((child) => (
+                    <Link
+                      key={child.id}
+                      href={child.href}
+                      onClick={onNavigate}
+                      className="flex items-center gap-2 rounded px-3 py-1.5 text-sm text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink"
+                    >
+                      <child.icon className="h-3.5 w-3.5 shrink-0" />
+                      {child.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        }
         const Icon = item.icon;
         return (
           <Link

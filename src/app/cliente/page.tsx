@@ -1,8 +1,11 @@
 import { auth } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
+import Link from "next/link";
 
 export default async function ClienteDashboard() {
   const session = await auth();
+  if (!session) redirect("/login?callbackUrl=/cliente");
 
   const usuario = await prisma.usuario.findUnique({
     where: { id: session!.user.id },
@@ -92,11 +95,48 @@ export default async function ClienteDashboard() {
         </div>
 
         <div className="rounded border border-border bg-surface p-6">
-          <p className="section-label text-ink-faint">PROYECTOS</p>
+          <p className="section-label text-ink-faint">OBRAS TOTALES</p>
           <p className="mt-3 font-heading text-4xl font-bold">{totalObras}</p>
           <p className="mt-1 text-sm text-ink-muted">
-            Proyectos completados
+            En tu historial
           </p>
+        </div>
+      </div>
+
+      {/* Navegación rápida a secciones del portal */}
+      <div className="rounded border border-border bg-surface p-6">
+        <p className="section-label mb-4 text-ink-faint">MI OBRA</p>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Link
+            href="/cliente/avance"
+            className="rounded border border-border bg-background p-5 hover:border-accent transition-colors text-center"
+          >
+            <p className="section-label text-ink-faint">AVANCE</p>
+            <p className="mt-2 font-heading text-lg font-bold">Hitos de obra</p>
+            <p className="mt-1 text-sm text-ink-muted">
+              Ver progreso, hitos cumplidos y próximos pasos
+            </p>
+          </Link>
+          <Link
+            href="/cliente/pagos"
+            className="rounded border border-border bg-background p-5 hover:border-accent transition-colors text-center"
+          >
+            <p className="section-label text-ink-faint">PAGOS</p>
+            <p className="mt-2 font-heading text-lg font-bold">Historial</p>
+            <p className="mt-1 text-sm text-ink-muted">
+              Ver montos, fechas, conceptos y comprobantes
+            </p>
+          </Link>
+          <Link
+            href="/cliente/documentos"
+            className="rounded border border-border bg-background p-5 hover:border-accent transition-colors text-center"
+          >
+            <p className="section-label text-ink-faint">DOCUMENTOS</p>
+            <p className="mt-2 font-heading text-lg font-bold">Contratos y PDFs</p>
+            <p className="mt-1 text-sm text-ink-muted">
+              Descargar contrato firmado y documentación
+            </p>
+          </Link>
         </div>
       </div>
 

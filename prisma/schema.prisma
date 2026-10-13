@@ -58,6 +58,26 @@ enum EstadoPago {
   confirmado
 }
 
+// ─── Enums nuevos (Módulos 5-7) ────────────────────────────────────
+
+enum CargoEmpleado {
+  ingeniero
+  arquitecto
+  maestro_obra
+  albanil
+  electricista
+  plomero
+  ayudante
+  administrativo
+}
+
+enum EstadoHerramienta {
+  disponible
+  en_uso
+  mantenimiento
+  baja
+}
+
 // ─── Entidades Fase 1 ───────────────────────────────────────────────
 
 model Usuario {
@@ -244,10 +264,13 @@ model ObraActiva {
   estado          EstadoObra @default(en_curso)
   progreso        Int        @default(0)
 
-  cliente  Cliente    @relation(fields: [clienteId], references: [id])
-  contrato Contrato?  @relation(fields: [contratoId], references: [id])
-  hitos    HitosObra[]
-  pagos    PagoObra[]
+  cliente       Cliente            @relation(fields: [clienteId], references: [id])
+  contrato      Contrato?          @relation(fields: [contratoId], references: [id])
+  hitos         HitosObra[]
+  pagos         PagoObra[]
+  asignaciones  AsignacionObra[]
+  materiales    MaterialObra[]
+  prestamos     PrestamoHerramienta[]
 
   @@index([clienteId])
   @@index([contratoId])
@@ -282,4 +305,105 @@ model PagoObra {
 
   @@index([obraId])
   @@map("pagos_obra")
+}
+
+// ─── Entidades Módulo 5 — Empleados ────────────────────────────────
+
+model Empleado {
+  id           String   @id @default(cuid())
+  nombre       String
+  apellidos    String
+  ci           String   @unique
+  telefono     String
+  cargo        CargoEmpleado
+  fechaIngreso DateTime @map("fecha_ingreso")
+  salario      Decimal? @db.Decimal(12, 2)
+  activo       Boolean  @default(true)
+  creadoEn     DateTime @default(now()) @map("creado_en")
+
+  asignaciones AsignacionObra[]
+  prestamos    PrestamoHerramienta[]
+
+  @@map("empleados")
+}
+
+model AsignacionObra {
+  id           String   @id @default(cuid())
+  empleadoId   String   @map("empleado_id")
+  obraId       String   @map("obra_id")
+  rolEnObra    String   @map("rol_en_obra")
+  fechaInicio  DateTime @map("fecha_inicio")
+  fechaFin     DateTime? @map("fecha_fin")
+
+  empleado Empleado   @relation(fields: [empleadoId], references: [id])
+  obra     ObraActiva @relation(fields: [obraId], references: [id])
+
+  @@index([empleadoId])
+  @@index([obraId])
+  @@map("asignaciones_obra")
+}
+
+// ─── Entidades Módulo 6 — Materiales ──────────────────────────────
+
+model Material {
+  id            String   @id @default(cuid())
+  nombre        String
+  unidad        String
+  stockActual   Decimal  @map("stock_actual") @db.Decimal(12, 2)
+  stockMinimo   Decimal  @map("stock_minimo") @db.Decimal(12, 2)
+  precioUnitario Decimal @map("precio_unitario") @db.Decimal(12, 2)
+  activo        Boolean  @default(true)
+
+  usos MaterialObra[]
+
+  @@map("materiales")
+}
+
+model MaterialObra {
+  id             String   @id @default(cuid())
+  obraId         String   @map("obra_id")
+  materialId     String   @map("material_id")
+  cantidad       Decimal  @db.Decimal(12, 2)
+  precioUnitario Decimal  @map("precio_unitario") @db.Decimal(12, 2)
+  fecha          DateTime
+
+  obra     ObraActiva @relation(fields: [obraId], references: [id])
+  material Material   @relation(fields: [materialId], references: [id])
+
+  @@index([obraId])
+  @@index([materialId])
+  @@map("materiales_obra")
+}
+
+// ─── Entidades Módulo 7 — Herramientas ────────────────────────────
+
+model Herramienta {
+  id       String            @id @default(cuid())
+  nombre   String
+  codigo   String            @unique
+  estado   EstadoHerramienta @default(disponible)
+  activo   Boolean           @default(true)
+
+  prestamos PrestamoHerramienta[]
+
+  @@map("herramientas")
+}
+
+model PrestamoHerramienta {
+  id               String   @id @default(cuid())
+  herramientaId    String   @map("herramienta_id")
+  empleadoId       String   @map("empleado_id")
+  obraId           String   @map("obra_id")
+  fechaSalida      DateTime @map("fecha_salida")
+  fechaDevolucion  DateTime? @map("fecha_devolucion")
+  observaciones    String?
+
+  herramienta Herramienta @relation(fields: [herramientaId], references: [id])
+  empleado    Empleado     @relation(fields: [empleadoId], references: [id])
+  obra        ObraActiva   @relation(fields: [obraId], references: [id])
+
+  @@index([herramientaId])
+  @@index([empleadoId])
+  @@index([obraId])
+  @@map("prestamos_herramienta")
 }

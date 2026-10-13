@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { ESTADO_LABELS, ESTADO_COLORES } from "@/lib/constants";
 import { getDashboardStats, getCotizacionesRecientes } from "./actions";
 
@@ -50,6 +51,33 @@ export default async function AdminDashboard() {
         <div className="rounded border border-border bg-surface p-6">
           <p className="section-label text-ink-faint">TESTIMONIOS PUBLICADOS</p>
           <p className="mt-2 font-heading text-3xl font-bold">{stats.testimonios}</p>
+        </div>
+      </div>
+
+      {/* Módulos de gestión (placeholders) */}
+      <div className="mt-8">
+        <p className="section-label mb-4 text-ink-faint">MÓDULOS DE GESTIÓN</p>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Link href="/admin/empleados" className="rounded border border-border bg-surface p-6 hover:border-accent transition-colors">
+            <p className="section-label text-ink-faint">EMPLEADOS</p>
+            <p className="mt-2 font-heading text-lg font-bold">Personal</p>
+            <p className="mt-2 text-sm text-ink-muted">Gestión de ingenieros, maestros, albañiles, electricistas, administrativos</p>
+          </Link>
+          <Link href="/admin/materiales" className="rounded border border-border bg-surface p-6 hover:border-accent transition-colors">
+            <p className="section-label text-ink-faint">MATERIALES</p>
+            <p className="mt-2 font-heading text-lg font-bold">Inventario</p>
+            <p className="mt-2 text-sm text-ink-muted">Control de stock, reposición, costos de cemento, fierro, aislaciones, placas</p>
+          </Link>
+          <Link href="/admin/herramientas" className="rounded border border-border bg-surface p-6 hover:border-accent transition-colors">
+            <p className="section-label text-ink-faint">HERRAMIENTAS</p>
+            <p className="mt-2 font-heading text-lg font-bold">Equipos</p>
+            <p className="mt-2 text-sm text-ink-muted">Préstamos, mantenimiento, estado de taladros, mezcladoras, andamios, etc.</p>
+          </Link>
+          <Link href="/admin/autorizar-cuentas" className="rounded border border-border bg-surface p-6 hover:border-accent transition-colors">
+            <p className="section-label text-ink-faint">AUTORIZAR CUENTAS</p>
+            <p className="mt-2 font-heading text-lg font-bold">Acceso cliente</p>
+            <p className="mt-2 text-sm text-ink-muted">Crear cuentas para clientes con obra/contrato</p>
+          </Link>
         </div>
       </div>
 
