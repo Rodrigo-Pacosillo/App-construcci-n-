@@ -6,14 +6,14 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Servicios",
   description:
-    "Steel frame, drywall, cielorrasos, revestimientos y aislaciones. Soluciones completas en construcción en seco.",
+    "Construcción tradicional, construcción en seco (Steel Frame) y soluciones integrales. Cobertura nacional en Bolivia.",
   openGraph: {
     images: [
       {
-        url: "/og?title=Servicios&subtitle=Soluciones%20completas%20en%20construcci%C3%B3n%20en%20seco&type=dark",
+        url: "/og?title=Servicios&subtitle=Construcci%C3%B3n%20tradicional%2C%20en%20seco%20e%20integral&type=dark",
         width: 1200,
         height: 630,
-        alt: "Servicios Steel Frame",
+        alt: "Servicios CONSTR-ART",
       },
     ],
   },

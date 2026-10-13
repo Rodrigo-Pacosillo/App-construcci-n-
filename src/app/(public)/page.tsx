@@ -9,16 +9,16 @@ import { CtaSection } from "@/components/sections/CtaSection";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Steel Frame — Construcción en Seco",
+  title: "CONSTR-ART — Construcción en Seco y Tradicional",
   description:
-    "Contratista independiente de construcción en seco: steel frame, drywall, cielorrasos, revestimientos y aislaciones. Zona norte GBA y CABA.",
+    "Contratista independiente de construcción: steel frame, construcción tradicional, soluciones integrales. Cobertura nacional en Bolivia.",
   openGraph: {
     images: [
       {
-        url: "/og?title=Steel%20Frame&subtitle=Construcci%C3%B3n%20en%20Seco&type=dark",
+        url: "/og?title=CONSTR-ART&subtitle=Construcci%C3%B3n%20en%20Seco%20y%20Tradicional&type=dark",
         width: 1200,
         height: 630,
-        alt: "Steel Frame - Construcción en Seco",
+        alt: "CONSTR-ART - Construcción en Seco y Tradicional",
       },
     ],
   },

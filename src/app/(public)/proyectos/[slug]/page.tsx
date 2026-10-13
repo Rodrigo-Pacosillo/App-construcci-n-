@@ -28,16 +28,20 @@ export async function generateMetadata({
     return { title: "Proyecto no encontrado" };
   }
 
+  const tipoConstructivo = proyecto.tipoConstruccion === "seco" ? "Steel Frame" : 
+    proyecto.tipoConstruccion === "tradicional" ? "Construcción Tradicional" : 
+    "Solución Integral";
+
   return {
     title: proyecto.titulo,
-    description: `${proyecto.tipoConstruccion === "seco" ? "Steel Frame" : proyecto.tipoConstruccion} · ${proyecto.m2Construidos}m2 · ${proyecto.ubicacion}`,
+    description: `${tipoConstructivo} · ${proyecto.m2Construidos}m² · ${proyecto.ubicacion}`,
     openGraph: {
       images: [
         {
-          url: `/og?title=${encodeURIComponent(proyecto.titulo)}&subtitle=${encodeURIComponent(`${proyecto.tipoConstruccion === "seco" ? "Steel Frame" : proyecto.tipoConstruccion} · ${proyecto.ubicacion}`)}&type=dark`,
+          url: `/og?title=${encodeURIComponent(proyecto.titulo)}&subtitle=${encodeURIComponent(`${tipoConstructivo} · ${proyecto.ubicacion}`)}&type=dark`,
           width: 1200,
           height: 630,
-          alt: proyecto.titulo,
+          alt: `${proyecto.titulo} - CONSTR-ART`,
         },
       ],
     },
@@ -70,7 +74,9 @@ export default async function ProyectoPage({
           <p className="section-label text-accent-strong">
             {proyecto.tipoConstruccion === "seco"
               ? "STEEL FRAME"
-              : proyecto.tipoConstruccion.toUpperCase()}
+              : proyecto.tipoConstruccion === "tradicional"
+              ? "CONSTRUCCIÓN TRADICIONAL"
+              : "SOLUCIÓN INTEGRAL"}
           </p>
           {proyecto.destacado && (
             <span className="section-label rounded bg-accent/10 px-2 py-0.5 text-accent-strong">

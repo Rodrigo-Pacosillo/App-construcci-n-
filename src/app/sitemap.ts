@@ -3,7 +3,7 @@ import { FALLBACK_SERVICIOS, FALLBACK_PROYECTOS } from "@/lib/fallback-data";
 import type { MetadataRoute } from "next";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = "https://steelframe.com.ar";
+  const base = "https://app-construcci-n.vercel.app";
 
   const staticPages: MetadataRoute.Sitemap = [
     { url: base, lastModified: new Date(), changeFrequency: "weekly", priority: 1 },

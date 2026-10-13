@@ -6,14 +6,14 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Proyectos",
   description:
-    "Portafolio de obras destacadas en construcción en seco. Casos reales con fotos antes/durante/después.",
+    "Portafolio de obras en Bolivia: construcción en seco, tradicional e integral. Casos reales con fotos, metros cuadrados y tiempos de ejecución.",
   openGraph: {
     images: [
       {
-        url: "/og?title=Proyectos&subtitle=Portafolio%20de%20obras%20en%20construcci%C3%B3n%20en%20seco&type=dark",
+        url: "/og?title=Proyectos&subtitle=Portafolio%20de%20obras%20en%20Bolivia&type=dark",
         width: 1200,
         height: 630,
-        alt: "Proyectos Steel Frame",
+        alt: "Proyectos CONSTR-ART",
       },
     ],
   },

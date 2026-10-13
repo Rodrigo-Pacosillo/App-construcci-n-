@@ -9,6 +9,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/admin", "/api/"],
       },
     ],
-    sitemap: "https://steelframe.com.ar/sitemap.xml",
+    sitemap: "https://app-construcci-n.vercel.app/sitemap.xml",
   };
 }

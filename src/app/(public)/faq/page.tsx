@@ -6,14 +6,14 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Preguntas Frecuentes",
   description:
-    "Resolvemos tus dudas sobre construcción en seco, steel frame, plazos, costos y más.",
+    "Resolvemos tus dudas sobre construcción en seco, steel frame, construcción tradicional, plazos, costos, garantía y cobertura nacional.",
   openGraph: {
     images: [
       {
-        url: "/og?title=Preguntas%20Frecuentes&subtitle=Resolvemos%20tus%20dudas%20sobre%20construcci%C3%B3n%20en%20seco&type=dark",
+        url: "/og?title=Preguntas%20Frecuentes&subtitle=Dudas%20sobre%20construcci%C3%B3n%20en%20Bolivia&type=dark",
         width: 1200,
         height: 630,
-        alt: "FAQ Steel Frame",
+        alt: "FAQ CONSTR-ART",
       },
     ],
   },

@@ -9,8 +9,7 @@ export function CtaSection() {
           Pedí tu presupuesto
         </h2>
         <p className="mt-4 text-lg text-ink-muted">
-          Contanos tu proyecto y te damos una estimación en 24 horas.
-          Sin compromiso.
+          Por la eficiencia y garantía que brindamos. Cobramos por m².
         </p>
         <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:justify-center">
           <Link

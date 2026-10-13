@@ -37,10 +37,11 @@ function AnimatedNumber({ value, suffix }: { value: number; suffix: string }) {
 
 export function NumerosSection() {
   const numeros = [
-    { label: "Metros cuadrados", valor: 5000, sufijo: "m2" },
+    { label: "Metros cuadrados", valor: 5000, sufijo: "m²" },
     { label: "Obras ejecutadas", valor: 200, sufijo: "+" },
-    { label: "Días promedio", valor: 35, sufijo: "" },
-    { label: "Años de experiencia", valor: 15, sufijo: "" },
+    { label: "Días — vivienda pequeña", valor: 70, sufijo: "" },
+    { label: "Años de experiencia", valor: 14, sufijo: "" },
+    { label: "Año de garantía", valor: 1, sufijo: "" },
   ];
 
   return (
@@ -51,7 +52,7 @@ export function NumerosSection() {
           Nuestros resultados
         </h2>
 
-        <div className="mt-12 grid grid-cols-2 gap-8 lg:grid-cols-4">
+        <div className="mt-12 grid grid-cols-2 gap-8 lg:grid-cols-5">
           {numeros.map((num) => (
             <div key={num.label} className="text-center">
               <p className="font-heading text-5xl font-bold text-accent-strong">

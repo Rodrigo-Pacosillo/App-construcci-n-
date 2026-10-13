@@ -22,25 +22,25 @@ const archivo = Archivo({
 
 export const metadata: Metadata = {
   title: {
-    default: "Steel Frame — Construcción en Seco",
-    template: "%s | Steel Frame",
+    default: "CONSTR-ART — Construcción en Seco y Tradicional",
+    template: "%s | CONSTR-ART",
   },
   description:
-    "Contratista independiente de construcción en seco: steel frame, drywall, cielorrasos, revestimientos y aislaciones. Zona norte GBA y CABA.",
-  metadataBase: new URL("https://steelframe.com.ar"),
+    "Contratista independiente de construcción: steel frame, construcción tradicional, soluciones integrales. Cobertura nacional en Bolivia.",
+  metadataBase: new URL("https://app-construcci-n.vercel.app"),
   openGraph: {
     type: "website",
-    locale: "es_AR",
-    siteName: "Steel Frame",
-    title: "Steel Frame — Construcción en Seco",
+    locale: "es_BO",
+    siteName: "CONSTR-ART",
+    title: "CONSTR-ART — Construcción en Seco y Tradicional",
     description:
-      "Contratista independiente de construcción en seco: steel frame, drywall, cielorrasos, revestimientos y aislaciones.",
+      "Contratista independiente de construcción en seco, tradicional e integral. Eficiencia y garantía en cada obra. Bolivia.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Steel Frame — Construcción en Seco",
+    title: "CONSTR-ART — Construcción en Seco y Tradicional",
     description:
-      "Contratista independiente de construcción en seco: steel frame, drywall, cielorrasos, revestimientos y aislaciones.",
+      "Contratista independiente de construcción en seco, tradicional e integral. Eficiencia y garantía en cada obra. Bolivia.",
   },
   robots: {
     index: true,

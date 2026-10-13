@@ -8,56 +8,29 @@ import type { Certificacion, Faq, Servicio } from "@prisma/client";
 export const FALLBACK_SERVICIOS: Servicio[] = [
   {
     id: "1",
-    slug: "steel-frame",
-    titulo: "Steel Frame",
+    slug: "construccion-tradicional",
+    titulo: "Construcción tradicional",
     descripcion:
-      "Construcción de viviendas y estructuras con perfilería de acero galvanizado. Más liviano, más rápido, más eficiente térmicamente.",
+      "Construcción de viviendas y edificaciones con métodos tradicionales de albañilería. Sólida, duradera y con acabados clásicos.",
     orden: 1,
     activo: true,
   },
   {
     id: "2",
-    slug: "drywall",
-    titulo: "Tabiquería Drywall",
+    slug: "construccion-en-seco",
+    titulo: "Construcción en seco",
     descripcion:
-      "Tabiques internos en placa de yeso sobre estructura de acero. Rápido, limpio y con excelente aislación acústica y térmica.",
+      "Construcción con perfilería de acero galvanizado (Steel Frame). Más liviano, más rápido, más eficiente térmicamente.",
     orden: 2,
     activo: true,
   },
   {
     id: "3",
-    slug: "cielorrasos",
-    titulo: "Cielorrasos",
+    slug: "soluciones-integrales",
+    titulo: "Soluciones integrales",
     descripcion:
-      "Cielorrasos suspendidos en placa de yeso, con opciones de diseños, iluminación empotrada y acabados lisos o texturizados.",
+      "Proyectos llave en mano: diseño, gestión de permisos, ejecución y entrega. Un solo interlocutor para toda tu obra.",
     orden: 3,
-    activo: true,
-  },
-  {
-    id: "4",
-    slug: "revestimientos",
-    titulo: "Revestimientos",
-    descripcion:
-      "Revestimientos interiores y exteriores en placas de yeso, fibrocemento u otros materiales. Acabados profesionales garantizados.",
-    orden: 4,
-    activo: true,
-  },
-  {
-    id: "5",
-    slug: "aislaciones",
-    titulo: "Aislaciones Térmicas y Acústicas",
-    descripcion:
-      "Instalación de lana de vidrio, lana de roca y otros materiales aislantes para máxima eficiencia energética y confort.",
-    orden: 5,
-    activo: true,
-  },
-  {
-    id: "6",
-    slug: "habilitaciones",
-    titulo: "Habilitaciones de Locales",
-    descripcion:
-      "Trámites y ejecución para habilitación de locales comerciales, oficinas y espacios gastronómicos. Cumplimiento de normativas.",
-    orden: 6,
     activo: true,
   },
 ];
@@ -65,113 +38,113 @@ export const FALLBACK_SERVICIOS: Servicio[] = [
 export const FALLBACK_PROYECTOS = [
   {
     id: "1",
-    slug: "casa-steel-frame-pilar",
-    titulo: "Casa Steel Frame en Pilar",
+    slug: "proyecto-1",
+    titulo: "Proyecto Residencial Santa Cruz",
     tipoConstruccion: "seco",
-    m2Construidos: 220,
-    diasEjecucion: 45,
-    ubicacion: "Pilar, Buenos Aires",
+    m2Construidos: 180,
+    diasEjecucion: 70,
+    ubicacion: "Santa Cruz de la Sierra, Bolivia",
     problemaCliente:
-      "La familia quería una casa moderna y sustentable, pero con presupuesto limitado y plazo ajustado para mudarse.",
+      "Familia requería vivienda moderna y eficiente en plazo ajustado.",
     solucion:
-      "Construcción en steel frame con aislación térmica de alta eficiencia. Reducción del 40% en tiempo de obra respecto a tradicional, con mejor aislación.",
+      "Vivienda Steel Frame con aislación térmica de alta eficiencia. Entregada en 70 días con acabados premium.",
     destacado: true,
     publicado: true,
     fotos: [
-      { url: "/img/proyectos/pilar-antes.jpg", fase: "antes", orden: 1 },
-      { url: "/img/proyectos/pilar-durante.jpg", fase: "durante", orden: 2 },
-      { url: "/img/proyectos/pilar-despues.jpg", fase: "despues", orden: 3 },
+      { url: "/img/proyectos/proyecto1-antes.jpg", fase: "antes", orden: 1 },
+      { url: "/img/proyectos/proyecto1-durante.jpg", fase: "durante", orden: 2 },
+      { url: "/img/proyectos/proyecto1-despues.jpg", fase: "despues", orden: 3 },
     ],
   },
   {
     id: "2",
-    slug: "ampliacion-vicente-lopez",
-    titulo: "Ampliación en Vicente López",
-    tipoConstruccion: "seco",
-    m2Construidos: 65,
-    diasEjecucion: 20,
-    ubicacion: "Vicente López, Buenos Aires",
+    slug: "proyecto-2",
+    titulo: "Ampliación Comercial La Paz",
+    tipoConstruccion: "integral",
+    m2Construidos: 120,
+    diasEjecucion: 45,
+    ubicacion: "La Paz, Bolivia",
     problemaCliente:
-      "Necesitaban un estudio y un dormitorio extra en el piso superior, sin perder el jardín.",
+      "Local comercial necesitaba ampliar superficie sin cerrar operaciones.",
     solucion:
-      "Ampliación en steel frame sobre estructura existente. Se logró el doble de espacio sin demoler, con acabados idénticos a la casa original.",
+      "Ampliación en construcción tradicional con ejecución por fases. Operaciones continuaron sin interrupciones.",
     destacado: true,
     publicado: true,
     fotos: [
-      { url: "/img/proyectos/vlopez-antes.jpg", fase: "antes", orden: 1 },
-      { url: "/img/proyectos/vlopez-despues.jpg", fase: "despues", orden: 2 },
+      { url: "/img/proyectos/proyecto2-antes.jpg", fase: "antes", orden: 1 },
+      { url: "/img/proyectos/proyecto2-despues.jpg", fase: "despues", orden: 2 },
     ],
   },
   {
     id: "3",
-    slug: "local-comercial-caba",
-    titulo: "Local Comercial en CABA",
+    slug: "proyecto-3",
+    titulo: "Oficinas Corporativas Cochabamba",
     tipoConstruccion: "seco",
-    m2Construidos: 90,
-    diasEjecucion: 15,
-    ubicacion: "San Telmo, CABA",
+    m2Construidos: 200,
+    diasEjecucion: 60,
+    ubicacion: "Cochabamba, Bolivia",
     problemaCliente:
-      "Un emprendedor quería habilitar un local gastronómico en un sótano, con plazo mínimo de demora.",
+      "Empresa requería oficinas flexibles y modernas para equipo en crecimiento.",
     solucion:
-      "Acondicionamiento completo con tabiquería drywall, cielorrasos suspendidos y revestimientos resistentes a humedad. Listo en 15 días.",
+      "Sistema de tabiques desmontables en Steel Frame. Espacio reconfigurable según necesidades del equipo.",
     destacado: false,
     publicado: true,
     fotos: [
-      { url: "/img/proyectos/santelmo-durante.jpg", fase: "durante", orden: 1 },
-      { url: "/img/proyectos/santelmo-despues.jpg", fase: "despues", orden: 2 },
+      { url: "/img/proyectos/proyecto3-durante.jpg", fase: "durante", orden: 1 },
+      { url: "/img/proyectos/proyecto3-despues.jpg", fase: "despues", orden: 2 },
     ],
   },
   {
     id: "4",
-    slug: "quinta-rehabilitacion",
-    titulo: "Quinta en Rehabilitación",
-    tipoConstruccion: "integral",
-    m2Construidos: 350,
-    diasEjecucion: 80,
-    ubicacion: "San Pedro, Buenos Aires",
+    slug: "proyecto-4",
+    titulo: "Vivienda Familiar Sucre",
+    tipoConstruccion: "tradicional",
+    m2Construidos: 250,
+    diasEjecucion: 120,
+    ubicacion: "Sucre, Bolivia",
     problemaCliente:
-      "Una quinta familiar con décadas de abandono que querían convertir en casa de fin de semana.",
+      "Familia buscaba casa tradicional con materiales locales y acabados artesanales.",
     solucion:
-      "Rehabilitación integral: estructura reforzada, nuevos tabiques, aislación, instalaciones. Se preservó la fachada original.",
+      "Construcción tradicional con ladrillo visto, techos de teja y detalles artesanales. Estética colonial contemporánea.",
     destacado: true,
     publicado: true,
     fotos: [
-      { url: "/img/proyectos/sanpedro-antes.jpg", fase: "antes", orden: 1 },
-      { url: "/img/proyectos/sanpedro-durante.jpg", fase: "durante", orden: 2 },
-      { url: "/img/proyectos/sanpedro-despues.jpg", fase: "despues", orden: 3 },
+      { url: "/img/proyectos/proyecto4-antes.jpg", fase: "antes", orden: 1 },
+      { url: "/img/proyectos/proyecto4-durante.jpg", fase: "durante", orden: 2 },
+      { url: "/img/proyectos/proyecto4-despues.jpg", fase: "despues", orden: 3 },
     ],
   },
   {
     id: "5",
-    slug: "oficinas-empresariales",
-    titulo: "Oficinas Empresariales",
-    tipoConstruccion: "seco",
-    m2Construidos: 180,
-    diasEjecucion: 30,
-    ubicacion: "Microcentro, CABA",
+    slug: "proyecto-5",
+    titulo: "Centro Comercial Tarija",
+    tipoConstruccion: "integral",
+    m2Construidos: 500,
+    diasEjecucion: 180,
+    ubicacion: "Tarija, Bolivia",
     problemaCliente:
-      "Una startup necesitaba oficinas modulares que pudieran reconfigurar según crezca el equipo.",
+      "Inversionista requería centro comercial llave en mano con gestión integral.",
     solucion:
-      "Sistema de tabiques desmontables en drywall con puertas corredizas. El espacio se adapta al equipo sin obras.",
+      "Solución integral: diseño, permisos, estructura mixta (tradicional + seco), instalaciones y entrega operativa.",
     destacado: false,
     publicado: true,
     fotos: [
-      { url: "/img/proyectos/oficinas-durante.jpg", fase: "durante", orden: 1 },
-      { url: "/img/proyectos/oficinas-despues.jpg", fase: "despues", orden: 2 },
+      { url: "/img/proyectos/proyecto5-durante.jpg", fase: "durante", orden: 1 },
+      { url: "/img/proyectos/proyecto5-despues.jpg", fase: "despues", orden: 2 },
     ],
   },
   {
     id: "6",
-    slug: "casa-ecologica-escobar",
-    titulo: "Casa Ecológica en Escobar",
-    tipoConstruccion: "seco",
-    m2Construidos: 160,
-    diasEjecucion: 35,
-    ubicacion: "Escobar, Buenos Aires",
+    slug: "proyecto-6",
+    titulo: "Refacción Hotel Potosí",
+    tipoConstruccion: "tradicional",
+    m2Construidos: 300,
+    diasEjecucion: 90,
+    ubicacion: "Potosí, Bolivia",
     problemaCliente:
-      "Un arquitecto quería demostrar que la construcción en seco puede ser tan estética como la tradicional.",
+      "Hotel histórico necesitaba refacción completa preservando fachada patrimonial.",
     solucion:
-      "Casa de diseño con tabiques vistos, cielorrasos de chapa ondulada y amplios vanos de vidrio. Publicada en revista de arquitectura.",
+      "Refacción integral con técnicas tradicionales. Fachada restaurada, interiores modernizados con eficiencia energética.",
     destacado: false,
     publicado: true,
     fotos: [],
@@ -181,41 +154,41 @@ export const FALLBACK_PROYECTOS = [
 export const FALLBACK_FAQS: Faq[] = [
   {
     id: "1",
-    pregunta: "¿Cuánto tarda una casa en steel frame?",
+    pregunta: "¿Cuánto tarda una vivienda en construcción en seco?",
     respuesta:
-      "Una vivienda de 100m² tarda entre 30 y 45 días desde el inicio de la obra hasta la entrega de llaves. Es significativamente más rápido que la construcción tradicional.",
+      "70 días para vivienda pequeña (hasta 100m²) desde el inicio de la obra hasta la entrega de llaves. Es significativamente más rápido que la construcción tradicional.",
     orden: 1,
     activo: true,
   },
   {
     id: "2",
-    pregunta: "¿El steel frame es más caro que la construcción tradicional?",
+    pregunta: "¿Cómo se calcula el costo de una obra?",
     respuesta:
-      "El costo por m² es comparable, pero el ahorro viene por el tiempo de obra (menos interés si financiás) y la eficiencia térmica (menor costo de calefacción/refrigeración).",
+      "Cobramos por m². El costo varía según el tipo de construcción (tradicional, seco, integral), ubicación, acabados y complejidad. Te damos un presupuesto detallado sin compromiso.",
     orden: 2,
     activo: true,
   },
   {
     id: "3",
-    pregunta: "¿Sirve para ampliaciones?",
+    pregunta: "¿Realizan ampliaciones sobre estructuras existentes?",
     respuesta:
-      "Sí, es ideal para ampliaciones porque es más liviano que la estructura tradicional, lo que permite construir sobre estructuras existentes sin refuerzos costosos.",
+      "Sí, tanto en construcción en seco (ideal por su ligereza) como en tradicional. Evaluamos la estructura existente y diseñamos la solución adecuada.",
     orden: 3,
     activo: true,
   },
   {
     id: "4",
-    pregunta: "¿Cómo es la aislación térmica?",
+    pregunta: "¿Qué tipo de aislación térmica ofrecen?",
     respuesta:
-      "El sistema incluye lana de vidrio o roca entre los parantes, logrando un coeficiente térmico superior a la construcción tradicional con muros de 20cm.",
+      "En construcción en seco: lana de vidrio/roca entre parantes (coeficiente térmico superior). En tradicional: aislación en techos y muros según normativa vigente.",
     orden: 4,
     activo: true,
   },
   {
     id: "5",
-    pregunta: "¿Trabajan en toda la zona norte del Gran Buenos Aires?",
+    pregunta: "¿Trabajan en todo Bolivia?",
     respuesta:
-      "Sí, cubrimos CABA y toda la zona norte del GBA: Vicente López, San Isidro, Tigre, Pilar, Escobar, y alrededores.",
+      "Sí, cobertura nacional. Ejecutamos proyectos en Santa Cruz, La Paz, Cochabamba, Sucre, Tarija, Potosí, Beni, Pando y Oruro.",
     orden: 5,
     activo: true,
   },
@@ -223,7 +196,7 @@ export const FALLBACK_FAQS: Faq[] = [
     id: "6",
     pregunta: "¿Puedo ver ejemplos de trabajos anteriores?",
     respuesta:
-      "Sí, en nuestra sección de proyectos encontrarás casos reales con fotos antes/durante/después, metros cuadrados y tiempos de ejecución.",
+      "Sí, en nuestra sección de proyectos encontrarás casos reales con fotos antes/durante/después, metros cuadrados, tiempos de ejecución y ubicaciones en Bolivia.",
     orden: 6,
     activo: true,
   },
@@ -243,46 +216,54 @@ export const FALLBACK_FAQS: Faq[] = [
     orden: 8,
     activo: true,
   },
+  {
+    id: "9",
+    pregunta: "¿Ofrecen garantía en sus obras?",
+    respuesta:
+      "Sí, todas nuestras obras tienen garantía de 1 año por vicios de construcción y materiales. Respaldamos nuestro trabajo con certificaciones y seguros vigentes.",
+    orden: 9,
+    activo: true,
+  },
 ];
 
 export const FALLBACK_TESTIMONIOS = [
   {
     id: "1",
-    clienteNombre: "Juan Pérez",
+    clienteNombre: "Carlos Mendoza",
     texto:
-      "Increíble cómo en 45 días pasamos de terreno a casa habitable. La calidad de los acabados superó nuestras expectativas. El aislamiento térmico es notable.",
+      "Increíble cómo en 70 días pasamos de terreno a casa habitable. La calidad de los acabados superó nuestras expectativas. El aislamiento térmico es notable.",
     puntaje: 5,
     publicado: true,
   },
   {
     id: "2",
-    clienteNombre: "Laura Fernández",
+    clienteNombre: "Ana Gutiérrez",
     texto:
-      "Necesitábamos ampliar sin demoler y cumplieron exactamente lo prometido. La ampliación se ve como si siempre hubiera estado ahí.",
+      "Necesitábamos ampliar sin cerrar el local y cumplieron exactamente lo prometido. La ampliación se ve como si siempre hubiera estado ahí.",
     puntaje: 5,
     publicado: true,
   },
   {
     id: "3",
-    clienteNombre: "Diego Torres",
+    clienteNombre: "Roberto Flores",
     texto:
-      "El local quedó listo en 15 días, justo antes de la inauguración. Profesionales de primera.",
+      "Las oficinas quedaron listas en 60 días, justo antes de la mudanza del equipo. Profesionales de primera, solución integral real.",
     puntaje: 5,
     publicado: true,
   },
   {
     id: "4",
-    clienteNombre: "Roberto García",
+    clienteNombre: "María Vargas",
     texto:
-      "Transformaron una quinta abandonada en una casa hermosa. Preservaron la fachada y modernizaron todo por dentro. Excelente trabajo.",
-    puntaje: 4,
+      "Transformaron una casa antigua en una joya colonial moderna. Preservaron la fachada y modernizaron todo por dentro. Excelente trabajo en construcción tradicional.",
+    puntaje: 5,
     publicado: true,
   },
   {
     id: "5",
-    clienteNombre: "María López",
+    clienteNombre: "Jorge Ávila",
     texto:
-      "Contraté solo la cotización pero me sorprendió la profesionalidad y claridad del presupuesto. Muy recomendable.",
+      "Contraté solo la cotización pero me sorprendió la profesionalidad y claridad del presupuesto. Muy recomendable para cualquier tipo de obra.",
     puntaje: 5,
     publicado: true,
   },
@@ -291,37 +272,38 @@ export const FALLBACK_TESTIMONIOS = [
 export const FALLBACK_CERTIFICACIONES: Certificacion[] = [
   {
     id: "1",
-    titulo: "Matrícula Constructora",
+    titulo: "Matrícula Constructora Nacional",
     descripcion:
-      "Matrícula habilitante para construcciones en seco — Ciudad de Buenos Aires y Provincia.",
+      "Matrícula habilitante para construcciones en todo el territorio boliviano.",
     activo: true,
   },
   {
     id: "2",
     titulo: "Certificación Steel Frame",
     descripcion:
-      "Certificación oficial por la Association of Steel Frame Constructors (ASFC).",
+      "Certificación oficial en sistemas de construcción en seco con perfilería de acero galvanizado.",
     activo: true,
   },
   {
     id: "3",
-    titulo: "Seguro de Responsabilidad Civil",
+    titulo: "Garantía de 1 año",
     descripcion:
-      "Cobertura completa de responsabilidad civil para obras de hasta $50.000.000.",
+      "Garantía escrita de 1 año en todas nuestras obras por vicios de construcción y materiales.",
     activo: true,
   },
   {
     id: "4",
-    titulo: "15 años de experiencia",
+    titulo: "Equipo profesional y especializado",
     descripcion:
-      "Más de 200 obras ejecutadas en la zona norte del Gran Buenos Aires y CABA.",
+      "Más de 14 años de experiencia y 200+ obras ejecutadas a nivel nacional en Bolivia.",
     activo: true,
   },
 ];
 
 export const FALLBACK_NUMEROS = [
-  { label: "Metros cuadrados", valor: 5000, sufijo: "m2" },
+  { label: "Metros cuadrados", valor: 5000, sufijo: "m²" },
   { label: "Obras ejecutadas", valor: 200, sufijo: "+" },
-  { label: "Días promedio", valor: 35, sufijo: "" },
-  { label: "Años de experiencia", valor: 15, sufijo: "" },
+  { label: "Días — vivienda pequeña", valor: 70, sufijo: "" },
+  { label: "Años de experiencia", valor: 14, sufijo: "" },
+  { label: "Año de garantía", valor: 1, sufijo: "" },
 ];

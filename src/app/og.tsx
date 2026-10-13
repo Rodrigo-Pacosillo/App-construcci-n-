@@ -11,8 +11,8 @@ export const runtime = "edge";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
-  const title = searchParams.get("title") || "Steel Frame";
-  const subtitle = searchParams.get("subtitle") || "Construccion en Seco";
+  const title = searchParams.get("title") || "CONSTR-ART";
+  const subtitle = searchParams.get("subtitle") || "Construcción en Seco y Tradicional";
   const type = searchParams.get("type") || "default";
 
   const isDark = type === "dark";
@@ -75,7 +75,7 @@ export async function GET(req: Request) {
               marginBottom: 24,
             }}
           >
-            Steel Frame
+            CONSTR-ART
           </p>
           <h1
             style={{
