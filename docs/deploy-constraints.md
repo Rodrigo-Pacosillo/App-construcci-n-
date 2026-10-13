@@ -37,10 +37,10 @@ La restricción vieja de "no importar Prisma/Auth.js" aplicaba solo a
 
 ### ⚠️ Reglas para la BD
 - No hacer migraciones destructivas ni pesadas en producción sin aviso
-- Migraciones: `pnpm db:migrate` en local; contra la BD de producción se
+- Migraciones: `npm run db:migrate` en local; contra la BD de producción se
   aplican a mano (el build de Vercel NO corre `prisma migrate deploy`)
 - Connection pooling: siempre usar el URL pooled de Neon (`?pgbouncer=true`)
-- Seed: `pnpm db:seed` es DESTRUCTIVO (borra y recarga); correrlo solo a propósito
+- Seed: `npm run db:seed` es DESTRUCTIVO (borra y recarga); correrlo solo a propósito
 - Queries: solo en Server Components o server actions, nunca en client components
 
 ## Restricciones del proyecto

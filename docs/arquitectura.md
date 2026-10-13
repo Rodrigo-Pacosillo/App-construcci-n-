@@ -130,11 +130,11 @@ AUTH_SECRET=... (generar con `openssl rand -base64 32`)
 ### Comandos
 
 ```bash
-pnpm dev          # Desarrollo local
-pnpm build        # Build de producción
-pnpm lint         # ESLint
-pnpm db:migrate   # Crear/aplicar migraciones
-pnpm db:seed      # DESTRUCTIVO: borra y recarga los datos semilla (demo)
+npm run dev          # Desarrollo local
+npm run build        # Build de producción
+npm run lint         # ESLint
+npm run db:migrate   # Crear/aplicar migraciones
+npm run db:seed      # DESTRUCTIVO: borra y recarga los datos semilla (demo)
 ```
 
 ## Decisiones técnicas clave
@@ -148,4 +148,4 @@ pnpm db:seed      # DESTRUCTIVO: borra y recarga los datos semilla (demo)
 | Zod (no Yup) | Inferencia de tipos nativa, tree-shakeable, más rápido |
 | Motion (no React Spring) | Mejor soporte React 19, API más clara |
 | GSAP (no CSS animations) | Control preciso de scroll, pinning, timeline |
-| pnpm (no npm/yarn) | Más rápido, estricto con dependencias, monorepo-ready |
+| npm | Estándar, sin dependencias extra, compatible con todos los CI |

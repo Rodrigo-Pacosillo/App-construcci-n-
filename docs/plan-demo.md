@@ -35,9 +35,9 @@ concreto en cada entregable.
 - [ ] `src/lib/db.ts` — singleton de Prisma
 - [ ] `src/lib/constants.ts` — enums evolutivos (estados, orígenes, nav)
 - [ ] `src/lib/validators.ts` — schemas Zod compartidos
-- [ ] Migración inicial (`pnpm db:migrate`)
+- [ ] Migración inicial (`npm run db:migrate`)
 - [ ] `prisma/seed.ts` — datos semilla verosímiles
-- [ ] Verificar con `pnpm db:seed`
+- [ ] Verificar con `npm run db:seed`
 
 ### FASE 4 — Auth + Layout base ✅ COMPLETADA
 
@@ -114,7 +114,7 @@ concreto en cada entregable.
 ## Reglas de avance
 
 1. **Una fase a la vez** — no saltar sin completar la anterior
-2. **Compila siempre** — `pnpm build` debe pasar antes de cerrar cada fase
+2. **Compila siempre** — `npm run build` debe pasar antes de cerrar cada fase
 3. **Seed verificable** — después de FASE 3, el seed debe cargar sin errores
 4. **Visible en cada entregable** — el dueño debería poder ver algo nuevo
 5. **Sin scope creep** — si surge algo nuevo, va a la lista, no al código

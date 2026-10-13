@@ -96,12 +96,12 @@ en fuente mono uppercase. No crear UI fuera de este lenguaje.
 
 ## Comandos
 
-- `pnpm dev` — desarrollo
-- `pnpm build` — build de producción (typecheck incluido; gate de cada fase)
-- `pnpm lint` — ESLint (flat config, sin args)
-- `pnpm db:migrate` — crear/aplicar migraciones
-- `pnpm db:seed` — DESTRUCTIVO: borra y recarga los datos semilla (demo)
-- `pnpm db:studio` — Prisma Studio (puerto 5555)
+- `npm run dev` — desarrollo
+- `npm run build` — build de producción (typecheck incluido; gate de cada fase)
+- `npm run lint` — ESLint (flat config, sin args)
+- `npm run db:migrate` — crear/aplicar migraciones
+- `npm run db:seed` — DESTRUCTIVO: borra y recarga los datos semilla (demo)
+- `npm run db:studio` — Prisma Studio (puerto 5555)
 - El `postinstall` corre `prisma generate` (necesario antes del primer `dev`)
 
 ## Gotchas
@@ -109,8 +109,8 @@ en fuente mono uppercase. No crear UI fuera de este lenguaje.
 - **Next.js 16 renombró el middleware: el archivo es `src/proxy.ts`.**
   Un `src/middleware.ts` existe en la doc vieja (`docs/plan-demo.md`) pero
   **no se ejecuta**. El guard de `/cliente` vive en su layout, no en el proxy.
-- **No hay test runner configurado.** La verificación es `pnpm build` +
-  `pnpm lint` + `pnpm db:seed` contra una BD.
+- **No hay test runner configurado.** La verificación es `npm run build` +
+  `npm run lint` + `npm run db:seed` contra una BD.
 - **Credenciales de demo** (creadas por el seed): `admin@demo.com` /
   `admin123` y `cliente@demo.com` / `cliente123`.
 
@@ -121,5 +121,5 @@ en fuente mono uppercase. No crear UI fuera de este lenguaje.
 - Migraciones: NO corren en el build de Vercel; aplicarlas a mano contra la BD
 - Migraciones versionadas: `init` + `bd_hardening` (el `schema.prisma` ya refleja ambas)
 - Secrets: `DATABASE_URL`, `AUTH_SECRET`
-- Entorno: devcontainer (Node 22 + pnpm). Si `DATABASE_URL` llega vacío,
+- Entorno: devcontainer (Node 22 + npm). Si `DATABASE_URL` llega vacío,
   levantá un Postgres local para `db:seed`/verificación

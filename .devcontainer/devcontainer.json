@@ -6,18 +6,12 @@
   "features": {
     "ghcr.io/devcontainers/features/node:1": {
       "version": "22",
-      "pnpm": true,
       // Nada de tu stack compila nativo (Prisma/Next traen binarios precompilados,
       // auth usa bcryptjs) → no necesita python/g++ de node-gyp.
       // Si algún día un paquete pide compilación, quitá esta línea.
       "nodeGypDependencies": false
     }
   },
-
-  // Caché de pnpm persistente entre rebuilds: reinstalás en segundos
-  "mounts": [
-    "source=pnpm-store,target=/home/vscode/.local/share/pnpm/store,type=volume"
-  ],
 
   "forwardPorts": [3000, 5555],
   "portsAttributes": {

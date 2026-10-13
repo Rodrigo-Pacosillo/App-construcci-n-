@@ -375,13 +375,13 @@ Migración pendiente de aplicar contra Neon. Cambios:
 1. `clientes`: sin emails duplicados (`SELECT email, count(*) FROM clientes GROUP BY email HAVING count(*) > 1`)
 2. `cotizaciones`: sin `cliente_id` NULL (`SELECT count(*) FROM cotizaciones WHERE cliente_id IS NULL`)
 
-Aplicar con `pnpm db:migrate` (o `prisma migrate deploy`).
+Aplicar con `npm run db:migrate` (o `prisma migrate deploy`).
 
 ### Comandos
 
 ```bash
-pnpm db:migrate    # Crear + aplicar migración
-pnpm db:seed       # DESTRUCTIVO: borra y recarga los datos semilla
+npm run db:migrate    # Crear + aplicar migración
+npm run db:seed       # DESTRUCTIVO: borra y recarga los datos semilla
 ```
 
 ## Seed (`prisma/seed.ts`)
