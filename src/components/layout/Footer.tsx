@@ -20,26 +20,50 @@ export function Footer() {
             <ul className="space-y-1 text-sm text-ink-muted">
               <li>
                 <Link
-                  href="/servicios/construccion-tradicional"
+                  href="/servicios/steel-frame"
                   className="hover:text-accent-strong"
                 >
-                  Construcción tradicional
+                  Steel Frame
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/servicios/construccion-en-seco"
+                  href="/servicios/drywall"
                   className="hover:text-accent-strong"
                 >
-                  Construcción en seco
+                  Tabiquería Drywall
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/servicios/soluciones-integrales"
+                  href="/servicios/cielorrasos"
                   className="hover:text-accent-strong"
                 >
-                  Soluciones integrales
+                  Cielorrasos
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/servicios/revestimientos"
+                  className="hover:text-accent-strong"
+                >
+                  Revestimientos
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/servicios/aislaciones"
+                  className="hover:text-accent-strong"
+                >
+                  Aislaciones Térmicas y Acústicas
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/servicios/habilitaciones"
+                  className="hover:text-accent-strong"
+                >
+                  Habilitaciones de Locales
                 </Link>
               </li>
             </ul>

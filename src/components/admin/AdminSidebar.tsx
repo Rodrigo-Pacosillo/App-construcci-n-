@@ -19,6 +19,7 @@ import {
   Award,
   HelpCircle,
   UserCog,
+  Package,
   type LucideIcon,
 } from "lucide-react";
 import { ADMIN_NAV_SECTIONS, type NavItem } from "@/lib/constants";
@@ -35,6 +36,7 @@ const ICONS: Record<string, LucideIcon> = {
   Award,
   HelpCircle,
   UserCog,
+  Package,
 };
 
 function isActive(pathname: string, href: string) {

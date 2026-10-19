@@ -17,11 +17,28 @@ async function getCotizaciones() {
   const cotizaciones = await prisma.cotizacion.findMany({
     where: { clienteId: usuario.cliente.id },
     orderBy: { creadoEn: "desc" },
-    include: { cliente: true },
+    select: {
+      id: true,
+      clienteId: true,
+      tipoObra: true,
+      tipoConstruccion: true,
+      rangoM2: true,
+      ubicacionObra: true,
+      plazoInicio: true,
+      origen: true,
+      estado: true,
+      montoEstimado: true,
+      montoCerrado: true,
+      requerimiento: true,
+      creadoEn: true,
+      actualizadoEn: true,
+      cliente: { select: { id: true, nombre: true, apellidos: true, email: true, telefono: true, ciudad: true } },
+    },
   });
 
   return cotizaciones.map((c) => ({
     ...c,
+    montoEstimado: c.montoEstimado ? Number(c.montoEstimado) : null,
     montoCerrado: c.montoCerrado ? Number(c.montoCerrado) : null,
   }));
 }

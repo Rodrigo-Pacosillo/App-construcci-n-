@@ -27,9 +27,18 @@ export async function updateTestimonio(
 ) {
   await requireAdmin();
 
+  // Obtener testimonio actual para preservar proyectoId
+  const existing = await prisma.testimonio.findUnique({
+    where: { id },
+    select: { proyectoId: true },
+  });
+  if (!existing) {
+    return { success: false, error: { _form: ["Testimonio no encontrado"] } };
+  }
+
   // Validar datos con Zod
   const data = {
-    proyectoId: null as string | null,
+    proyectoId: existing.proyectoId,
     clienteNombre: formData.get("clienteNombre") as string,
     texto: formData.get("texto") as string,
     fotoUrl: formData.get("fotoUrl") as string,

@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { CheckCircle, Clock } from "lucide-react";
 
-async function getObraActiva() {
+async function getObraActiva(obraId?: string) {
   const session = await auth();
   if (!session || session.user.role !== "cliente") redirect("/login");
 
@@ -25,6 +25,9 @@ async function getObraActiva() {
   });
 
   const obras = usuario?.cliente?.obras ?? [];
+  if (obraId) {
+    return obras.find((o) => o.id === obraId) || obras[0] || null;
+  }
   return obras[0] || null;
 }
 
@@ -37,8 +40,13 @@ function formatDate(date: Date | null | undefined) {
   });
 }
 
-export default async function ClientePagosPage() {
-  const obra = await getObraActiva();
+export default async function ClientePagosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ obraId?: string }>;
+}) {
+  const { obraId } = await searchParams;
+  const obra = await getObraActiva(obraId);
 
   if (!obra) {
     return (

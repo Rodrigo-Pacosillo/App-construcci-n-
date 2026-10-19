@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 
-async function getObraActiva() {
+async function getObraActiva(obraId?: string) {
   const session = await auth();
   if (!session || session.user.role !== "cliente") redirect("/login");
 
@@ -23,6 +23,9 @@ async function getObraActiva() {
   });
 
   const obras = usuario?.cliente?.obras ?? [];
+  if (obraId) {
+    return obras.find((o) => o.id === obraId) || obras[0] || null;
+  }
   return obras[0] || null;
 }
 
@@ -35,8 +38,13 @@ function formatDate(date: Date | null | undefined) {
   });
 }
 
-export default async function ClienteDocumentosPage() {
-  const obra = await getObraActiva();
+export default async function ClienteDocumentosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ obraId?: string }>;
+}) {
+  const { obraId } = await searchParams;
+  const obra = await getObraActiva(obraId);
 
   if (!obra) {
     return (
@@ -119,9 +127,9 @@ export default async function ClienteDocumentosPage() {
           <p>• Actas de recepción (pendiente)</p>
           <p>• Garantías y seguros (pendiente)</p>
         </div>
-<p className="mt-4 text-xs text-ink-faint">
-            Los documentos adicionales se agregarán conforme avance la obra.
-          </p>
+        <p className="mt-4 text-xs text-ink-faint">
+          Los documentos adicionales se agregarán conforme avance la obra.
+        </p>
       </div>
     </div>
   );

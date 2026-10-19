@@ -37,11 +37,17 @@ export async function getCotizaciones() {
   await requireAdmin();
 
   try {
-    return await prisma.cotizacion.findMany({
+    const cotizaciones = await prisma.cotizacion.findMany({
       include: { cliente: true },
       orderBy: { creadoEn: "desc" },
       take: 50,
     });
+
+    return cotizaciones.map((c) => ({
+      ...c,
+      montoEstimado: c.montoEstimado ? Number(c.montoEstimado) : null,
+      montoCerrado: c.montoCerrado ? Number(c.montoCerrado) : null,
+    }));
   } catch (error) {
     console.error("Error en getCotizaciones:", error);
     return [];
@@ -58,7 +64,13 @@ export async function getCotizacionesPorEstado() {
       take: 50,
     });
 
-    const porEstado: Record<string, typeof cotizaciones> = {
+    const cotizacionesMapped = cotizaciones.map((c) => ({
+      ...c,
+      montoEstimado: c.montoEstimado ? Number(c.montoEstimado) : null,
+      montoCerrado: c.montoCerrado ? Number(c.montoCerrado) : null,
+    }));
+
+    const porEstado: Record<string, typeof cotizacionesMapped> = {
       nuevo: [],
       contactado: [],
       visita_tecnica: [],
@@ -67,7 +79,7 @@ export async function getCotizacionesPorEstado() {
       perdido: [],
     };
 
-    for (const c of cotizaciones) {
+    for (const c of cotizacionesMapped) {
       if (porEstado[c.estado]) {
         porEstado[c.estado].push(c);
       }

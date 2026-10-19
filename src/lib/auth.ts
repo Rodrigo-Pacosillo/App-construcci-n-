@@ -6,6 +6,7 @@ import { loginSchema } from "./validators";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: "jwt" },
+  trustHost: true,
   pages: {
     signIn: "/login",
   },
@@ -41,9 +42,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.role = (user as { role?: string }).role;
+      }
+      // Refrescar rol desde BD cuando se actualiza la sesión (ej. admin cambia rol de usuario)
+      if (trigger === "update" && token.sub) {
+        const updatedUser = await prisma.usuario.findUnique({
+          where: { id: token.sub },
+          select: { rol: true, activo: true },
+        });
+        if (updatedUser) {
+          token.role = updatedUser.rol;
+          // Opcional: forzar logout si usuario fue desactivado
+          // if (!updatedUser.activo) return null;
+        }
       }
       return token;
     },

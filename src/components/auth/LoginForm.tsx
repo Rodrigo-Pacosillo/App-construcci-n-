@@ -19,11 +19,19 @@ export function LoginForm({ callbackUrl }: { callbackUrl: string }) {
 
     const formData = new FormData(e.currentTarget);
 
-    const result = await signIn("credentials", {
-      email: formData.get("email") as string,
-      password: formData.get("password") as string,
-      redirect: false,
-    });
+    let result;
+    try {
+      result = await signIn("credentials", {
+        email: formData.get("email") as string,
+        password: formData.get("password") as string,
+        redirect: false,
+      });
+    } catch (err) {
+      console.error("signIn error:", err);
+      setError("Error de conexión. Intente nuevamente.");
+      setLoading(false);
+      return;
+    }
 
     if (result?.error) {
       setError("Email o contraseña incorrectos");
@@ -33,7 +41,6 @@ export function LoginForm({ callbackUrl }: { callbackUrl: string }) {
 
     setLoading(false);
     router.push(callbackUrl || "/");
-    router.refresh();
   }
 
   return (

@@ -19,7 +19,7 @@ export default async function TestimoniosPage() {
       </div>
 
       <div className="mt-8">
-        <TestimoniosList testimonios={testimonios as never} />
+        <TestimoniosList testimonios={testimonios} />
       </div>
     </div>
   );

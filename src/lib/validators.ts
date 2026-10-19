@@ -8,7 +8,7 @@ import {
 export const cotizacionAdminSchema = z.object({
   clienteId: z.string().cuid().optional(),
   tipoObra: z.enum(["vivienda_nueva", "ampliacion", "otro"]),
-  tipoConstruccion: z.enum(["tradicional", "seco", "no_sabe"]),
+  tipoConstruccion: z.enum(["tradicional", "seco", "no_sabe", "integral"]),
   rangoM2: z.enum(["hasta_50", "m50_100", "m100_200", "mas_200"]),
   ubicacionObra: z.string().optional(),
   plazoInicio: z.enum(["lo_antes_posible", "en_3_meses", "no_sabe"]),
@@ -26,9 +26,9 @@ export const cotizacionFormSchema = z.object({
   nombre: z.string().min(1, "El nombre es requerido").max(100, "Máximo 100 caracteres"),
   apellidos: z.string().min(1, "Los apellidos son requeridos").max(100, "Máximo 100 caracteres"),
   telefono: z.string().min(1, "El teléfono es requerido").max(30, "Máximo 30 caracteres"),
-  email: z.string().email("Email inválido").optional(),
+  email: z.string().email("Email inválido").optional().or(z.literal("")),
   tipoObra: z.enum(["vivienda_nueva", "ampliacion", "otro"]),
-  tipoConstruccion: z.enum(["tradicional", "seco", "no_sabe"]),
+  tipoConstruccion: z.enum(["tradicional", "seco", "no_sabe", "integral"]),
   rangoM2: z.enum(["hasta_50", "m50_100", "m100_200", "mas_200"]),
   ubicacionObra: z.string().max(200, "Máximo 200 caracteres").optional(),
   descripcion: z.string().max(1000, "Máximo 1000 caracteres").optional(),
@@ -56,7 +56,7 @@ export const proyectoSchema = z.object({
     .min(1)
     .regex(/^[a-z0-9-]+$/, "Slug solo puede contener letras, números y guiones"),
   titulo: z.string().min(1, "El título es requerido"),
-  tipoConstruccion: z.enum(["tradicional", "seco", "integral"]),
+  tipoConstruccion: z.enum(["tradicional", "seco", "no_sabe", "integral"]),
   m2Construidos: z.number().int().positive(),
   diasEjecucion: z.number().int().positive(),
   ubicacion: z.string().min(1, "La ubicación es requerida"),
@@ -116,7 +116,7 @@ export type CertificacionInput = z.infer<typeof certificacionSchema>;
 
 // ─── Precio Referencia ─────────────────────────────────────────────
 export const precioReferenciaSchema = z.object({
-  tipoConstruccion: z.enum(["tradicional", "seco", "no_sabe"]),
+  tipoConstruccion: z.enum(["tradicional", "seco", "no_sabe", "integral"]),
   rangoM2: z.enum(["hasta_50", "m50_100", "m100_200", "mas_200"]),
   precioMin: z.number().positive(),
   precioMax: z.number().positive(),

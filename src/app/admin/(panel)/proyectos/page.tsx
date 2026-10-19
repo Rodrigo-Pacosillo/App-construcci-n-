@@ -19,7 +19,7 @@ export default async function ProyectosAdminPage() {
       </div>
 
       <div className="mt-8">
-        <ProyectosList proyectos={proyectos as never} />
+        <ProyectosList proyectos={proyectos} />
       </div>
     </div>
   );

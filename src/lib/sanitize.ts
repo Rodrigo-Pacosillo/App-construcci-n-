@@ -24,29 +24,3 @@ export function sanitizeHTML(html: string): string {
 
   return clean;
 }
-
-/**
- * Sanitiza textos libres pero permite más tags
- * Para testimonios, FAQs, etc.
- *
- * @param text - Texto a sanitizar
- * @returns Texto limpio y seguro
- */
-export function sanitizeText(text: string): string {
-  if (!text || typeof text !== "string") {
-    return "";
-  }
-
-  let clean = text;
-
-  // Strip tags peligrosos
-  clean = clean.replace(/<\s*\/?\s*(script|style|iframe|object|embed|form|input|textarea|button|select|option|link|meta|base|applet|dir|frame|frameset|ilayer|layer|bgsound|comment)\b[^>]*>/gi, "");
-
-  // Strip on* event handlers
-  clean = clean.replace(/\s+on\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, "");
-
-  // Strip javascript: y vbscript: de hrefs/srcs
-  clean = clean.replace(/(href|src|action)\s*=\s*(?:"[^"]*(?:javascript|vbscript)[^"]*"|'[^']*(?:javascript|vbscript)[^']*')/gi, "");
-
-  return clean;
-}

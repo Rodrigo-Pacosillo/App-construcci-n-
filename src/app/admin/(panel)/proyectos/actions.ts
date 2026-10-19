@@ -65,9 +65,18 @@ export async function createProyecto(formData: FormData) {
 export async function updateProyecto(id: string, formData: FormData) {
   await requireAdmin();
 
+  // Obtener proyecto actual para preservar clienteId
+  const existing = await prisma.proyecto.findUnique({
+    where: { id },
+    select: { clienteId: true },
+  });
+  if (!existing) {
+    return { success: false, error: { _form: ["Proyecto no encontrado"] } };
+  }
+
   // Validar datos con Zod
   const data = {
-    clienteId: null as string | null,
+    clienteId: existing.clienteId,
     slug: formData.get("slug") as string,
     titulo: formData.get("titulo") as string,
     tipoConstruccion: formData.get("tipoConstruccion") as string,

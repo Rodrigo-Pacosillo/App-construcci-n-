@@ -309,6 +309,39 @@ export async function toggleHitoVisible(id: string, visibleCliente: boolean) {
   }
 }
 
+export async function updateHito(id: string, formData: FormData) {
+  await requireAdmin();
+
+  const data = {
+    titulo: formData.get("titulo") as string,
+    descripcion: formData.get("descripcion") as string,
+    fecha: formData.get("fecha") as string,
+    visibleCliente: formData.get("visibleCliente") === "true",
+  };
+
+  const valid = hitoSchema.safeParse(data);
+
+  if (!valid.success) {
+    return { success: false, error: valid.error.flatten().fieldErrors };
+  }
+
+  try {
+    await prisma.hitosObra.update({
+      where: { id },
+      data: { ...valid.data, fecha: new Date(valid.data.fecha) },
+    });
+    revalidatePath("/admin/obras");
+    return { success: true };
+  } catch (error) {
+    console.error("Error actualizando hito:", error);
+    return { success: false, error: { _form: ["Error al actualizar el hito."] } };
+  }
+}
+
+export async function toggleHitoVisibleCliente(id: string, visibleCliente: boolean) {
+  return toggleHitoVisible(id, visibleCliente);
+}
+
 export async function deleteHito(id: string) {
   await requireAdmin();
 
@@ -386,6 +419,36 @@ export async function togglePagoEstado(id: string, estado: string) {
   }
 }
 
+export async function updatePago(id: string, formData: FormData) {
+  await requireAdmin();
+
+  const data = {
+    monto: Number(formData.get("monto")) || 0,
+    fecha: formData.get("fecha") as string,
+    concepto: formData.get("concepto") as string,
+    estado: formData.get("estado") as string,
+    comprobanteUrl: (formData.get("comprobanteUrl") as string) || null,
+  };
+
+  const valid = pagoSchema.safeParse(data);
+
+  if (!valid.success) {
+    return { success: false, error: valid.error.flatten().fieldErrors };
+  }
+
+  try {
+    await prisma.pagoObra.update({
+      where: { id },
+      data: { ...valid.data, fecha: new Date(valid.data.fecha) },
+    });
+    revalidatePath("/admin/obras");
+    return { success: true };
+  } catch (error) {
+    console.error("Error actualizando pago:", error);
+    return { success: false, error: { _form: ["Error al actualizar el pago."] } };
+  }
+}
+
 export async function deletePago(id: string) {
   await requireAdmin();
 
@@ -396,5 +459,58 @@ export async function deletePago(id: string) {
   } catch (error) {
     console.error("Error eliminando pago:", error);
     return { success: false, error: { _form: ["Error al eliminar el pago."] } };
+  }
+}
+
+export async function getObraById(id: string) {
+  await requireAdmin();
+
+  try {
+    const obra = await prisma.obraActiva.findUnique({
+      where: { id },
+      include: {
+        cliente: true,
+        contrato: true,
+        hitos: { orderBy: { fecha: "asc" } },
+        pagos: { orderBy: { fecha: "desc" } },
+      },
+    });
+
+    if (!obra) return null;
+
+    return {
+      id: obra.id,
+      clienteId: obra.clienteId,
+      direccionObra: obra.direccionObra,
+      estado: obra.estado,
+      progreso: obra.progreso,
+      fechaInicio: obra.fechaInicio.toISOString(),
+      fechaFinEstimada: obra.fechaFinEstimada?.toISOString() ?? null,
+      cliente: obra.cliente
+        ? { id: obra.cliente.id, nombre: obra.cliente.nombre, apellidos: obra.cliente.apellidos }
+        : null,
+      contrato: obra.contrato
+        ? { id: obra.contrato.id, montoTotal: Number(obra.contrato.montoTotal) }
+        : null,
+      hitos: obra.hitos.map((h) => ({
+        id: h.id,
+        titulo: h.titulo,
+        descripcion: h.descripcion,
+        fecha: h.fecha.toISOString(),
+        fotoUrl: h.fotoUrl,
+        visibleCliente: h.visibleCliente,
+      })),
+      pagos: obra.pagos.map((p) => ({
+        id: p.id,
+        monto: Number(p.monto),
+        fecha: p.fecha.toISOString(),
+        concepto: p.concepto,
+        comprobanteUrl: p.comprobanteUrl,
+        estado: p.estado,
+      })),
+    };
+  } catch (error) {
+    console.error("Error en getObraById:", error);
+    return null;
   }
 }

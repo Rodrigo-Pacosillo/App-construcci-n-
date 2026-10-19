@@ -15,7 +15,61 @@ const crearUsuarioSchema = z.object({
   password: z.string().min(8, "Mínimo 8 caracteres").max(72),
 });
 
-export async function createUsuarioCliente(formData: FormData) {
+type CreateUsuarioResult =
+  | { success: true }
+  | { success: false; error: Record<string, string[]> };
+
+async function createUsuarioClienteInternal(
+  clienteId: string,
+  email: string,
+  nombre: string,
+  apellidos: string,
+  password: string
+): Promise<CreateUsuarioResult> {
+  // Verificar que el cliente existe y no tiene usuario
+  const cliente = await prisma.cliente.findUnique({
+    where: { id: clienteId },
+    include: { usuario: true },
+  });
+
+  if (!cliente) {
+    return { success: false, error: { _form: ["Cliente no encontrado"] } };
+  }
+
+  if (cliente.usuario) {
+    return { success: false, error: { _form: ["Este cliente ya tiene una cuenta vinculada"] } };
+  }
+
+  // Verificar que el email no esté en uso
+  const emailExistente = await prisma.usuario.findUnique({
+    where: { email },
+  });
+
+  if (emailExistente) {
+    return { success: false, error: { email: ["Este email ya está registrado"] } };
+  }
+
+  // Hash de contraseña
+  const passwordHash = await bcrypt.hash(password, 10);
+
+  // Crear usuario y vincular al cliente
+  await prisma.usuario.create({
+    data: {
+      nombre,
+      apellidos,
+      email,
+      passwordHash,
+      rol: "cliente",
+      clienteId,
+      activo: true,
+    },
+  });
+
+  revalidatePath("/admin/autorizar-cuentas");
+  return { success: true };
+}
+
+export async function createUsuarioCliente(formData: FormData): Promise<CreateUsuarioResult> {
   await requireAdmin();
 
   const rawData = {
@@ -28,61 +82,14 @@ export async function createUsuarioCliente(formData: FormData) {
 
   const parsed = crearUsuarioSchema.safeParse(rawData);
   if (!parsed.success) {
-    // En lugar de retornar error, redirigimos con parámetros de error
-    const errores = parsed.error.flatten().fieldErrors;
-    const params = new URLSearchParams();
-    Object.entries(errores).forEach(([key, val]) => {
-      if (val) params.append(key, val.join(", "));
-    });
-    redirect(`/admin/autorizar-cuentas/crear?clienteId=${rawData.clienteId}&error=1&${params.toString()}`);
+    return { success: false, error: parsed.error.flatten().fieldErrors };
   }
 
-  const { clienteId, email, nombre, apellidos, password } = parsed.data;
-
-  // Verificar que el cliente existe y no tiene usuario
-  const cliente = await prisma.cliente.findUnique({
-    where: { id: clienteId },
-    include: { usuario: true },
-  });
-
-  if (!cliente) {
-    redirect(`/admin/autorizar-cuentas?error=Cliente no encontrado`);
-  }
-
-  if (cliente.usuario) {
-    redirect(`/admin/autorizar-cuentas?error=Este cliente ya tiene una cuenta vinculada`);
-  }
-
-  // Verificar que el email no esté en uso
-  const emailExistente = await prisma.usuario.findUnique({
-    where: { email },
-  });
-
-  if (emailExistente) {
-    redirect(`/admin/autorizar-cuentas/crear?clienteId=${clienteId}&error=Este email ya está registrado`);
-  }
-
-  // Hash de contraseña
-  const passwordHash = await bcrypt.hash(password, 10);
-
-  try {
-    // Crear usuario y vincular al cliente
-    await prisma.usuario.create({
-      data: {
-        nombre,
-        apellidos,
-        email,
-        passwordHash,
-        rol: "cliente",
-        clienteId,
-        activo: true,
-      },
-    });
-
-    revalidatePath("/admin/autorizar-cuentas");
-    redirect("/admin/autorizar-cuentas?success=Cuenta creada correctamente");
-  } catch (error) {
-    console.error("Error creando usuario:", error);
-    redirect(`/admin/autorizar-cuentas/crear?clienteId=${clienteId}&error=Error al crear la cuenta`);
-  }
+  return createUsuarioClienteInternal(
+    parsed.data.clienteId,
+    parsed.data.email,
+    parsed.data.nombre,
+    parsed.data.apellidos,
+    parsed.data.password
+  );
 }

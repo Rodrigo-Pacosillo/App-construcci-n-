@@ -23,13 +23,11 @@ export default async function LoginPage({
 }) {
   const { callbackUrl } = await searchParams;
 
-  // Si ya hay sesión, redirigir según rol para evitar loop con el cliente
+  // Si ya hay sesión, redirigir según rol para evitar loop
   const session = await auth();
   if (session) {
     const destination = session.user?.role === "admin" ? "/admin" : "/cliente";
-    if (safeCallbackUrl(callbackUrl) !== destination) {
-      redirect(destination);
-    }
+    redirect(destination);
   }
 
   return (

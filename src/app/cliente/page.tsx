@@ -22,7 +22,7 @@ export default async function ClienteDashboard({
           obras: {
             include: {
               contrato: true,
-              hitos: { orderBy: { fecha: "asc" }, take: 5 },
+              hitos: { where: { visibleCliente: true }, orderBy: { fecha: "asc" }, take: 5 },
             },
             orderBy: { fechaInicio: "desc" },
           },

@@ -15,7 +15,33 @@ async function getContratos() {
 
   return prisma.contrato.findMany({
     where: { clienteId: usuario.cliente.id },
-    include: { cliente: true, cotizacion: true },
+    select: {
+      id: true,
+      clienteId: true,
+      cotizacionId: true,
+      archivoPdfUrl: true,
+      fechaFirma: true,
+      montoTotal: true,
+      observaciones: true,
+      creadoEn: true,
+      cotizacion: {
+        select: {
+          id: true,
+          tipoObra: true,
+          tipoConstruccion: true,
+          rangoM2: true,
+          ubicacionObra: true,
+          plazoInicio: true,
+          origen: true,
+          estado: true,
+          montoEstimado: true,
+          montoCerrado: true,
+          requerimiento: true,
+          creadoEn: true,
+          actualizadoEn: true,
+        },
+      },
+    },
     orderBy: { fechaFirma: "desc" },
   });
 }

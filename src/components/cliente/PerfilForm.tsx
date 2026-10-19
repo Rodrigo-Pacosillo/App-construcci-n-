@@ -2,15 +2,8 @@
 
 import { useState } from "react";
 import { signOut } from "next-auth/react";
-import { updatePerfil, cambiarPassword } from "@/app/cliente/perfil/actions";
+import { cambiarPassword } from "@/app/cliente/perfil/actions";
 import { z } from "zod";
-
-const perfilSchema = z.object({
-  nombre: z.string().min(1, "El nombre es requerido").max(100, "Máximo 100 caracteres"),
-  apellidos: z.string().min(1, "Los apellidos son requeridos").max(100, "Máximo 100 caracteres"),
-  telefono: z.string().min(1, "El teléfono es requerido").max(30, "Máximo 30 caracteres"),
-  ciudad: z.string().max(100, "Máximo 100 caracteres").optional().or(z.literal("")),
-});
 
 const passwordSchema = z
   .object({
@@ -34,36 +27,11 @@ type PerfilInicial = {
 export function PerfilForm({ inicial }: { inicial: PerfilInicial }) {
   const [activeTab, setActiveTab] = useState<Tab>("datos");
 
-  const [nombre, setNombre] = useState(inicial.nombre);
-  const [apellidos, setApellidos] = useState(inicial.apellidos);
-  const [telefono, setTelefono] = useState(inicial.telefono);
-  const [ciudad, setCiudad] = useState(inicial.ciudad ?? "");
-
   const [password, setPassword] = useState("");
   const [confirmPassword, setPasswordConfirm] = useState("");
 
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-
-  const handleUpdatePerfil = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
-
-    const parsed = perfilSchema.safeParse({ nombre, apellidos, telefono, ciudad });
-    if (!parsed.success) {
-      setError("Datos inválidos");
-      return;
-    }
-
-    const result = await updatePerfil({ nombre, apellidos, telefono, ciudad: ciudad || null });
-    if (result?.error) {
-      setError(result.error);
-      return;
-    }
-
-    setSuccess("Datos actualizados correctamente");
-  };
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,7 +46,14 @@ export function PerfilForm({ inicial }: { inicial: PerfilInicial }) {
 
     const result = await cambiarPassword(password);
     if (result?.error) {
-      setError(result.error);
+      const err = result.error;
+      if (typeof err === "string") {
+        setError(err);
+      } else if ("_form" in err && err._form) {
+        setError(err._form[0]);
+      } else {
+        setError("Error al cambiar la contraseña");
+      }
       return;
     }
 
@@ -106,103 +81,38 @@ export function PerfilForm({ inicial }: { inicial: PerfilInicial }) {
         </button>
       </div>
 
-      <div className="flex gap-4 border-b border-border bg-surface p-4">
-        {["datos", "password"].map((tab) => (
-          <button
-            key={tab}
-            onClick={() => {
-              setActiveTab(tab as Tab);
-              setError("");
-              setSuccess("");
-            }}
-            className={`px-4 py-2 text-sm font-medium transition-colors ${
-              activeTab === tab
-                ? "bg-ink/5 text-ink"
-                : "text-ink-muted hover:bg-ink/5 hover:text-ink"
-            }`}
-          >
-            {tab === "datos" ? "Datos personales" : "Cambiar contraseña"}
-          </button>
-        ))}
+      <div className="rounded border border-border bg-surface p-6">
+        <p className="section-label mb-4 text-ink-faint">DATOS PERSONALES</p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="section-label block text-ink-faint">Nombre(s)</label>
+            <p className="mt-1 text-ink">{inicial.nombre}</p>
+          </div>
+          <div>
+            <label className="section-label block text-ink-faint">Apellidos</label>
+            <p className="mt-1 text-ink">{inicial.apellidos}</p>
+          </div>
+          <div>
+            <label className="section-label block text-ink-faint">Teléfono</label>
+            <p className="mt-1 text-ink">{inicial.telefono}</p>
+          </div>
+          <div>
+            <label className="section-label block text-ink-faint">Ciudad</label>
+            <p className="mt-1 text-ink">{inicial.ciudad || "—"}</p>
+          </div>
+        </div>
+        <p className="mt-4 text-sm text-ink-muted">
+          Para modificar sus datos personales, contacte al administrador por WhatsApp.
+        </p>
       </div>
 
-      {activeTab === "datos" && (
-        <form onSubmit={handleUpdatePerfil} className="space-y-6">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label htmlFor="nombre" className="section-label block text-ink-faint">
-                Nombre(s)
-              </label>
-              <input
-                id="nombre"
-                type="text"
-                required
-                value={nombre}
-                onChange={(e) => setNombre(e.target.value)}
-                className="mt-1 block w-full rounded border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent"
-              />
-            </div>
+      <div className="rounded border border-border bg-surface p-6">
+        <p className="section-label mb-4 text-ink-faint">SEGURIDAD</p>
 
-            <div>
-              <label htmlFor="apellidos" className="section-label block text-ink-faint">
-                Apellidos
-              </label>
-              <input
-                id="apellidos"
-                type="text"
-                required
-                value={apellidos}
-                onChange={(e) => setApellidos(e.target.value)}
-                className="mt-1 block w-full rounded border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent"
-              />
-            </div>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label htmlFor="telefono" className="section-label block text-ink-faint">
-                Teléfono
-              </label>
-              <input
-                id="telefono"
-                type="tel"
-                required
-                value={telefono}
-                onChange={(e) => setTelefono(e.target.value)}
-                placeholder="+54 11 ..."
-                className="mt-1 block w-full rounded border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="ciudad" className="section-label block text-ink-faint">
-                Ciudad (opcional)
-              </label>
-              <input
-                id="ciudad"
-                type="text"
-                value={ciudad}
-                onChange={(e) => setCiudad(e.target.value)}
-                className="mt-1 block w-full rounded border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent"
-              />
-            </div>
-          </div>
-
+        <form onSubmit={handleChangePassword} className="space-y-6">
           {error && <p className="text-sm text-red-500">{error}</p>}
           {success && <p className="text-sm text-green-600">{success}</p>}
 
-          <button
-            type="submit"
-            disabled={!nombre || !apellidos || !telefono}
-            className="accent-btn w-full rounded py-2 text-sm font-medium transition-opacity hover:opacity-90 disabled:opacity-50"
-          >
-            Guardar cambios
-          </button>
-        </form>
-      )}
-
-      {activeTab === "password" && (
-        <form onSubmit={handleChangePassword} className="space-y-6">
           <div>
             <label htmlFor="password" className="section-label block text-ink-faint">
               Nueva contraseña
@@ -244,7 +154,7 @@ export function PerfilForm({ inicial }: { inicial: PerfilInicial }) {
             Cambiar contraseña
           </button>
         </form>
-      )}
+      </div>
     </div>
   );
 }

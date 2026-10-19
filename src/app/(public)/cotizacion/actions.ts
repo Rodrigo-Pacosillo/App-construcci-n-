@@ -61,12 +61,17 @@ export async function createCotizacion(formData: FormData) {
     clienteIdFinal = usuario.clienteId;
     origen = "referido";
   } else {
-    // Visitante: buscar el cliente existente por email o crearlo (find-or-create).
+    // Visitante: buscar el cliente existente por email o teléfono o crearlo (find-or-create).
     // La unicidad de clientes.email evita duplicar un lead que ya cotizó antes.
+    // telefono no es unique en el schema, usamos findFirst.
+    let existente = null;
     if (email) {
-      const existente = await prisma.cliente.findUnique({ where: { email } });
-      if (existente) clienteIdFinal = existente.id;
+      existente = await prisma.cliente.findUnique({ where: { email } });
     }
+    if (!existente && telefono) {
+      existente = await prisma.cliente.findFirst({ where: { telefono } });
+    }
+    if (existente) clienteIdFinal = existente.id;
 
     if (!clienteIdFinal) {
       try {

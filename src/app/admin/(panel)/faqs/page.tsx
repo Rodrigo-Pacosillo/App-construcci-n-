@@ -19,7 +19,7 @@ export default async function FaqsAdminPage() {
       </div>
 
       <div className="mt-8">
-        <FaqsList faqs={faqs as never} />
+        <FaqsList faqs={faqs} />
       </div>
     </div>
   );

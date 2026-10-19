@@ -1,76 +1,37 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
-import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
+import { redirect } from "next/navigation";
+import { z } from "zod";
 
-export async function updatePerfil({
-  nombre,
-  apellidos,
-  telefono,
-  ciudad,
-}: {
-  nombre: string;
-  apellidos: string;
-  telefono: string;
-  ciudad: string | null;
-}) {
+const passwordSchema = z.object({
+  password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres").max(72, "Máximo 72 caracteres"),
+});
+
+export async function cambiarPassword(password: string) {
   const session = await auth();
-  if (!session) redirect("/login");
-
-  const usuario = await prisma.usuario.findUnique({
-    where: { id: session.user.id },
-  });
-
-  if (!usuario) {
-    return { error: "Usuario no encontrado" };
+  if (!session || session.user.role !== "cliente") {
+    return { error: "No autorizado" };
   }
 
-  if (usuario.clienteId) {
-    const cliente = await prisma.cliente.update({
-      where: { id: usuario.clienteId },
-      data: {
-        nombre,
-        apellidos,
-        telefono,
-        ciudad: ciudad || null,
-      },
+  const parsed = passwordSchema.safeParse(password);
+  if (!parsed.success) {
+    return { error: parsed.error.flatten().fieldErrors };
+  }
+
+  try {
+    const passwordHash = await bcrypt.hash(parsed.data.password, 10);
+    await prisma.usuario.update({
+      where: { id: session.user.id },
+      data: { passwordHash },
     });
-
-    const usuarioActualizado = await prisma.usuario.update({
-      where: { id: usuario.id },
-      data: { nombre, apellidos },
-    });
-
-    return { success: true, cliente, usuario: usuarioActualizado };
+    revalidatePath("/cliente/perfil");
+    return { success: true };
+  } catch (error) {
+    console.error("Error cambiando contraseña:", error);
+    return { error: { _form: ["Error al cambiar la contraseña"] } };
   }
-
-  return { error: "No tiene un cliente asociado" };
-}
-
-export async function cambiarPassword(nuevaPassword: string) {
-  const session = await auth();
-  if (!session) redirect("/login");
-
-  const usuario = await prisma.usuario.findUnique({
-    where: { id: session.user.id },
-  });
-
-  if (!usuario) {
-    return { error: "Usuario no encontrado" };
-  }
-
-  if (!usuario.passwordHash) {
-    return { error: "No tiene una contraseña configurada" };
-  }
-
-  const passwordHash = await bcrypt.hash(nuevaPassword, 10);
-
-  await prisma.usuario.update({
-    where: { id: usuario.id },
-    data: { passwordHash },
-  });
-
-  return { success: true };
 }

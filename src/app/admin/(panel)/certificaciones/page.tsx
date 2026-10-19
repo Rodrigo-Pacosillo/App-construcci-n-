@@ -21,7 +21,7 @@ export default async function CertificacionesAdminPage() {
       </div>
 
       <div className="mt-8">
-        <CertificacionesList certificaciones={certificaciones as never} />
+        <CertificacionesList certificaciones={certificaciones} />
       </div>
     </div>
   );

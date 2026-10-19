@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useInView } from "motion/react";
+import { FALLBACK_NUMEROS } from "@/lib/fallback-data";
 
 function AnimatedNumber({ value, suffix }: { value: number; suffix: string }) {
   const [count, setCount] = useState(0);
@@ -36,14 +37,6 @@ function AnimatedNumber({ value, suffix }: { value: number; suffix: string }) {
 }
 
 export function NumerosSection() {
-  const numeros = [
-    { label: "Metros cuadrados", valor: 5000, sufijo: "m²" },
-    { label: "Obras ejecutadas", valor: 200, sufijo: "+" },
-    { label: "Días — vivienda pequeña", valor: 70, sufijo: "" },
-    { label: "Años de experiencia", valor: 14, sufijo: "" },
-    { label: "Año de garantía", valor: 1, sufijo: "" },
-  ];
-
   return (
     <section className="py-16 lg:py-24">
       <div className="mx-auto max-w-7xl px-4 lg:px-8">
@@ -53,7 +46,7 @@ export function NumerosSection() {
         </h2>
 
         <div className="mt-12 grid grid-cols-2 gap-8 lg:grid-cols-5">
-          {numeros.map((num) => (
+          {FALLBACK_NUMEROS.map((num) => (
             <div key={num.label} className="text-center">
               <p className="font-heading text-5xl font-bold text-accent-strong">
                 <AnimatedNumber value={num.valor} suffix={num.sufijo} />

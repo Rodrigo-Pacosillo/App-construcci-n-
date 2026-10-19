@@ -19,7 +19,7 @@ export default async function CotizacionesPage() {
       </div>
 
       <div className="mt-8">
-        <CotizacionesList cotizaciones={cotizaciones as never} />
+        <CotizacionesList cotizaciones={cotizaciones} />
       </div>
     </div>
   );
