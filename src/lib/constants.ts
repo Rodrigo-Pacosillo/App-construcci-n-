@@ -15,11 +15,7 @@ export type EstadoCotizacion = (typeof ESTADOS_COTIZACION)[number];
 // VARCHAR + Zod: agregar un canal no requiere migración de BD
 export const ORIGENES_COTIZACION = [
   "web",
-  "whatsapp",
-  "tiktok",
-  "facebook",
   "referido",
-  "estimador",
 ] as const;
 
 export type OrigenCotizacion = (typeof ORIGENES_COTIZACION)[number];
@@ -128,11 +124,7 @@ export const ESTADO_LABELS: Record<EstadoCotizacion, string> = {
 
 export const ORIGEN_LABELS: Record<OrigenCotizacion, string> = {
   web: "Sitio web",
-  whatsapp: "WhatsApp",
-  tiktok: "TikTok",
-  facebook: "Facebook",
   referido: "Referido",
-  estimador: "Estimador",
 };
 
 // ─── Colores de estado para UI ─────────────────────────────────────

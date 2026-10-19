@@ -125,14 +125,6 @@ export const precioReferenciaSchema = z.object({
 
 export type PrecioReferenciaInput = z.infer<typeof precioReferenciaSchema>;
 
-// ─── Estimador (formulario público) ────────────────────────────────
-export const estimadorSchema = z.object({
-  tipoConstruccion: z.enum(["tradicional", "seco"]),
-  rangoM2: z.enum(["hasta_50", "m50_100", "m100_200", "mas_200"]),
-});
-
-export type EstimadorInput = z.infer<typeof estimadorSchema>;
-
 // ─── Login ─────────────────────────────────────────────────────────
 export const loginSchema = z.object({
   email: z.string().email("Email inválido"),

@@ -1,4 +1,4 @@
-import { PrismaClient, Rol, TipoObra, TipoConstruccion, RangoM2, PlazoInicio, FaseFoto, EstadoObra, EstadoPago, CargoEmpleado, EstadoHerramienta } from "@prisma/client";
+import { PrismaClient, Rol, TipoConstruccion, RangoM2, FaseFoto, EstadoObra, EstadoPago } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -32,200 +32,30 @@ async function main() {
     data: {
       nombre: "Admin",
       apellidos: "Demo",
-      email: "admin@demo.com",
+      email: "admin@gmail.com",
       passwordHash,
       rol: Rol.admin,
     },
   });
   console.log(`   ✅ Admin creado: ${admin.email}`);
 
-  console.log("👥 Creando clientes de ejemplo...");
-  const clientes = await Promise.all([
-    prisma.cliente.create({
-      data: {
-        nombre: "Carlos",
-        apellidos: "Méndez",
-        telefono: "+591 7 123-4567",
-        email: "carlos.mendez@email.com",
-        ciudad: "La Paz",
-      },
-    }),
-    prisma.cliente.create({
-      data: {
-        nombre: "Laura",
-        apellidos: "Fernández",
-        telefono: "+591 7 123-4568",
-        email: "laura.f@email.com",
-        ciudad: "Santa Cruz",
-      },
-    }),
-    prisma.cliente.create({
-      data: {
-        nombre: "Roberto",
-        apellidos: "García",
-        telefono: "+591 7 123-4569",
-        ciudad: "Cochabamba",
-      },
-    }),
-    prisma.cliente.create({
-      data: {
-        nombre: "María",
-        apellidos: "López",
-        telefono: "+591 7 123-4570",
-        email: "maria.lopez@email.com",
-        ciudad: "El Alto",
-      },
-    }),
-    prisma.cliente.create({
-      data: {
-        nombre: "Juan",
-        apellidos: "Pérez",
-        telefono: "+591 7 123-4571",
-        ciudad: "Sucre",
-      },
-    }),
-    prisma.cliente.create({
-      data: {
-        nombre: "Ana",
-        apellidos: "Rodríguez",
-        telefono: "+591 7 123-4572",
-        email: "ana.r@email.com",
-        ciudad: "Tarija",
-      },
-    }),
-    prisma.cliente.create({
-      data: {
-        nombre: "Diego",
-        apellidos: "Torres",
-        telefono: "+591 7 123-4573",
-        ciudad: "Oruro",
-      },
-    }),
-    prisma.cliente.create({
-      data: {
-        nombre: "Sofía",
-        apellidos: "Martínez",
-        telefono: "+591 7 123-4574",
-        email: "sofia.m@email.com",
-        ciudad: "Potosí",
-      },
-    }),
-  ]);
-  console.log(`   ✅ ${clientes.length} clientes creados`);
-
-  console.log("📋 Creando cotizaciones...");
-  const cotizaciones = await Promise.all([
-    prisma.cotizacion.create({
-      data: {
-        clienteId: clientes[0].id,
-        tipoObra: TipoObra.vivienda_nueva,
-        tipoConstruccion: TipoConstruccion.seco,
-        rangoM2: RangoM2.m100_200,
-        ubicacionObra: "Zona Sur, La Paz",
-        plazoInicio: PlazoInicio.lo_antes_posible,
-        origen: "web",
-        estado: "nuevo",
-        requerimiento:
-          "Queremos construir una casa de 3 dormitorios en la Zona Sur. Buscamos algo moderno, bien aislado y con plazo firme.",
-      },
-    }),
-    prisma.cotizacion.create({
-      data: {
-        clienteId: clientes[1].id,
-        tipoObra: TipoObra.ampliacion,
-        tipoConstruccion: TipoConstruccion.seco,
-        rangoM2: RangoM2.m50_100,
-        ubicacionObra: "Equipetrol, Santa Cruz",
-        plazoInicio: PlazoInicio.en_3_meses,
-        origen: "whatsapp",
-        estado: "contactado",
-      },
-    }),
-    prisma.cotizacion.create({
-      data: {
-        clienteId: clientes[2].id,
-        tipoObra: TipoObra.vivienda_nueva,
-        tipoConstruccion: TipoConstruccion.tradicional,
-        rangoM2: RangoM2.m100_200,
-        ubicacionObra: "Cala Cala, Cochabamba",
-        plazoInicio: PlazoInicio.lo_antes_posible,
-        origen: "facebook",
-        estado: "visita_tecnica",
-      },
-    }),
-    prisma.cotizacion.create({
-      data: {
-        clienteId: clientes[3].id,
-        tipoObra: TipoObra.otro,
-        tipoConstruccion: TipoConstruccion.seco,
-        rangoM2: RangoM2.hasta_50,
-        ubicacionObra: "El Alto, La Paz",
-        plazoInicio: PlazoInicio.no_sabe,
-        origen: "estimador",
-        estado: "presupuestado",
-        montoEstimado: 4500000,
-      },
-    }),
-    prisma.cotizacion.create({
-      data: {
-        clienteId: clientes[4].id,
-        tipoObra: TipoObra.vivienda_nueva,
-        tipoConstruccion: TipoConstruccion.seco,
-        rangoM2: RangoM2.mas_200,
-        ubicacionObra: "Sucre",
-        plazoInicio: PlazoInicio.en_3_meses,
-        origen: "referido",
-        estado: "ganado",
-        montoEstimado: 18000000,
-        montoCerrado: 17500000,
-        requerimiento:
-          "Casa principal de 200m2 más quincho. Necesitamos plazos ciertos porque tenemos un bebé en camino.",
-      },
-    }),
-    prisma.cotizacion.create({
-      data: {
-        clienteId: clientes[5].id,
-        tipoObra: TipoObra.ampliacion,
-        tipoConstruccion: TipoConstruccion.no_sabe,
-        rangoM2: RangoM2.m50_100,
-        ubicacionObra: "Tarija",
-        plazoInicio: PlazoInicio.no_sabe,
-        origen: "tiktok",
-        estado: "perdido",
-      },
-    }),
-    prisma.cotizacion.create({
-      data: {
-        clienteId: clientes[6].id,
-        tipoObra: TipoObra.vivienda_nueva,
-        tipoConstruccion: TipoConstruccion.seco,
-        rangoM2: RangoM2.m100_200,
-        ubicacionObra: "Oruro",
-        plazoInicio: PlazoInicio.lo_antes_posible,
-        origen: "web",
-        estado: "nuevo",
-      },
-    }),
-    prisma.cotizacion.create({
-      data: {
-        clienteId: clientes[7].id,
-        tipoObra: TipoObra.vivienda_nueva,
-        tipoConstruccion: TipoConstruccion.seco,
-        rangoM2: RangoM2.m50_100,
-        ubicacionObra: "Potosí",
-        plazoInicio: PlazoInicio.en_3_meses,
-        origen: "whatsapp",
-        estado: "contactado",
-      },
-    }),
-  ]);
-  console.log(`   ✅ ${cotizaciones.length} cotizaciones creadas`);
+  console.log("👥 Creando cliente demo (con acceso a portal)...");
+  const cliente = await prisma.cliente.create({
+    data: {
+      nombre: "Juan",
+      apellidos: "Pérez",
+      telefono: "+591 7 123-4567",
+      email: "juan.perez@email.com",
+      ciudad: "Santa Cruz",
+    },
+  });
+  console.log(`   ✅ Cliente creado: ${cliente.nombre} ${cliente.apellidos}`);
 
   console.log("📁 Creando proyectos de portafolio...");
   const proyectos = await Promise.all([
     prisma.proyecto.create({
       data: {
-        clienteId: clientes[4].id,
+        clienteId: cliente.id,
         slug: "casa-steel-frame-santa-cruz",
         titulo: "Casa Steel Frame en Santa Cruz",
         tipoConstruccion: TipoConstruccion.seco,
@@ -633,20 +463,20 @@ async function main() {
   const clientePasswordHash = await bcrypt.hash("cliente123", 10);
   const usuarioCliente = await prisma.usuario.create({
     data: {
-      nombre: clientes[4].nombre,
-      apellidos: clientes[4].apellidos,
-      email: "cliente@demo.com",
+      nombre: cliente.nombre,
+      apellidos: cliente.apellidos,
+      email: "cliente@gmail.com",
       passwordHash: clientePasswordHash,
       rol: Rol.cliente,
-      clienteId: clientes[4].id,
+      clienteId: cliente.id,
     },
   });
   console.log(`   ✅ Usuario cliente creado: ${usuarioCliente.email}`);
 
   const contrato = await prisma.contrato.create({
     data: {
-      clienteId: clientes[4].id,
-      cotizacionId: cotizaciones[4].id,
+      clienteId: cliente.id,
+      cotizacionId: null,
       montoTotal: 17500000,
       fechaFirma: new Date("2026-06-20"),
       observaciones:
@@ -656,7 +486,7 @@ async function main() {
 
   const obra = await prisma.obraActiva.create({
     data: {
-      clienteId: clientes[4].id,
+      clienteId: cliente.id,
       contratoId: contrato.id,
       direccionObra: "Av. Los Álamos 1450, Santa Cruz",
       fechaInicio: new Date("2026-07-01"),
@@ -741,285 +571,10 @@ async function main() {
   ]);
   console.log(`   ✅ ${pagos.length} pagos de obra creados`);
 
-  console.log("👷 Creando empleados...");
-  const empleados = await Promise.all([
-    prisma.empleado.create({
-      data: {
-        nombre: "Martín",
-        apellidos: "Silva",
-        ci: "4823156",
-        telefono: "+591 7 666-1111",
-        cargo: CargoEmpleado.ingeniero,
-        fechaIngreso: new Date("2022-03-15"),
-        salario: 1200000,
-        activo: true,
-      },
-    }),
-    prisma.empleado.create({
-      data: {
-        nombre: "Roberto",
-        apellidos: "Gómez",
-        ci: "6739012",
-        telefono: "+591 7 666-2222",
-        cargo: CargoEmpleado.maestro_obra,
-        fechaIngreso: new Date("2021-08-10"),
-        salario: 950000,
-        activo: true,
-      },
-    }),
-    prisma.empleado.create({
-      data: {
-        nombre: "Carlos",
-        apellidos: "Díaz",
-        ci: "5345678",
-        telefono: "+591 7 666-3333",
-        cargo: CargoEmpleado.albanil,
-        fechaIngreso: new Date("2023-01-20"),
-        salario: 750000,
-        activo: true,
-      },
-    }),
-    prisma.empleado.create({
-      data: {
-        nombre: "Lucas",
-        apellidos: "Fernández",
-        ci: "7901234",
-        telefono: "+591 7 666-4444",
-        cargo: CargoEmpleado.electricista,
-        fechaIngreso: new Date("2023-06-05"),
-        salario: 850000,
-        activo: true,
-      },
-    }),
-    prisma.empleado.create({
-      data: {
-        nombre: "Andrea",
-        apellidos: "Paz",
-        ci: "4567890",
-        telefono: "+591 7 666-5555",
-        cargo: CargoEmpleado.administrativo,
-        fechaIngreso: new Date("2020-11-01"),
-        salario: 800000,
-        activo: true,
-      },
-    }),
-  ]);
-  console.log(`   ✅ ${empleados.length} empleados creados`);
-
-  console.log("📋 Creando asignaciones de obra...");
-  const asignaciones = await Promise.all([
-    prisma.asignacionObra.create({
-      data: {
-        empleadoId: empleados[0].id,
-        obraId: obra.id,
-        rolEnObra: "Ingeniero a cargo",
-        fechaInicio: new Date("2026-07-01"),
-      },
-    }),
-    prisma.asignacionObra.create({
-      data: {
-        empleadoId: empleados[1].id,
-        obraId: obra.id,
-        rolEnObra: "Maestro de obra",
-        fechaInicio: new Date("2026-07-01"),
-      },
-    }),
-    prisma.asignacionObra.create({
-      data: {
-        empleadoId: empleados[2].id,
-        obraId: obra.id,
-        rolEnObra: "Albañil principal",
-        fechaInicio: new Date("2026-07-05"),
-      },
-    }),
-    prisma.asignacionObra.create({
-      data: {
-        empleadoId: empleados[3].id,
-        obraId: obra.id,
-        rolEnObra: "Electricista",
-        fechaInicio: new Date("2026-09-01"),
-      },
-    }),
-  ]);
-  console.log(`   ✅ ${asignaciones.length} asignaciones creadas`);
-
-  console.log("📦 Creando materiales...");
-  const materiales = await Promise.all([
-    prisma.material.create({
-      data: {
-        nombre: "Cemento Portland",
-        unidad: "bolsa",
-        stockActual: 150,
-        stockMinimo: 20,
-        precioUnitario: 8500,
-        activo: true,
-      },
-    }),
-    prisma.material.create({
-      data: {
-        nombre: "Arena de río",
-        unidad: "m3",
-        stockActual: 45,
-        stockMinimo: 10,
-        precioUnitario: 25000,
-        activo: true,
-      },
-    }),
-    prisma.material.create({
-      data: {
-        nombre: "Fierro corrugado 12mm",
-        unidad: "barra",
-        stockActual: 200,
-        stockMinimo: 30,
-        precioUnitario: 12000,
-        activo: true,
-      },
-    }),
-    prisma.material.create({
-      data: {
-        nombre: "Lana de vidrio 100mm",
-        unidad: "rollo",
-        stockActual: 80,
-        stockMinimo: 15,
-        precioUnitario: 15000,
-        activo: true,
-      },
-    }),
-    prisma.material.create({
-      data: {
-        nombre: "Placa de yeso 12.5mm",
-        unidad: "unidad",
-        stockActual: 300,
-        stockMinimo: 50,
-        precioUnitario: 4500,
-        activo: true,
-      },
-    }),
-  ]);
-  console.log(`   ✅ ${materiales.length} materiales creados`);
-
-  console.log("🏗️ Creando uso de materiales en obra...");
-  const materialesObra = await Promise.all([
-    prisma.materialObra.create({
-      data: {
-        obraId: obra.id,
-        materialId: materiales[0].id,
-        cantidad: 80,
-        precioUnitario: 8500,
-        fecha: new Date("2026-07-05"),
-      },
-    }),
-    prisma.materialObra.create({
-      data: {
-        obraId: obra.id,
-        materialId: materiales[1].id,
-        cantidad: 12,
-        precioUnitario: 25000,
-        fecha: new Date("2026-07-08"),
-      },
-    }),
-    prisma.materialObra.create({
-      data: {
-        obraId: obra.id,
-        materialId: materiales[2].id,
-        cantidad: 60,
-        precioUnitario: 12000,
-        fecha: new Date("2026-07-10"),
-      },
-    }),
-    prisma.materialObra.create({
-      data: {
-        obraId: obra.id,
-        materialId: materiales[3].id,
-        cantidad: 40,
-        precioUnitario: 15000,
-        fecha: new Date("2026-08-15"),
-      },
-    }),
-    prisma.materialObra.create({
-      data: {
-        obraId: obra.id,
-        materialId: materiales[4].id,
-        cantidad: 120,
-        precioUnitario: 4500,
-        fecha: new Date("2026-08-20"),
-      },
-    }),
-  ]);
-  console.log(`   ✅ ${materialesObra.length} usos de materiales creados`);
-
-  console.log("🔧 Creando herramientas...");
-  const herramientas = await Promise.all([
-    prisma.herramienta.create({
-      data: {
-        nombre: "Taladro percutor Bosch",
-        codigo: "HERR-001",
-        estado: EstadoHerramienta.disponible,
-        activo: true,
-      },
-    }),
-    prisma.herramienta.create({
-      data: {
-        nombre: "Mezcladora de cemento",
-        codigo: "HERR-002",
-        estado: EstadoHerramienta.en_uso,
-        activo: true,
-      },
-    }),
-    prisma.herramienta.create({
-      data: {
-        nombre: "Andamio modular 3m",
-        codigo: "HERR-003",
-        estado: EstadoHerramienta.disponible,
-        activo: true,
-      },
-    }),
-    prisma.herramienta.create({
-      data: {
-        nombre: "Amoladora angular",
-        codigo: "HERR-004",
-        estado: EstadoHerramienta.mantenimiento,
-        activo: true,
-      },
-    }),
-    prisma.herramienta.create({
-      data: {
-        nombre: "Nivel láser",
-        codigo: "HERR-005",
-        estado: EstadoHerramienta.disponible,
-        activo: true,
-      },
-    }),
-  ]);
-  console.log(`   ✅ ${herramientas.length} herramientas creadas`);
-
-  console.log("📝 Creando préstamos de herramientas...");
-  const prestamos = await Promise.all([
-    prisma.prestamoHerramienta.create({
-      data: {
-        herramientaId: herramientas[1].id,
-        empleadoId: empleados[2].id,
-        obraId: obra.id,
-        fechaSalida: new Date("2026-07-10"),
-        observaciones: "Para hormigón de fundaciones",
-      },
-    }),
-    prisma.prestamoHerramienta.create({
-      data: {
-        herramientaId: herramientas[0].id,
-        empleadoId: empleados[3].id,
-        obraId: obra.id,
-        fechaSalida: new Date("2026-09-01"),
-        observaciones: "Instalaciones eléctricas",
-      },
-    }),
-  ]);
-  console.log(`   ✅ ${prestamos.length} préstamos creados`);
-
   console.log("\n🎉 ¡Seed completado exitosamente!");
-  console.log(`   Usuarios: 2 (admin@demo.com, cliente@demo.com)`);
-  console.log(`   Clientes: ${clientes.length}`);
-  console.log(`   Cotizaciones: ${cotizaciones.length}`);
+  console.log(`   Usuarios: 2 (admin@gmail.com, cliente@gmail.com)`);
+  console.log(`   Cliente: 1 (Juan Pérez)`);
+  console.log(`   Cotizaciones: 0`);
   console.log(`   Proyectos: ${proyectos.length}`);
   console.log(`   Fotos: ${fotos.length}`);
   console.log(`   Testimonios: ${testimonios.length}`);
@@ -1027,7 +582,9 @@ async function main() {
   console.log(`   FAQs: ${faqs.length}`);
   console.log(`   Certificaciones: ${certificaciones.length}`);
   console.log(`   Precios de referencia: ${precios.length}`);
-  console.log(`   Obras activas: 1 (cliente@demo.com / cliente123)`);
+  console.log(`   Obras activas: 1 (cliente@gmail.com / cliente123)`);
+  console.log(`   Hitos: ${hitos.length} (3 visibles + 1 oculto)`);
+  console.log(`   Pagos: ${pagos.length}`);
 }
 
 main()

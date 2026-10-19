@@ -239,7 +239,7 @@ export const FALLBACK_FAQS: Faq[] = [
     id: "8",
     pregunta: "¿Cómo pido un presupuesto?",
     respuesta:
-      "Puede usar nuestro estimador online para tener una referencia, o completar el formulario de cotización con los detalles de su obra. Nos comunicamos con usted en 24 horas.",
+      "Complete el formulario de cotización con los detalles de su obra. Nos comunicamos con usted en 24 horas.",
     orden: 8,
     activo: true,
   },

@@ -18,12 +18,6 @@ export function CtaSection() {
           >
             Cotización online
           </Link>
-          <Link
-            href="/estimador"
-            className="inline-flex items-center justify-center rounded border border-ink/25 px-8 py-4 text-sm font-medium text-ink transition-colors hover:border-ink/40"
-          >
-            Estimador rápido
-          </Link>
         </div>
       </div>
     </section>
