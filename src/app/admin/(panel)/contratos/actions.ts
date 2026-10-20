@@ -74,24 +74,62 @@ export async function createContrato(formData: FormData) {
 
   try {
     const { cotizacionId, ...rest } = parsed.data;
-    const contrato = await prisma.contrato.create({
-      data: {
-        ...rest,
-        cotizacionId: cotizacionId || null,
-        fechaFirma: parsed.data.fechaFirma ? new Date(parsed.data.fechaFirma) : null,
-      },
-    });
 
-    // Si hay cotización vinculada, actualizar estado a "ganado"
-    if (cotizacionId) {
-      await prisma.cotizacion.update({
-        where: { id: cotizacionId },
-        data: { estado: "ganado" },
-      });
+    // §6.5 — validar en servidor que el cliente existe.
+    const cliente = await prisma.cliente.findUnique({
+      where: { id: rest.clienteId },
+      select: { id: true },
+    });
+    if (!cliente) {
+      return { success: false, error: { clienteId: ["El cliente no existe"] } };
     }
+
+    // §6.5 — si hay cotización, validar que corresponde al mismo cliente
+    // y que no tenga ya un contrato (§5.8: impedir duplicados).
+    if (cotizacionId) {
+      const cotizacion = await prisma.cotizacion.findUnique({
+        where: { id: cotizacionId },
+        select: { id: true, clienteId: true, contratos: { select: { id: true } } },
+      });
+      if (!cotizacion) {
+        return { success: false, error: { cotizacionId: ["La cotización no existe"] } };
+      }
+      if (cotizacion.clienteId !== rest.clienteId) {
+        return {
+          success: false,
+          error: { cotizacionId: ["La cotización pertenece a otro cliente"] },
+        };
+      }
+      if (cotizacion.contratos.length > 0) {
+        return {
+          success: false,
+          error: { cotizacionId: ["Esta cotización ya tiene un contrato asociado"] },
+        };
+      }
+    }
+
+    // §10.3 — transacción: crear contrato + marcar cotización como
+    // `contratado` en la misma operación lógica.
+    const contrato = await prisma.$transaction(async (tx) => {
+      const nuevo = await tx.contrato.create({
+        data: {
+          ...rest,
+          cotizacionId: cotizacionId || null,
+          fechaFirma: parsed.data.fechaFirma ? new Date(parsed.data.fechaFirma) : null,
+        },
+      });
+      if (cotizacionId) {
+        await tx.cotizacion.update({
+          where: { id: cotizacionId },
+          data: { estado: "contratado" },
+        });
+      }
+      return nuevo;
+    });
 
     revalidatePath("/admin/contratos");
     revalidatePath("/admin/cotizaciones");
+    revalidatePath("/admin");
     return { success: true, data: contrato };
   } catch (error) {
     console.error("Error creando contrato:", error);
@@ -173,7 +211,7 @@ export async function getClientesForSelect() {
 export async function getCotizacionesGanadasForSelect() {
   await requireAdmin();
   return prisma.cotizacion.findMany({
-    where: { estado: "ganado", contratos: { none: {} } },
+    where: { estado: "contratado", contratos: { none: {} } },
     select: { id: true, tipoObra: true, cliente: { select: { nombre: true, apellidos: true } } },
     orderBy: { creadoEn: "desc" },
   });

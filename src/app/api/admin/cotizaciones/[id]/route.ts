@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth-utils";
 import { z } from "zod";
+import { ESTADOS_COTIZACION } from "@/lib/constants";
 
 const updateSchema = z.object({
-  estado: z.enum(["nuevo", "contactado", "visita_tecnica", "presupuestado", "ganado", "perdido"]).optional(),
+  estado: z.enum(ESTADOS_COTIZACION).optional(),
   montoEstimado: z.number().positive().nullable().optional(),
   montoCerrado: z.number().positive().nullable().optional(),
   notasInternas: z.string().nullable().optional(),

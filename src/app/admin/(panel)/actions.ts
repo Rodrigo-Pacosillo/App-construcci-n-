@@ -63,17 +63,17 @@ export async function getDashboardAlertas() {
       take: 10,
     });
 
-    const ganadosSinContrato = await prisma.cliente.findMany({
+    const contratadasSinContrato = await prisma.cliente.findMany({
       where: {
-        cotizaciones: { some: { estado: "ganado" } },
+        cotizaciones: { some: { estado: "contratado" } },
         contratos: { none: {} },
       },
       take: 10,
     });
 
-    return { nuevasSinContactar, obrasPausadas, ganadosSinContrato };
+    return { nuevasSinContactar, obrasPausadas, contratadasSinContrato };
   } catch (error) {
     console.error("Error en getDashboardAlertas:", error);
-    return { nuevasSinContactar: [], obrasPausadas: [], ganadosSinContrato: [] };
+    return { nuevasSinContactar: [], obrasPausadas: [], contratadasSinContrato: [] };
   }
 }

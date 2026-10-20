@@ -38,7 +38,9 @@ export default async function ClienteDashboard({
     : obras[0];
   const cotizaciones = cliente?.cotizaciones ?? [];
   const totalCotizaciones = cotizaciones.length;
-  const cotizacionesGanadas = cotizaciones.filter((c) => c.estado === "ganado").length;
+  const cotizacionesContratadas = cotizaciones.filter(
+    (c) => c.estado === "contratado"
+  ).length;
   const totalObras = obras.length;
   const obraConHitos = obras.filter((o) => o.hitos.length > 0);
   const maxProgreso = obraConHitos.reduce((max, o) => Math.max(max, o.progreso), 0);
@@ -92,7 +94,7 @@ export default async function ClienteDashboard({
           <p className="section-label text-ink-faint">COTIZACIONES</p>
           <p className="mt-3 font-heading text-4xl font-bold">{totalCotizaciones}</p>
           <p className="mt-1 text-sm text-ink-muted">
-            {cotizacionesGanadas} ganadas
+            {cotizacionesContratadas} contratadas
           </p>
         </div>
 

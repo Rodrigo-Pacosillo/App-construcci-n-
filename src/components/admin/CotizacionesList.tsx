@@ -17,8 +17,14 @@ type Cotizacion = {
   cliente: { nombre: string; apellidos: string; telefono: string; email: string | null } | null;
 };
 
-export function CotizacionesList({ cotizaciones }: { cotizaciones: Cotizacion[] }) {
-  const [filtro, setFiltro] = useState<string>("todos");
+export function CotizacionesList({
+  cotizaciones,
+  filtroInicial,
+}: {
+  cotizaciones: Cotizacion[];
+  filtroInicial?: string;
+}) {
+  const [filtro, setFiltro] = useState<string>(filtroInicial ?? "todos");
   const [isPending, startTransition] = useTransition();
 
   const filtradas = filtro === "todos"

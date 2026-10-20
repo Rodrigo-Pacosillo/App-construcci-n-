@@ -1,15 +1,45 @@
 // ─── Estados del embudo de ventas ──────────────────────────────────
-// VARCHAR + Zod: cambiar un estado no requiere migración de BD
+// VARCHAR + Zod: cambiar un estado no requiere migración de BD.
+// Conjunto reducido según ESPECIFICACION_PANEL_ADMIN_CONTRART.md §5.3:
+// no se guardan `visita_tecnica` ni `presupuestado`, y los valores
+// antiguos `ganado`/`perdido` se remapean a `contratado`/`no_concretado`.
 export const ESTADOS_COTIZACION = [
   "nuevo",
   "contactado",
-  "visita_tecnica",
-  "presupuestado",
-  "ganado",
-  "perdido",
+  "contratado",
+  "no_concretado",
 ] as const;
 
 export type EstadoCotizacion = (typeof ESTADOS_COTIZACION)[number];
+
+// ─── Mapeo lógico de estados antiguos → nuevos (§5.3) ──────────────
+// Para migrar datos existentes. NO se ejecuta automáticamente.
+export const MAPEO_ESTADOS_ANTIGUOS: Record<string, EstadoCotizacion> = {
+  nuevo: "nuevo",
+  contactado: "contactado",
+  visita_tecnica: "contactado",
+  presupuestado: "contactado",
+  ganado: "contratado",
+  perdido: "no_concretado",
+};
+
+// ─── Agrupación visual del panel Cotizaciones (§5.2) ───────────────
+// "Por revisar" y "Pendientes" son estados persistidos; "Finalizadas"
+// agrupa los dos resultados finales.
+export const GRUPOS_COTIZACION = ["por_revisar", "pendientes", "finalizadas"] as const;
+export type GrupoCotizacion = (typeof GRUPOS_COTIZACION)[number];
+
+export const ESTADOS_POR_GRUPO: Record<GrupoCotizacion, EstadoCotizacion[]> = {
+  por_revisar: ["nuevo"],
+  pendientes: ["contactado"],
+  finalizadas: ["contratado", "no_concretado"],
+};
+
+export const GRUPO_LABELS: Record<GrupoCotizacion, string> = {
+  por_revisar: "Por revisar",
+  pendientes: "Pendientes",
+  finalizadas: "Finalizadas",
+};
 
 // ─── Orígenes de las cotizaciones ──────────────────────────────────
 // VARCHAR + Zod: agregar un canal no requiere migración de BD
@@ -54,12 +84,9 @@ export const ADMIN_NAV_SECTIONS: NavSection[] = [
     items: [
       { id: "dashboard", label: "Dashboard", href: "/admin", icon: "LayoutDashboard" },
       { id: "cotizaciones", label: "Cotizaciones", href: "/admin/cotizaciones", icon: "FileText" },
-      { id: "clientes", label: "Clientes", href: "/admin/clientes", icon: "Users" },
       { id: "contratos", label: "Contratos", href: "/admin/contratos", icon: "FileCheck" },
+      { id: "usuarios", label: "Usuarios", href: "/admin/usuarios", icon: "UserCog" },
       { id: "obras", label: "Obras", href: "/admin/obras", icon: "HardHat" },
-      { id: "empleados", label: "Empleados", href: "/admin/empleados", icon: "Users" },
-      { id: "materiales", label: "Materiales", href: "/admin/materiales", icon: "Package" },
-      { id: "herramientas", label: "Herramientas", href: "/admin/herramientas", icon: "Wrench" },
     ],
   },
   {
@@ -74,10 +101,13 @@ export const ADMIN_NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
-    id: "sistema",
-    label: "Sistema",
+    id: "secundario",
+    label: "Módulos secundarios",
     items: [
-      { id: "usuarios", label: "Usuarios", href: "/admin/usuarios", icon: "UserCog" },
+      { id: "clientes", label: "Clientes", href: "/admin/clientes", icon: "Users" },
+      { id: "empleados", label: "Empleados", href: "/admin/empleados", icon: "Users" },
+      { id: "materiales", label: "Materiales", href: "/admin/materiales", icon: "Package" },
+      { id: "herramientas", label: "Herramientas", href: "/admin/herramientas", icon: "Wrench" },
     ],
   },
 ];
@@ -117,13 +147,12 @@ export const CLIENTE_NAV_SECTIONS: NavSection[] = [
 ];
 
 // ─── Labels para UI ────────────────────────────────────────────────
+// Etiquetas según §5.3 de la especificación.
 export const ESTADO_LABELS: Record<EstadoCotizacion, string> = {
-  nuevo: "Nuevo",
-  contactado: "Contactado",
-  visita_tecnica: "Visita técnica",
-  presupuestado: "Presupuestado",
-  ganado: "Ganado",
-  perdido: "Perdido",
+  nuevo: "Por revisar",
+  contactado: "Pendiente",
+  contratado: "Contratada",
+  no_concretado: "No concretada",
 };
 
 export const ORIGEN_LABELS: Record<OrigenCotizacion, string> = {
@@ -139,10 +168,8 @@ export const ORIGEN_LABELS: Record<OrigenCotizacion, string> = {
 export const ESTADO_COLORES: Record<EstadoCotizacion, string> = {
   nuevo: "bg-blue-100 text-blue-800",
   contactado: "bg-yellow-100 text-yellow-800",
-  visita_tecnica: "bg-purple-100 text-purple-800",
-  presupuestado: "bg-orange-100 text-orange-800",
-  ganado: "bg-green-100 text-green-800",
-  perdido: "bg-red-100 text-red-800",
+  contratado: "bg-green-100 text-green-800",
+  no_concretado: "bg-red-100 text-red-800",
 };
 
 // ─── Estados de obra activa (Fase 2) ───────────────────────────────

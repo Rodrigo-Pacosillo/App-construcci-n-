@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { ESTADO_LABELS } from "@/lib/constants";
 
 type Contrato = {
   id: string;
@@ -75,7 +76,9 @@ export function ContratosList({ contratos }: { contratos: Contrato[] }) {
                     {c.cotizacion ? (
                       <>
                         <p className="capitalize text-ink-muted">{c.cotizacion.tipoObra.replace("_", " ")}</p>
-                        <p className="text-xs text-ink-faint">{c.cotizacion.estado}</p>
+                        <p className="text-xs text-ink-faint">
+                          {ESTADO_LABELS[c.cotizacion.estado as keyof typeof ESTADO_LABELS] ?? c.cotizacion.estado}
+                        </p>
                       </>
                     ) : (
                       <p className="text-ink-faint">— Sin cotización —</p>

@@ -2,10 +2,20 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getCotizaciones } from "./actions";
 import { CotizacionesList } from "@/components/admin/CotizacionesList";
+import { ESTADOS_COTIZACION, type EstadoCotizacion } from "@/lib/constants";
 
-export default async function CotizacionesPage() {
+export default async function CotizacionesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ estado?: string }>;
+}) {
   const session = await auth();
   if (!session) redirect("/login?callbackUrl=/admin");
+
+  const { estado } = await searchParams;
+  const filtroInicial = ESTADOS_COTIZACION.includes(estado as EstadoCotizacion)
+    ? (estado as EstadoCotizacion)
+    : undefined;
 
   const cotizaciones = await getCotizaciones();
 
@@ -19,7 +29,7 @@ export default async function CotizacionesPage() {
       </div>
 
       <div className="mt-8">
-        <CotizacionesList cotizaciones={cotizaciones} />
+        <CotizacionesList cotizaciones={cotizaciones} filtroInicial={filtroInicial} />
       </div>
     </div>
   );

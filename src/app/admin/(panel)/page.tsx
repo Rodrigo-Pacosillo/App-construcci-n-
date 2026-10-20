@@ -28,7 +28,7 @@ export default async function AdminDashboard({
   const hayAlertas =
     alertas.nuevasSinContactar.length > 0 ||
     alertas.obrasPausadas.length > 0 ||
-    alertas.ganadosSinContrato.length > 0;
+    alertas.contratadasSinContrato.length > 0;
 
   return (
     <div>
@@ -65,12 +65,12 @@ export default async function AdminDashboard({
               cta="Ver"
             />
           )}
-          {alertas.ganadosSinContrato.length > 0 && (
+          {alertas.contratadasSinContrato.length > 0 && (
             <Alerta
-              texto={`${alertas.ganadosSinContrato.length} cliente${
-                alertas.ganadosSinContrato.length === 1 ? "" : "s"
-              } con cotización ganada pero sin contrato`}
-              href="/admin/clientes"
+              texto={`${alertas.contratadasSinContrato.length} cliente${
+                alertas.contratadasSinContrato.length === 1 ? "" : "s"
+              } con cotización contratada pero sin contrato`}
+              href="/admin/contratos/new"
               cta="Ver"
             />
           )}
@@ -86,7 +86,7 @@ export default async function AdminDashboard({
       {/* Embudo clickeable */}
       <div className="mt-8">
         <p className="section-label mb-4 text-ink-faint">EMBUDO DE COTIZACIONES</p>
-        <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {ESTADOS_COTIZACION.map((estado) => (
             <Link
               key={estado}
@@ -114,8 +114,8 @@ export default async function AdminDashboard({
         <p className="section-label mb-4 text-ink-faint">ACCIONES FRECUENTES</p>
         <div className="grid gap-4 sm:grid-cols-3">
           <AccionRapida href="/admin/cotizaciones" titulo="+ Cotización" detalle="Revisar el embudo y cargar una cotización" />
-          <AccionRapida href="/admin/contratos/new" titulo="+ Contrato" detalle="Crear un contrato desde una cotización ganada" />
-          <AccionRapida href="/admin/clientes" titulo="+ Cliente manual" detalle="Dar de alta un cliente para migración" />
+          <AccionRapida href="/admin/contratos/new" titulo="+ Contrato" detalle="Crear un contrato desde una cotización contratada" />
+          <AccionRapida href="/admin/usuarios" titulo="Usuarios" detalle="Gestionar cuentas de acceso de clientes" />
         </div>
       </div>
 
