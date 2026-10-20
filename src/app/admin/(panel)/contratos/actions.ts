@@ -130,7 +130,7 @@ export async function createContrato(formData: FormData) {
     revalidatePath("/admin/contratos");
     revalidatePath("/admin/cotizaciones");
     revalidatePath("/admin");
-    return { success: true, data: contrato };
+    return { success: true, data: contrato, clienteId: rest.clienteId };
   } catch (error) {
     console.error("Error creando contrato:", error);
     return {
@@ -215,4 +215,50 @@ export async function getCotizacionesGanadasForSelect() {
     select: { id: true, tipoObra: true, cliente: { select: { nombre: true, apellidos: true } } },
     orderBy: { creadoEn: "desc" },
   });
+}
+
+/**
+ * §6.4 — después de guardar el contrato, decide a dónde lleva al admin:
+ * si el cliente ya tiene cuenta, a la ficha de esa cuenta; si no, al
+ * alta de cuenta con los datos precargados. Nunca crea una cuenta sola.
+ */
+export async function getDestinoPostContrato(clienteId: string) {
+  await requireAdmin();
+
+  try {
+    const cliente = await prisma.cliente.findUnique({
+      where: { id: clienteId },
+      select: {
+        id: true,
+        nombre: true,
+        apellidos: true,
+        email: true,
+        usuario: { select: { id: true } },
+      },
+    });
+
+    if (!cliente) return null;
+
+    if (cliente.usuario) {
+      return {
+        tipo: "usuario-existente" as const,
+        href: `/admin/usuarios/${cliente.usuario.id}`,
+      };
+    }
+
+    const params = new URLSearchParams({
+      clienteId: cliente.id,
+      nombre: cliente.nombre,
+      apellidos: cliente.apellidos,
+    });
+    if (cliente.email) params.set("email", cliente.email);
+
+    return {
+      tipo: "crear-cuenta" as const,
+      href: `/admin/autorizar-cuentas/crear?${params.toString()}`,
+    };
+  } catch (error) {
+    console.error("Error en getDestinoPostContrato:", error);
+    return null;
+  }
 }

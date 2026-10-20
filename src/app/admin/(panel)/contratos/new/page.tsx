@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { createContrato, getClientesForSelect, getCotizacionesGanadasForSelect } from "@/app/admin/(panel)/contratos/actions";
+import { createContrato, getClientesForSelect, getCotizacionesGanadasForSelect, getDestinoPostContrato } from "@/app/admin/(panel)/contratos/actions";
 
 type ClienteSelect = { id: string; nombre: string; apellidos: string; email: string | null };
 type CotizacionSelect = { id: string; tipoObra: string; cliente: { nombre: string; apellidos: string } };
@@ -53,7 +53,15 @@ export default function AdminNuevoContratoPage() {
       if (!res.success) {
         setError(res.error || { _form: ["Error al crear"] });
       } else {
-        router.push("/admin/contratos");
+        // §6.4: no crear cuenta automáticamente. Si el cliente ya tiene
+        // usuario, abrir su ficha; si no, llevar al alta de cuenta con
+        // los datos preseleccionados.
+        const destino = await getDestinoPostContrato(formData.clienteId);
+        if (destino) {
+          router.push(destino.href);
+        } else {
+          router.push("/admin/contratos");
+        }
         router.refresh();
       }
     });

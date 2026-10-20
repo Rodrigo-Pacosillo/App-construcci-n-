@@ -156,7 +156,7 @@ export default async function ClienteDashboard({
             <p className="section-label text-ink-faint">AVANCE</p>
             <p className="mt-2 font-heading text-lg font-bold">Hitos de obra</p>
             <p className="mt-1 text-sm text-ink-muted">
-              Ver progreso, hitos cumplidos y próximos pasos
+              Ver progreso, avances publicados y próximos pasos
             </p>
           </Link>
           <Link

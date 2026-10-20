@@ -59,7 +59,6 @@ export default async function ClienteAvancePage({
   }
 
   const hitos = obra.hitos;
-  const ahora = new Date().getTime();
 
   return (
     <div className="space-y-8">
@@ -75,52 +74,40 @@ export default async function ClienteAvancePage({
         <div className="space-y-6">
           <div>
             <div className="flex items-center justify-between">
-              <p className="section-label text-ink-faint">HITOS ({hitos.length})</p>
+              <p className="section-label text-ink-faint">ACTUALIZACIONES ({hitos.length})</p>
               <p className="text-sm text-ink-muted">
-                {hitos.filter(h => new Date(h.fecha).getTime() <= ahora && h.visibleCliente).length} de {hitos.filter(h => h.visibleCliente).length} visibles cumplidos
+                Publicadas por el administrador
               </p>
             </div>
+            {/* §8.4: la visibilidad no prueba que un hito esté completado.
+                Se muestran como actualizaciones publicadas con fecha y
+                descripción, sin inferir un estado de finalización. */}
             <div className="mt-6 relative">
               <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-ink/10" />
               <div className="space-y-8">
-                {hitos.map((h, i) => {
-                  const cumplido = new Date(h.fecha).getTime() <= ahora && h.visibleCliente;
-                  return (
-                    <div key={h.id} className="relative flex gap-4">
-                      <div className={`relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${cumplido ? "bg-green-500 text-white" : "bg-accent text-ink"} font-bold`}>
-                        {cumplido ? "✓" : i + 1}
-                      </div>
-                      <div className="flex-1 rounded border border-border bg-surface p-4">
-                        <div className="flex items-center justify-between">
-                          <h3 className="font-heading font-bold">{h.titulo}</h3>
-                          <div className="flex items-center gap-2">
-                            {h.visibleCliente && (
-                              <span className="rounded bg-green-100 text-green-800 px-2 py-0.5 text-xs font-medium">
-                                Visible
-                              </span>
-                            )}
-                            {cumplido && (
-                              <span className="rounded bg-green-100 text-green-800 px-2 py-0.5 text-xs font-medium">
-                                Cumplido
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <p className="mt-1 text-sm text-ink-muted">{h.descripcion}</p>
-                        <p className="mt-2 text-xs text-ink-faint">{formatDate(h.fecha)}</p>
-                      </div>
+                {hitos.map((h, i) => (
+                  <div key={h.id} className="relative flex gap-4">
+                    <div className="relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-accent font-bold text-ink">
+                      {i + 1}
                     </div>
-                  );
-                })}
+                    <div className="flex-1 rounded border border-border bg-surface p-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-heading font-bold">{h.titulo}</h3>
+                      </div>
+                      <p className="mt-1 text-sm text-ink-muted">{h.descripcion}</p>
+                      <p className="mt-2 text-xs text-ink-faint">{formatDate(h.fecha)}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
         </div>
       ) : (
         <div className="rounded border border-border bg-surface p-8 text-center">
-          <p className="section-label text-ink-faint">SIN HITOS REGISTRADOS</p>
+          <p className="section-label text-ink-faint">SIN ACTUALIZACIONES PUBLICADAS</p>
           <p className="mt-2 text-ink-muted">
-            El administrador agregará hitos conforme avance la obra.
+            El administrador publicará actualizaciones conforme avance la obra.
           </p>
         </div>
       )}
