@@ -27,48 +27,66 @@ proyecto. Modelo de datos: `docs/modelo-datos.md`. Visión de negocio:
 src/
 ├── app/
 │   ├── layout.tsx              # Root layout (fuentes, ThemeProvider)
-│   ├── page.tsx                # Home (/)
 │   ├── globals.css             # Tokens + utilidades base
-│   ├── cotizacion/page.tsx     # Formulario de cotización (/cotizacion)
-│   ├── estimador/page.tsx      # Estimador orientativo (/estimador)
-│   ├── faq/page.tsx            # Preguntas frecuentes (/faq)
-│   ├── proyectos/
-│   │   ├── page.tsx            # Portafolio completo (/proyectos)
-│   │   └── [slug]/page.tsx     # Detalle de proyecto (/proyectos/[slug])
-│   ├── servicios/
-│   │   ├── page.tsx            # Lista de servicios (/servicios)
-│   │   └── [slug]/page.tsx     # Detalle de servicio (/servicios/[slug])
-│   ├── admin/
+│   ├── proxy.ts                # Guard de /admin (Next.js 16 renombró middleware)
+│   ├── (public)/               # Sitio público
+│   │   ├── page.tsx            # Home (/)
+│   │   ├── cotizacion/         # Formulario (/cotizacion)
+│   │   ├── estimador/          # Estimador orientativo (/estimador)
+│   │   ├── faq/                # Preguntas frecuentes (/faq)
+│   │   ├── login/              # Login (/login)
+│   │   ├── proyectos/          # Portafolio + [slug]
+│   │   └── servicios/          # Lista + [slug]
+│   ├── admin/                  # Panel protegido
 │   │   ├── layout.tsx          # Layout admin (sidebar, auth check)
-│   │   ├── page.tsx            # Dashboard embudo
-│   │   ├── cotizaciones/       # CRUD cotizaciones
-│   │   ├── proyectos/          # CRUD proyectos + fotos
-│   │   ├── testimonios/        # CRUD testimonios
-│   │   └── servicios/          # CRUD servicios
+│   │   ├── (panel)/            # Dashboard, cotizaciones, contratos, obras,
+│   │   │                       # clientes, usuarios, proyectos, servicios,
+│   │   │                       # testimonios, faqs, certificaciones
+│   │   ├── empleados/          # Módulo interno
+│   │   ├── materiales/         # Módulo interno
+│   │   ├── herramientas/       # Módulo interno
+│   │   └── autorizar-cuentas/  # Alta de cuentas de usuario
+│   ├── cliente/                # Portal de cliente (solo lectura)
+│   │   ├── page.tsx            # Resumen "Mi obra"
+│   │   ├── avance/             # Hitos visibles
+│   │   ├── pagos/              # Historial de pagos
+│   │   ├── documentos/         # Contratos
+│   │   ├── cotizaciones/       # Historial de cotizaciones
+│   │   ├── contratos/          # Historial de contratos
+│   │   └── perfil/             # Datos de la cuenta
 │   └── api/
-│       └── auth/[...nextauth]/ # Auth.js route handler
+│       ├── auth/[...nextauth]/ # Auth.js route handler
+│       └── admin/              # Route handlers (clientes, contratos,
+│                               # cotizaciones, empleados, herramientas,
+│                               # materiales)
 ├── components/
-│   ├── sections/               # Secciones del home (Hero, Servicios, etc.)
+│   ├── sections/               # Secciones del home
 │   ├── proyecto/               # Componentes de portafolio
-│   ├── ui/                     # Primitivos reutilizables (Button, Card, etc.)
+│   ├── ui/                     # Primitivos reutilizables
 │   ├── admin/                  # Componentes del panel admin
+│   ├── cliente/                # Componentes del portal
+│   ├── auth/                   # LoginForm, etc.
 │   └── layout/                 # Header, Footer, Navigation
 ├── lib/
 │   ├── db.ts                   # Instancia singleton de Prisma
 │   ├── auth.ts                 # Configuración Auth.js
+│   ├── auth-utils.ts           # requireAdmin / requireAdminPage
 │   ├── constants.ts            # Enums evolutivos (estados, orígenes, nav)
 │   ├── validators.ts           # Schemas Zod compartidos
+│   ├── fallback-data.ts        # Contenido cuando la query vuelve vacío
 │   └── utils.ts                # cn() y utilidades generales
-└── types/
-    └── index.ts                # Tipos compartidos (si needed)
 prisma/
 ├── schema.prisma               # Fuente de verdad del modelo
 ├── seed.ts                     # Datos semilla para demo
-└── migrations/                 # Migraciones versionadas
+└── migrations/                 # Migraciones versionadas (init, bd_hardening,
+                                # fix_drift_and_modules_5_7)
 public/
-├── img/                        # Imágenes de demo (stock)
+├── img/                        # Imágenes de demo
 └── fonts/                      # Fuentes locales (si needed)
 ```
+
+> Nota: **el middleware NO existe como `src/middleware.ts`**. En Next.js 16 el
+> guard vive en `src/proxy.ts`. Ver `docs/deploy-constraints.md`.
 
 ## Convenciones de código
 

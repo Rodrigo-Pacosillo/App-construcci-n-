@@ -11,6 +11,27 @@ concreto en cada entregable.
 
 ## Orden de construcción
 
+> **Nota de estado:** la especificación aprobada
+> (`ESPECIFICACION_PANEL_ADMIN_CONTRART.md`) define **cuatro paneles
+> principales: Cotizaciones, Contratos, Usuarios, Obras**. El trabajo actual
+> es alinear el admin a esa especificación. Verificá el estado real en el
+> código antes de asumir que algo de las fases de abajo está terminado.
+
+Estado verificado (a la fecha de esta actualización):
+
+| Módulo | Estado |
+|---|---|
+| Cotizaciones (lista, detalle, cambio de estado) | Implementado — estados **antiguos** (pendiente alinear) |
+| Contratos (lista, detalle, alta) | Implementado |
+| Obras (lista, detalle, hitos, pagos) | Implementado — `/admin/obras/new` es placeholder |
+| Usuarios (cuentas) | Placeholder (`ModuloPlaceholder`) |
+| Clientes | Stub ("módulo en el siguiente paso") — la tabla se conserva |
+| Alta de cuentas | Implementada en `/admin/autorizar-cuentas` (vía separada) |
+
+**Pendiente de decisión:** migrar los estados de cotización del código a los
+de la especificación (`ganado`→`contratado`, `perdido`→`no_concretado`; sin
+`visita_tecnica` ni `presupuestado`).
+
 ### FASE 1 — Infraestructura base ✅ COMPLETADA
 
 - [x] Next.js + TypeScript + Tailwind v4
@@ -45,12 +66,13 @@ concreto en cada entregable.
 
 - [x] `src/lib/auth.ts` — configuración Auth.js
 - [x] `src/app/api/auth/[...nextauth]/route.ts` — route handler
-- [x] `src/middleware.ts` — proteger `/admin`
+- [x] `src/proxy.ts` — proteger `/admin` (Next.js 16: el middleware se
+      renombró a `proxy.ts`; un `src/middleware.ts` **no se ejecuta**)
 - [x] Componente `Header` (nav pública)
 - [x] Componente `Footer`
 - [x] `src/app/admin/layout.tsx` — layout admin con sidebar
 - [x] `src/app/admin/page.tsx` — dashboard mínimo (placeholder)
-- [x] `src/app/admin/login/page.tsx` — página de login
+- [x] `src/app/(public)/login/page.tsx` — página de login
 
 ### FASE 5 — Páginas públicas (contenido estático) ✅ COMPLETADA
 

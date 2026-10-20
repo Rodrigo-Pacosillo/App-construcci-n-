@@ -23,13 +23,15 @@ nuevo estado del embudo, un nuevo canal de origen), usa VARCHAR + Zod.
 
 ### usuarios
 
-Cuentas de acceso: admin y clientes con portal. No es la entidad de
-negocio — los leads viven en `clientes` y pueden NO tener cuenta.
+**Cuenta de acceso** (credenciales, rol, estado): admin y clientes con portal.
+No es la entidad de negocio — los leads viven en `clientes` y pueden NO tener
+cuenta. `Usuario.clienteId` vincula la cuenta con la ficha `Cliente` existente.
 
 ```prisma
 model Usuario {
   id            String    @id @default(cuid())
   nombre        String
+  apellidos     String
   email         String    @unique
   passwordHash  String    @map("password_hash")
   rol           Rol       @default(cliente)
@@ -52,27 +54,32 @@ model Usuario {
 
 ### clientes
 
-Personas que piden cotización. El histórico del embudo es sagrado.
+Personas que piden cotización (ficha de persona/contacto, **no** es la cuenta
+de acceso). El histórico del embudo es sagrado.
 
 ```prisma
 model Cliente {
   id        String       @id @default(cuid())
   nombre    String
-  whatsapp  String
+  apellidos String
+  telefono  String
   email     String?      @unique
   ciudad    String?
   creadoEn  DateTime     @default(now()) @map("creado_en")
 
+  usuario      Usuario?
   cotizaciones Cotizacion[]
   contratos    Contrato[]
   proyectos    Proyecto[]
+  obras        ObraActiva[]
 
   @@map("clientes")
 }
 ```
 
+- `telefono` es el campo de contacto (antes se llamaba `whatsapp`).
 - `email` es la llave natural para deduplicar leads: el mismo email no
-  puede crear dos `clientes`. El registro público reusa el lead existente
+  puede crear dos `clientes`. El formulario público reusa el lead existente
   en vez de duplicarlo.
 
 **NUNCA borrado físico** — soft delete con `activo` si es necesario (aún
@@ -116,11 +123,20 @@ model Cotizacion {
   es solo para el admin; NO mezclarlos.
 
 **Estados del embudo** (VARCHAR + Zod en `src/lib/constants.ts`):
-`nuevo` → `contactado` → `visita_tecnica` → `presupuestado` →
-`ganado` / `perdido`
 
-**Orígenes** (VARCHAR + Zod en `src/lib/constants.ts`):
-`web`, `whatsapp`, `tiktok`, `facebook`, `referido`, `estimador`
+- **Definidos por la especificación aprobada** (autoridad funcional):
+  `nuevo` → `contactado` → `contratado` / `no_concretado`.
+  Etiquetas UI: "Por revisar", "Pendiente"/"Contactada", "Contratada",
+  "No concretada".
+- **Estado actual del código** (todavía sin migrar): `nuevo`, `contactado`,
+  `visita_tecnica`, `presupuestado`, `ganado`, `perdido`.
+- **Pendiente:** alinear el código a los valores de la especificación
+  (`ganado`→`contratado`, `perdido`→`no_concretado`), con autorización.
+  Ver `DATABASE.md` § "Estados de cotización".
+
+**Orígenes** (VARCHAR + Zod en `src/lib/constants.ts`): hoy `web`, `referido`.
+(La doc antigua mencionaba `whatsapp`, `tiktok`, `facebook`, `estimador`: esos
+valores **no están definidos hoy**.)
 
 ### contratos
 
@@ -377,6 +393,16 @@ Migración pendiente de aplicar contra Neon. Cambios:
 
 Aplicar con `npm run db:migrate` (o `prisma migrate deploy`).
 
+### Migraciones existentes
+
+En `prisma/migrations/`:
+
+1. `20260918031323_init`
+2. `20260920120000_bd_hardening`
+3. `20261019000000_fix_drift_and_modules_5_7` — corrige drift y agrega los
+   módulos 5-7 (empleados, materiales, herramientas). El `schema.prisma` ya
+   refleja las tres.
+
 ### Comandos
 
 ```bash
@@ -386,18 +412,17 @@ npm run db:seed       # DESTRUCTIVO: borra y recarga los datos semilla
 
 ## Seed (`prisma/seed.ts`)
 
-El seed carga datos verosímiles (NO reales) para la demo:
+El seed carga datos verosímiles (NO reales) para la demo. Es **destructivo**:
+ejecuta `deleteMany()` por tabla antes de sembrar.
 
-- 1 admin (email: `admin@demo.com`, password: `admin123`)
-- 1 usuario cliente (email: `cliente@demo.com`, password: `cliente123`)
-- ~8-10 clientes de ejemplo
-- ~12-15 cotizaciones en diferentes estados del embudo
-- 1 contrato de ejemplo
-- 1 obra activa con hitos y pagos de ejemplo
-- ~6 proyectos publicados (portafolio)
-- ~12 fotos de proyectos (antes/durante/después)
-- ~5 testimonios
-- 4-6 servicios (steel frame, drywall, cielorrasos, etc.)
-- ~8 FAQs
-- 3-4 certificaciones
-- ~8 registros de precio_referencia
+Inventario real que carga hoy:
+
+- 1 usuario admin (`admin@gmail.com` / `admin123`)
+- 1 usuario cliente (`cliente@gmail.com` / `cliente123`) vinculado a la ficha
+  de cliente
+- 1 cliente demo (Juan Pérez)
+- **0 cotizaciones** (documentación antigua afirmaba ~12-15: incorrecto)
+- 1 contrato y 1 obra activa (con 4 hitos y 3 pagos)
+- 6 proyectos publicados (portafolio) y 12 fotos
+- 5 testimonios, 6 servicios, 10 FAQs, 4 certificaciones
+- 8 registros de `precio_referencia`

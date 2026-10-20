@@ -56,8 +56,8 @@
 | `rango_m2` | `RangoM2` | `@map("rango_m2")` | Enum |
 | `ubicacion_obra` | `String?` | `@map("ubicacion_obra")` | Dirección/ciudad |
 | `plazo_inicio` | `PlazoInicio` | `@map("plazo_inicio")` | Enum |
-| `origen` | `String` | | `web`, `whatsapp`, `tiktok`, etc. |
-| `estado` | `String` | `@default("nuevo")` | Funnel: `nuevo`→`contactado`→`visita_tecnica`→`presupuestado`→`ganado`/`perdido` |
+| `origen` | `String` | | VARCHAR + Zod. Hoy: `web`, `referido` (ver abajo) |
+| `estado` | `String` | `@default("nuevo")` | VARCHAR + Zod (evolutivo). Ver "Estados de cotización" abajo |
 | `monto_estimado` | `Decimal?` | `@db.Decimal(12,2) @map("monto_estimado")` | Estimación inicial |
 | `monto_cerrado` | `Decimal?` | `@db.Decimal(12,2) @map("monto_cerrado")` | Valor final acordado |
 | `notas_internas` | `String?` | `@map("notas_internas")` | Solo admin |
@@ -68,6 +68,25 @@
 **Relaciones**
 - `cliente` → `Cliente` (N:1)
 - `contratos` → `Contrato[]` (1:N)
+---
+### Estados de cotización (`estado`)
+
+`Cotizacion.estado` es `String` (no enum nativo) porque es evolutivo.
+
+- **Conjunto definido por la especificación aprobada**
+  (`ESPECIFICACION_PANEL_ADMIN_CONTRART.md` §5.3): `nuevo`, `contactado`,
+  `contratado`, `no_concretado`. Etiquetas UI: "Por revisar", "Pendiente" /
+  "Contactada", "Contratada", "No concretada".
+- **Realidad actual del código** (`src/lib/constants.ts`):
+  `nuevo`, `contactado`, `visita_tecnica`, `presupuestado`, `ganado`,
+  `perdido`. **Todavía no se aplicó el conjunto de la especificación.**
+- **Decisión pendiente:** migrar los estados de código a los de la
+  especificación (con mapeo `ganado`→`contratado`, `perdido`→`no_concretado`,
+  y sin `visita_tecnica`/`presupuestado`). Requiere autorización; no se
+  ejecutó en esta actualización documental.
+- `origen`: `String`; valores actuales en `src/lib/constants.ts` = `web`,
+  `referido`. La doc antigua mencionaba `whatsapp`/`tiktok`/`facebook`/
+  `estimador`: **no están definidos hoy**.
 ---
 ### 4. `contratos` (Contrato)
 | Campo | Tipo | Constraints | Descripción |
@@ -369,4 +388,17 @@ erDiagram
 - **Decimal money**: `@db.Decimal(12,2)` para ARS
 - **Tablas intermedias**: `asignaciones_obra`, `materiales_obra` y `prestamos_herramienta` resuelven relaciones muchos-a-muchos (empleado↔obra, material↔obra, herramienta↔empleado↔obra).
 - **Enums nuevos**: `CargoEmpleado` y `EstadoHerramienta` deben agregarse al `schema.prisma`.
+- **Migraciones versionadas** (`prisma/migrations/`): `20260918031323_init`,
+  `20260920120000_bd_hardening`, `20261019000000_fix_drift_and_modules_5_7`.
+  El `schema.prisma` ya refleja las tres.
+- **Cliente vs Usuario**: `clientes` es la **ficha de persona/contacto**
+  (puede existir sin cuenta de acceso). `usuarios` es la **cuenta de acceso**.
+  `Usuario.cliente_id` es opcional y único: como máximo una cuenta por ficha,
+  y una ficha puede no tener cuenta todavía. No usar ambos términos como si
+  fueran la misma tabla.
+- **Seed**: `prisma/seed.ts` es **destructivo** (`deleteMany()` por tabla).
+  Hoy carga 2 usuarios (`admin@gmail.com`/`admin123`,
+  `cliente@gmail.com`/`cliente123`), 1 cliente, **0 cotizaciones**, 1 contrato,
+  1 obra activa, 4 hitos, 3 pagos, 6 proyectos, 12 fotos, 5 testimonios,
+  6 servicios, 10 FAQs, 4 certificaciones y 8 precios de referencia.
 - **NextAuth**: Sesiones JWT sobre `usuarios`. Nota: `@auth/prisma-adapter` está configurado en código pero las tablas del adapter (`account`, `session`, `verification_token`, `authenticator`) NO existen en el schema; con strategy JWT + Credentials no se usan, pero el adapter está de más (ver decisión pendiente).

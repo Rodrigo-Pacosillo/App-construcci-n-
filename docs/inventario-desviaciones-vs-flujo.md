@@ -1,6 +1,20 @@
 # Inventario de desviaciones vs. FLUJO DE PERSONAS.md
 
-> **Estado:** Solo lectura. Creado para servir como línea base. 
+> **⚠️ DOCUMENTO HISTÓRICO — NO ES ESPECIFICACIÓN ACTUAL**
+> Fecha del relevamiento: **2026-10-12**. Es una foto de ese momento, no una
+> descripción de hoy. Varias afirmaciones ya están desactualizadas:
+> - La ruta pública `/registro` y su auto-registro **ya fueron eliminados**
+>   (cumple la regla dura #1). Este documento las describe como existentes.
+> - La "falta de vía admin para autorizar cuentas" **ya no aplica**: existe
+>   `/admin/autorizar-cuentas`.
+> - El estado pendiente real hoy es otro (ver `AGENTS.md` y
+>   `docs/plan-demo.md`): el panel Usuarios es placeholder, el panel Clientes
+>   es un stub, y los estados de cotización del código no coinciden con la
+>   especificación aprobada.
+> Usar como referencia histórica; **verificar siempre contra el código
+> actual** y contra las fuentes de verdad (`AGENTS.md`).
+
+> **Estado:** Solo lectura. Creado para servir como línea base.
 > **Alcance:** Solo el flujo de cliente (4 realidades). No incluye herramientas, ni ampliación de paneles.
 
 Fecha: 2026-10-12

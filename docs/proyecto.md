@@ -23,9 +23,11 @@ Cada página pública tiene uno de dos propósitos: **convertir** o
 
 ```text
 visitante → cotización (con origen)
-   → embudo: nuevo → contactado → visita_tecnica → presupuestado
-                                     → ganado / perdido
-   → ganado: contrato
+   → embudo (valores de la especificación aprobada):
+        nuevo → contactado → contratado / no_concretado
+        (el código todavía usa: nuevo → contactado → visita_tecnica →
+         presupuestado → ganado / perdido — pendiente de alinear)
+   → contratado: contrato
    → obra activa (portal cliente + admin de obras)
    → proyecto publicado en portafolio (antes/durante/después)
    → testimonio publicado
@@ -34,10 +36,10 @@ visitante → cotización (con origen)
 
 Reglas del flujo:
 
-- El **origen** se captura siempre (web, whatsapp, tiktok, facebook,
-  referido, estimador): es la métrica de qué canal funciona.
+- El **origen** se captura siempre: es la métrica de qué canal funciona.
+  Valores definidos hoy: `web`, `referido`.
 - El **estado** lo mueve el admin a mano desde el panel.
-- `monto_estimado` se completa al presupuestar; `monto_cerrado` al ganar.
+- `monto_estimado` se completa al presupuestar; `monto_cerrado` al cerrar.
 - `proyectos.cliente_id` cierra el círculo: qué lead se volvió caso
   publicado.
 
@@ -49,23 +51,25 @@ valores evolutivos (estado, origen) — cambiar una etapa o sumar un canal no
 debe requerir migración de BD.
 
 ```text
-usuarios          — cuentas de acceso (hoy solo admin)
-- id, nombre, email UQ, password_hash (bcrypt), rol ENUM(admin, cliente),
-  cliente_id FK→clientes NULL UQ (garantiza 1:0..1 real), activo, creado_en
+usuarios          — cuentas de acceso
+- id, nombre, apellidos, email UQ, password_hash (bcrypt),
+  rol ENUM(admin, cliente), cliente_id FK→clientes NULL UQ (garantiza
+  1:0..1 real), activo, creado_en
 
-clientes          — personas que piden cotización. NUNCA borrado físico
-- id, nombre, whatsapp, email NULL, ciudad, creado_en
+clientes          — fichas de persona/contacto (pueden no tener cuenta).
+                    NUNCA borrado físico
+- id, nombre, apellidos, telefono, email NULL UQ, ciudad, creado_en
 
 cotizaciones      — el corazón: el embudo de ventas
 - id, cliente_id FK [INDEX]
 - tipo_obra ENUM(vivienda_nueva, ampliacion, otro)
-- tipo_construccion ENUM(tradicional, seco, no_sabe)
+- tipo_construccion ENUM(tradicional, seco, no_sabe, integral)
 - rango_m2 ENUM(hasta_50, m50_100, m100_200, mas_200)
 - ubicacion_obra, plazo_inicio ENUM(lo_antes_posible, en_3_meses, no_sabe)
-- origen VARCHAR (evolutivo → Zod) [INDEX]
+- origen VARCHAR (evolutivo → Zod: hoy web, referido) [INDEX]
 - estado VARCHAR (evolutivo → Zod) [INDEX]
-- monto_estimado DECIMAL(12,2) NULL  — se completa al presupuestar
-- monto_cerrado   DECIMAL(12,2) NULL  — se completa al ganar
+- monto_estimado DECIMAL(12,2) NULL
+- monto_cerrado   DECIMAL(12,2) NULL
 - requerimiento  TEXT NULL — mensaje del cliente (form público)
 - notas_internas TEXT NULL — apuntes del admin, creado_en, actualizado_en
 
