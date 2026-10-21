@@ -107,7 +107,6 @@ export const ADMIN_NAV_SECTIONS: NavSection[] = [
     id: "secundario",
     label: "Módulos secundarios",
     items: [
-      { id: "clientes", label: "Clientes", href: "/admin/clientes", icon: "Users" },
       { id: "empleados", label: "Empleados", href: "/admin/empleados", icon: "Users" },
       { id: "materiales", label: "Materiales", href: "/admin/materiales", icon: "Package" },
       { id: "herramientas", label: "Herramientas", href: "/admin/herramientas", icon: "Wrench" },
