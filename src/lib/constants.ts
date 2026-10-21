@@ -1,3 +1,6 @@
+// ─── Tipos desde Prisma (enums nativos) ──────────────────────────────
+import type { TipoObra, RangoM2 } from "@prisma/client";
+
 // ─── Estados del embudo de ventas ──────────────────────────────────
 // VARCHAR + Zod: cambiar un estado no requiere migración de BD.
 // Conjunto reducido según ESPECIFICACION_PANEL_ADMIN_CONTRART.md §5.3:
@@ -162,6 +165,34 @@ export const ORIGEN_LABELS: Record<OrigenCotizacion, string> = {
   facebook: "Facebook",
   referido: "Referido",
   estimador: "Estimador",
+};
+
+// ─── Labels para formulario público de cotización ──────────────────
+export const TIPO_OBRA_LABELS: Record<TipoObra, string> = {
+  vivienda_nueva: "Vivienda nueva",
+  ampliacion: "Ampliación / Refacción",
+  otro: "Otro (comercial, galpón, etc.)",
+};
+
+export const TIPO_CONSTRUCCION_LABELS: Record<"seco" | "tradicional" | "no_sabe", string> = {
+  seco: "Steel Frame / Construcción en seco — estructura de acero galvanizado, rápido y limpio",
+  tradicional: "Tradicional (mampostería) — ladrillo, bloque, hormigón",
+  no_sabe: "No estoy seguro / Asesórenme",
+};
+
+export const RANGO_M2_LABELS: Record<RangoM2, string> = {
+  hasta_50: "Hasta 50 m² — ampliación, monoambiente, baño/cocina",
+  m50_100: "50 - 100 m² — casa 1-2 dormitorios, lote chico",
+  m100_200: "100 - 200 m² — casa 3-4 dormitorios, lote estándar",
+  mas_200: "Más de 200 m² — casa grande, múltiples ambientes, lote amplio",
+};
+
+export const PLAZO_INICIO_LABELS: Record<"lo_antes_posible" | "en_1_mes" | "en_3_meses" | "en_6_meses" | "no_sabe", string> = {
+  lo_antes_posible: "Lo antes posible — urgente, ya tengo terreno/listo para empezar",
+  en_1_mes: "En 1 mes — proyecto definido, coordinando detalles",
+  en_3_meses: "En 3 meses — planificando, definiendo presupuesto",
+  en_6_meses: "En 6 meses — etapa temprana, explorando opciones",
+  no_sabe: "Aún no lo sé / Solo consulto",
 };
 
 // ─── Colores de estado para UI ─────────────────────────────────────

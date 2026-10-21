@@ -11,7 +11,7 @@ export const cotizacionAdminSchema = z.object({
   tipoConstruccion: z.enum(["tradicional", "seco", "no_sabe", "integral"]),
   rangoM2: z.enum(["hasta_50", "m50_100", "m100_200", "mas_200"]),
   ubicacionObra: z.string().optional(),
-  plazoInicio: z.enum(["lo_antes_posible", "en_3_meses", "no_sabe"]),
+  plazoInicio: z.enum(["lo_antes_posible", "en_1_mes", "en_3_meses", "en_6_meses", "no_sabe"]),
   origen: z.enum(ORIGENES_COTIZACION).optional(),
   estado: z.enum(ESTADOS_COTIZACION).optional(),
   montoEstimado: z.number().positive().optional(),
@@ -28,11 +28,11 @@ export const cotizacionFormSchema = z.object({
   telefono: z.string().min(1, "El teléfono es requerido").max(30, "Máximo 30 caracteres"),
   email: z.string().email("Email inválido").optional().or(z.literal("")),
   tipoObra: z.enum(["vivienda_nueva", "ampliacion", "otro"]),
-  tipoConstruccion: z.enum(["tradicional", "seco", "no_sabe", "integral"]),
+  tipoConstruccion: z.enum(["seco", "tradicional", "no_sabe"]),
   rangoM2: z.enum(["hasta_50", "m50_100", "m100_200", "mas_200"]),
-  ubicacionObra: z.string().max(200, "Máximo 200 caracteres").optional(),
+  ubicacionObra: z.string().min(1, "La ubicación es requerida").max(200, "Máximo 200 caracteres"),
   descripcion: z.string().max(1000, "Máximo 1000 caracteres").optional(),
-  plazoInicio: z.enum(["lo_antes_posible", "en_3_meses", "no_sabe"]),
+  plazoInicio: z.enum(["lo_antes_posible", "en_1_mes", "en_3_meses", "en_6_meses", "no_sabe"]),
 });
 
 export type CotizacionFormData = z.infer<typeof cotizacionFormSchema>;
