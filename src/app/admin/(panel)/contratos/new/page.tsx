@@ -61,15 +61,7 @@ export default function AdminNuevoContratoPage() {
       if (!res.success) {
         setError(res.error || { _form: ["Error al crear"] });
       } else {
-        // §6.4: no crear cuenta automáticamente. Si el cliente ya tiene
-        // usuario, abrir su ficha; si no, llevar al alta de cuenta con
-        // los datos preseleccionados.
-        const destino = await getDestinoPostContrato(formData.clienteId);
-        if (destino) {
-          router.push(destino.href);
-        } else {
-          router.push("/admin/contratos");
-        }
+        router.push("/admin/contratos");
         router.refresh();
       }
     });
