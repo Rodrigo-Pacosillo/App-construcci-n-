@@ -1,61 +1,65 @@
 import Link from "next/link";
+import {
+  FileText,
+  FileCheck,
+  HardHat,
+  PencilLine,
+  type LucideIcon,
+} from "lucide-react";
 import { requireAdmin } from "@/lib/auth-utils";
-import { getDashboardStats, getCotizacionesRecientes, getDashboardAlertas } from "./actions";
+import { formatFecha } from "@/lib/format";
+import {
+  getActividadReciente,
+  getDashboardStats,
+  type Actividad,
+} from "./actions";
 
-export default async function AdminDashboard({
-  searchParams,
-}: {
-  searchParams: Promise<{ aviso?: string }>;
-}) {
+export default async function AdminDashboard() {
   const session = await requireAdmin();
-  const { aviso } = await searchParams;
 
-  const [stats, cotizaciones, alertas] = await Promise.all([
+  const [stats, actividad] = await Promise.all([
     getDashboardStats(),
-    getCotizacionesRecientes(),
-    getDashboardAlertas(),
+    getActividadReciente(),
   ]);
 
-  const hayAlertas =
-    alertas.nuevasSinContactar.length > 0 ||
-    alertas.obrasPausadas.length > 0 ||
-    alertas.contratadasSinContrato.length > 0;
-
   return (
-    <div className="p-4 lg:p-8">
-      {/* Header */}
-      <header className="mb-8 max-w-7xl">
-        <h1 className="font-heading text-3xl font-bold tracking-tight">Dashboard</h1>
+    <div className="max-w-6xl p-4 lg:p-8">
+      <header className="mb-10">
+        <h1 className="font-heading text-3xl font-bold tracking-tight">
+          Panel principal
+        </h1>
         <p className="mt-2 text-ink-muted">
           Bienvenido, {session.user?.name || "Admin"}
         </p>
       </header>
 
-      {/* Stats Cards Row */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8 max-w-7xl">
-        <StatsCard
-          title="Total Cotizaciones"
-          value={stats.totalCotizaciones}
-          href="/admin/cotizaciones"
-        />
-        <StatsCard
-          title="Proyectos"
-          value={stats.proyectos}
-          href="/admin/proyectos"
-        />
-        <StatsCard
-          title="Testimonios"
-          value={stats.testimonios}
-          href="/admin/testimonios"
-        />
-      </div>
+      {/* 1. Resumen */}
+      <section className="mb-10">
+        <h2 className="section-label mb-4 text-ink-faint">RESUMEN</h2>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <ResumenCard
+            titulo="Cotizaciones nuevas"
+            valor={stats.nuevas}
+            detalle={
+              stats.nuevas === 0
+                ? "Sin cotizaciones pendientes de revisar"
+                : "Sin contactar todavía"
+            }
+            href="/admin/cotizaciones?estado=nuevo"
+          />
+          <ResumenCard
+            titulo="Contactadas"
+            valor={stats.contactadasSemana}
+            detalle="En los últimos 7 días"
+            href="/admin/cotizaciones?estado=contactado"
+          />
+        </div>
+      </section>
 
-      {/* Acciones Rápidas / Quick Actions */}
-      <section className="mb-8 max-w-7xl">
-        <h2 className="font-heading text-lg font-medium text-ink mb-4 section-divider">
-          ACCIONES RÁPIDAS
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* 2. Acciones rápidas */}
+      <section className="mb-10">
+        <h2 className="section-label mb-4 text-ink-faint">ACCIONES RÁPIDAS</h2>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <AccionRapida
             href="/admin/cotizaciones"
             titulo="+ Cotización"
@@ -67,11 +71,6 @@ export default async function AdminDashboard({
             detalle="Crear un contrato desde una cotización contratada"
           />
           <AccionRapida
-            href="/admin/usuarios"
-            titulo="Usuarios"
-            detalle="Gestionar cuentas de acceso de clientes"
-          />
-          <AccionRapida
             href="/admin/obras"
             titulo="+ Obra"
             detalle="Crear o gestionar una nueva obra"
@@ -79,214 +78,54 @@ export default async function AdminDashboard({
         </div>
       </section>
 
-      {/* Embudo de Cotizaciones - Recientemente Llegadas */}
-      <section className="mb-8 max-w-7xl">
-        <h2 className="font-heading text-lg font-medium text-ink mb-4 section-divider">
-          COTIZACIONES RECIENTEMENTE LLEGADAS
-        </h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {cotizaciones.map((c) => (
-            <Link
-              key={c.id}
-              href={`/admin/cotizaciones/${c.id}`}
-              className="group rounded border border-border bg-surface p-4 transition-colors hover:border-accent"
-            >
-              <div className="flex items-start gap-3">
-                <span className="rounded bg-ink/5 p-2 flex-shrink-0">
-                  <svg
-                    className="h-5 w-5 text-ink-fant"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <path d="M9 5l7 7-7 7" />
-                  </svg>
-                </span>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium truncate hover:text-accent">
-                    {c.cliente?.nombre || "—"}
-                  </p>
-                  <p className="text-xs text-ink-faint truncate">
-                    {c.tipoConstruccion.replace("_", " ")} · {c.origen}
-                  </p>
-                </div>
-                <span className="ml-auto">
-                  <span
-                    className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${getEstadoColor(c.estado)}`}
-                  >
-                    {getEstadoLabel(c.estado)}
-                  </span>
-                </span>
-              </div>
-            </Link>
-          ))}
-          {cotizaciones.length === 0 && (
-            <p className="col-span-full text-center text-ink-faint py-8">
-              No hay cotizaciones aún
-            </p>
-          )}
+      {/* 3. Historial */}
+      <section>
+        <div className="mb-4 flex items-end justify-between">
+          <h2 className="section-label text-ink-faint">HISTORIAL</h2>
+          <Link
+            href="/admin/cotizaciones"
+            className="text-sm font-medium text-accent-strong hover:underline"
+          >
+            Ver todas las cotizaciones →
+          </Link>
         </div>
-      </section>
-
-      {/* Cotizaciones Contactadas */}
-      <section className="mb-8 max-w-7xl">
-        <h2 className="font-heading text-lg font-medium text-ink mb-4 section-divider">
-          COTIZACIONES CONTACTADAS
-        </h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {cotizaciones
-            .filter((c) => c.estado === "contactado")
-            .map((c) => (
-              <Link
-                key={c.id}
-                href={`/admin/cotizaciones/${c.id}`}
-                className="group rounded border border-border bg-surface p-4 transition-colors hover:border-accent"
-              >
-                <div className="flex items-start gap-3">
-                  <span className="rounded bg-ink/5 p-2 flex-shrink-0">
-                    <svg
-                      className="h-5 w-5 text-ink-fant"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                    >
-                      <path d="M9 5l7 7-7 7" />
-                    </svg>
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate hover:text-accent">
-                      {c.cliente?.nombre || "—"}
-                    </p>
-                    <p className="text-xs text-ink-faint truncate">
-                      {c.tipoConstruccion.replace("_", " ")} · {c.origen}
-                    </p>
-                  </div>
-                  <span className="ml-auto">
-                    <span
-                      className={`inline-block rounded px-2 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-800`}
-                    >
-                      Contactada
-                    </span>
-                  </span>
-                </div>
-              </Link>
+        {actividad.length > 0 ? (
+          <div className="divide-y divide-border rounded border border-border bg-surface">
+            {actividad.map((evento) => (
+              <ActividadRow key={evento.id} evento={evento} />
             ))}
-          {cotizaciones.filter((c) => c.estado === "contactado").length === 0 && (
-            <p className="col-span-full text-center text-ink-faint py-8">
-              No hay cotizaciones contactadas aún
-            </p>
-          )}
-        </div>
-      </section>
-
-      {/* Historial de Acciones */}
-      <section className="mb-8 max-w-7xl">
-        <h2 className="font-heading text-lg font-medium text-ink mb-4 section-divider">
-          HISTORIAL DE ACCIONES
-        </h2>
-        <div className="space-y-2">
-          {[
-            { label: "Nueva cotización creada", count: stats.porEstado.nuevo || 0 },
-            { label: "Cotización contactada", count: stats.porEstado.contactado || 0 },
-            { label: "Cotización contratada", count: stats.porEstado.contratado || 0 },
-            { label: "Cotización no concretada", count: stats.porEstado.no_concretado || 0 },
-          ].map((item) => (
-            <div key={item.label} className="flex items-center justify-between px-3 py-2 rounded bg-surface">
-              <span className="text-sm text-ink-muted">
-                {item.label}
-              </span>
-              <span className="text-sm font-medium text-ink">
-                {item.count}
-              </span>
-            </div>
-          ))}
-          {/* Botón ver todas las cotizaciones */}
-          <div className="mt-3 pt-3 border-t border-border text-center">
-            <Link
-              href="/admin/cotizaciones"
-              className="text-sm font-medium text-accent-strong hover:underline"
-            >
-              Ver todas las cotizaciones →
-            </Link>
           </div>
-        </div>
-      </section>
-
-      {/* Alertas Accionables */}
-      {aviso !== "modulo" && (
-        <section className="mt-8 max-w-7xl">
-          <div className="mt-8">
-            <p className="section-label mb-4 text-ink-faint">
-              ALERTAS ACCIONABLES
-            </p>
-            <div className="space-y-3">
-              {alertas.nuevasSinContactar.length > 0 && (
-                <Alerta
-                  texto={`${alertas.nuevasSinContactar.length} cotización${
-                    alertas.nuevasSinContactar.length === 1 ? "" : "es"
-                  } nueva${alertas.nuevasSinContactar.length === 1 ? "" : "s"} sin contactar hace más de 24 hs`}
-                  href="/admin/cotizaciones?estado=nuevo"
-                  cta="Ver y resolver"
-                />
-              )}
-              {alertas.obrasPausadas.length > 0 && (
-                <Alerta
-                  texto={`${alertas.obrasPausadas.length} obra${
-                    alertas.obrasPausadas.length === 1 ? "" : "s"
-                  } pausada${alertas.obrasPausadas.length === 1 ? "" : "s"}: ${alertas.obrasPausadas
-                    .map((o) => o.direccionObra)
-                    .join(" · ")}`}
-                  href="/admin/obras?estado=pausada"
-                  cta="Ver"
-                />
-              )}
-              {alertas.contratadasSinContrato.length > 0 && (
-                <Alerta
-                  texto={`${alertas.contratadasSinContrato.length} cliente${
-                    alertas.contratadasSinContrato.length === 1 ? "" : "s"
-                  } con cotización contratada pero sin contrato`}
-                  href="/admin/contratos/new"
-                  cta="Ver"
-                />
-              )}
-              {!hayAlertas && (
-                <div className="flex items-center gap-3 rounded border border-border bg-surface px-4 py-3 text-sm text-ink-muted">
-                  <span className="text-green-600">✓</span>
-                  Todo en orden — sin alertas.
-                </div>
-              )}
-            </div>
+        ) : (
+          <div className="rounded border border-border bg-surface px-4 py-8 text-center text-sm text-ink-faint">
+            No hay actividad registrada aún.
           </div>
-        </section>
-      )}
+        )}
+      </section>
     </div>
   );
 }
 
-/* --- Componenetes auxiliares --- */
+/* --- Componentes auxiliares --- */
 
-function StatsCard({
-  title,
-  value,
+function ResumenCard({
+  titulo,
+  valor,
+  detalle,
   href,
 }: {
-  title: string;
-  value: number;
+  titulo: string;
+  valor: number;
+  detalle: string;
   href: string;
 }) {
   return (
     <Link
       href={href}
-      className="group rounded-lg bg-surface p-6 transition-colors hover:bg-ink/5"
+      className="group rounded border border-border bg-surface p-6 transition-colors hover:border-accent"
     >
-      <div className="flex items-start justify-between">
-        <div className="flex-1 min-w-0">
-          <p className="font-medium text-ink-muted truncate hover:text-accent">
-            {title}
-          </p>
-        </div>
-      </div>
-      <p className="mt-4 font-heading text-4xl font-bold text-ink">
-        {value}
-      </p>
+      <p className="section-label text-ink-faint">{titulo}</p>
+      <p className="mt-4 font-heading text-5xl font-bold text-ink">{valor}</p>
+      <p className="mt-2 text-sm text-ink-muted">{detalle}</p>
     </Link>
   );
 }
@@ -311,46 +150,48 @@ function AccionRapida({
   );
 }
 
-function Alerta({ texto, href, cta }: { texto: string; href: string; cta: string }) {
-  return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded border border-border bg-surface px-4 py-3">
-      <p className="text-sm text-ink">
-        <span className="mr-2 text-accent">⚠</span>
-        {texto}
-      </p>
-      <Link href={href} className="text-sm font-medium text-accent-strong hover:underline">
-        {cta} →
-      </Link>
-    </div>
-  );
-}
+const ACTIVIDAD_ICONS: Record<Actividad["tipo"], LucideIcon> = {
+  cotizacion_creada: FileText,
+  cotizacion_actualizada: PencilLine,
+  contrato_creado: FileCheck,
+  obra_iniciada: HardHat,
+};
 
-function sectionDivider() {
+function ActividadRow({ evento }: { evento: Actividad }) {
+  const Icon = ACTIVIDAD_ICONS[evento.tipo];
+
   return (
-    <div className="flex items-center gap-2 mb-2 px-2">
-      <span className="inline-flex items-center px-2 py-1 rounded bg-ink/5 text-[10px] uppercase tracking-widest text-ink-faint">
-        {""}
+    <Link
+      href={evento.href}
+      className="flex items-center gap-4 px-4 py-3 transition-colors hover:bg-ink/5"
+    >
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-ink/5 text-ink-muted">
+        <Icon className="h-4 w-4" />
       </span>
-    </div>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium text-ink">{evento.titulo}</p>
+        <p className="truncate text-xs text-ink-faint">{evento.cliente}</p>
+      </div>
+      <span className="shrink-0 text-xs text-ink-faint">
+        {formatFechaRelativa(evento.fecha)}
+      </span>
+    </Link>
   );
 }
 
-function getEstadoColor(estado: string) {
-  const colores: Record<string, string> = {
-    nuevo: "bg-blue-100 text-blue-800",
-    contactado: "bg-yellow-100 text-yellow-800",
-    contratado: "bg-green-100 text-green-800",
-    no_concretado: "bg-red-100 text-red-800",
-  };
-  return colores[estado] || "bg-gray-100 text-gray-800";
-}
+function formatFechaRelativa(fecha: Date): string {
+  const diff = Date.now() - fecha.getTime();
+  const minutos = Math.floor(diff / 60000);
 
-function getEstadoLabel(estado: string) {
-  const labels: Record<string, string> = {
-    nuevo: "Nuevo",
-    contactado: "Contactado",
-    contratado: "Contratada",
-    no_concretado: "No concretada",
-  };
-  return labels[estado] || estado;
+  if (minutos < 1) return "ahora";
+  if (minutos < 60) return `hace ${minutos} min`;
+
+  const horas = Math.floor(minutos / 60);
+  if (horas < 24) return `hace ${horas} h`;
+
+  const dias = Math.floor(horas / 24);
+  if (dias === 1) return "ayer";
+  if (dias < 7) return `hace ${dias} días`;
+
+  return formatFecha(fecha);
 }

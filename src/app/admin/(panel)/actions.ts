@@ -2,78 +2,144 @@
 
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth-utils";
+import { ESTADO_LABELS, type EstadoCotizacion } from "@/lib/constants";
+
+const DIA_MS = 24 * 60 * 60 * 1000;
+const UMBRAL_DEDUPE_MS = 60 * 1000;
 
 export async function getDashboardStats() {
   await requireAdmin();
 
   try {
-    const grouped = await prisma.cotizacion.groupBy({
-      by: ["estado"],
-      _count: { _all: true },
-    });
+    const hace7dias = new Date(Date.now() - 7 * DIA_MS);
 
-    const porEstado: Record<string, number> = {};
-    let totalCotizaciones = 0;
-    for (const g of grouped) {
-      porEstado[g.estado] = g._count._all;
-      totalCotizaciones += g._count._all;
-    }
+    const [nuevas, contactadasSemana] = await Promise.all([
+      prisma.cotizacion.count({ where: { estado: "nuevo" } }),
+      prisma.cotizacion.count({
+        where: {
+          estado: "contactado",
+          actualizadoEn: { gte: hace7dias },
+        },
+      }),
+    ]);
 
-    const proyectos = await prisma.proyecto.count();
-    const testimonios = await prisma.testimonio.count({ where: { publicado: true } });
-
-    return { totalCotizaciones, porEstado, proyectos, testimonios };
+    return { nuevas, contactadasSemana };
   } catch (error) {
     console.error("Error en getDashboardStats:", error);
-    return { totalCotizaciones: 0, porEstado: {}, proyectos: 0, testimonios: 0 };
+    return { nuevas: 0, contactadasSemana: 0 };
   }
 }
 
-export async function getCotizacionesRecientes() {
+export type Actividad = {
+  id: string;
+  tipo:
+    | "cotizacion_creada"
+    | "cotizacion_actualizada"
+    | "contrato_creado"
+    | "obra_iniciada";
+  fecha: Date;
+  titulo: string;
+  cliente: string;
+  href: string;
+};
+
+export async function getActividadReciente(take = 8): Promise<Actividad[]> {
   await requireAdmin();
 
   try {
-    return await prisma.cotizacion.findMany({
-      include: { cliente: true },
-      orderBy: { creadoEn: "desc" },
-      take: 5,
-    });
+    const [cotizaciones, contratos, obras] = await Promise.all([
+      prisma.cotizacion.findMany({
+        select: {
+          id: true,
+          estado: true,
+          creadoEn: true,
+          actualizadoEn: true,
+          cliente: { select: { nombre: true, apellidos: true } },
+        },
+        orderBy: { actualizadoEn: "desc" },
+        take: 10,
+      }),
+      prisma.contrato.findMany({
+        select: {
+          id: true,
+          creadoEn: true,
+          cliente: { select: { nombre: true, apellidos: true } },
+        },
+        orderBy: { creadoEn: "desc" },
+        take: 10,
+      }),
+      prisma.obraActiva.findMany({
+        select: {
+          id: true,
+          direccionObra: true,
+          fechaInicio: true,
+          cliente: { select: { nombre: true, apellidos: true } },
+        },
+        orderBy: { fechaInicio: "desc" },
+        take: 10,
+      }),
+    ]);
+
+    const eventos: Actividad[] = [];
+
+    for (const c of cotizaciones) {
+      const cliente = `${c.cliente?.nombre ?? ""} ${c.cliente?.apellidos ?? ""}`.trim() || "—";
+
+      eventos.push({
+        id: `cotizacion-creada-${c.id}`,
+        tipo: "cotizacion_creada",
+        fecha: c.creadoEn,
+        titulo: "Cotización creada",
+        cliente,
+        href: `/admin/cotizaciones/${c.id}`,
+      });
+
+      const actualizada =
+        c.actualizadoEn.getTime() - c.creadoEn.getTime() > UMBRAL_DEDUPE_MS;
+
+      if (actualizada) {
+        const estadoLabel =
+          ESTADO_LABELS[c.estado as EstadoCotizacion] ?? c.estado;
+        eventos.push({
+          id: `cotizacion-actualizada-${c.id}`,
+          tipo: "cotizacion_actualizada",
+          fecha: c.actualizadoEn,
+          titulo: `Cotización actualizada a ${estadoLabel}`,
+          cliente,
+          href: `/admin/cotizaciones/${c.id}`,
+        });
+      }
+    }
+
+    for (const c of contratos) {
+      eventos.push({
+        id: `contrato-${c.id}`,
+        tipo: "contrato_creado",
+        fecha: c.creadoEn,
+        titulo: "Contrato creado",
+        cliente:
+          `${c.cliente?.nombre ?? ""} ${c.cliente?.apellidos ?? ""}`.trim() || "—",
+        href: `/admin/contratos/${c.id}`,
+      });
+    }
+
+    for (const o of obras) {
+      eventos.push({
+        id: `obra-${o.id}`,
+        tipo: "obra_iniciada",
+        fecha: o.fechaInicio,
+        titulo: `Obra iniciada · ${o.direccionObra}`,
+        cliente:
+          `${o.cliente?.nombre ?? ""} ${o.cliente?.apellidos ?? ""}`.trim() || "—",
+        href: `/admin/obras/${o.id}`,
+      });
+    }
+
+    return eventos
+      .sort((a, b) => b.fecha.getTime() - a.fecha.getTime())
+      .slice(0, take);
   } catch (error) {
-    console.error("Error en getCotizacionesRecientes:", error);
+    console.error("Error en getActividadReciente:", error);
     return [];
-  }
-}
-
-export async function getDashboardAlertas() {
-  await requireAdmin();
-
-  try {
-    const hace24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
-
-    const nuevasSinContactar = await prisma.cotizacion.findMany({
-      where: { estado: "nuevo", creadoEn: { lt: hace24h } },
-      include: { cliente: true },
-      orderBy: { creadoEn: "asc" },
-      take: 10,
-    });
-
-    const obrasPausadas = await prisma.obraActiva.findMany({
-      where: { estado: "pausada" },
-      include: { cliente: true },
-      take: 10,
-    });
-
-    const contratadasSinContrato = await prisma.cliente.findMany({
-      where: {
-        cotizaciones: { some: { estado: "contratado" } },
-        contratos: { none: {} },
-      },
-      take: 10,
-    });
-
-    return { nuevasSinContactar, obrasPausadas, contratadasSinContrato };
-  } catch (error) {
-    console.error("Error en getDashboardAlertas:", error);
-    return { nuevasSinContactar: [], obrasPausadas: [], contratadasSinContrato: [] };
   }
 }
