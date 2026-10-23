@@ -1,8 +1,7 @@
 # Arquitectura técnica
 
 Cuándo leer: antes de tocar estructura, convenciones o configuración del
-proyecto. Modelo de datos: `docs/modelo-datos.md`. Visión de negocio:
-`docs/proyecto.md`. Diseño visual: `docs/diseno-ui.md`.
+proyecto. Modelo de datos: `docs/modelo-datos.md`
 
 ## Stack
 
@@ -23,52 +22,8 @@ proyecto. Modelo de datos: `docs/modelo-datos.md`. Visión de negocio:
 
 ## Estructura del repositorio
 
-```
-src/
-├── app/
-│   ├── layout.tsx              # Root layout (fuentes, ThemeProvider)
-│   ├── page.tsx                # Home (/)
-│   ├── globals.css             # Tokens + utilidades base
-│   ├── cotizacion/page.tsx     # Formulario de cotización (/cotizacion)
-│   ├── estimador/page.tsx      # Estimador orientativo (/estimador)
-│   ├── faq/page.tsx            # Preguntas frecuentes (/faq)
-│   ├── proyectos/
-│   │   ├── page.tsx            # Portafolio completo (/proyectos)
-│   │   └── [slug]/page.tsx     # Detalle de proyecto (/proyectos/[slug])
-│   ├── servicios/
-│   │   ├── page.tsx            # Lista de servicios (/servicios)
-│   │   └── [slug]/page.tsx     # Detalle de servicio (/servicios/[slug])
-│   ├── admin/
-│   │   ├── layout.tsx          # Layout admin (sidebar, auth check)
-│   │   ├── page.tsx            # Dashboard embudo
-│   │   ├── cotizaciones/       # CRUD cotizaciones
-│   │   ├── proyectos/          # CRUD proyectos + fotos
-│   │   ├── testimonios/        # CRUD testimonios
-│   │   └── servicios/          # CRUD servicios
-│   └── api/
-│       └── auth/[...nextauth]/ # Auth.js route handler
-├── components/
-│   ├── sections/               # Secciones del home (Hero, Servicios, etc.)
-│   ├── proyecto/               # Componentes de portafolio
-│   ├── ui/                     # Primitivos reutilizables (Button, Card, etc.)
-│   ├── admin/                  # Componentes del panel admin
-│   └── layout/                 # Header, Footer, Navigation
-├── lib/
-│   ├── db.ts                   # Instancia singleton de Prisma
-│   ├── auth.ts                 # Configuración Auth.js
-│   ├── constants.ts            # Enums evolutivos (estados, orígenes, nav)
-│   ├── validators.ts           # Schemas Zod compartidos
-│   └── utils.ts                # cn() y utilidades generales
-└── types/
-    └── index.ts                # Tipos compartidos (si needed)
-prisma/
-├── schema.prisma               # Fuente de verdad del modelo
-├── seed.ts                     # Datos semilla para demo
-└── migrations/                 # Migraciones versionadas
-public/
-├── img/                        # Imágenes de demo (stock)
-└── fonts/                      # Fuentes locales (si needed)
-```
+> Nota: **el middleware NO existe como `src/middleware.ts`**. En Next.js 16 el
+> guard vive en `src/proxy.ts`. Ver `docs/deploy-constraints.md`.
 
 ## Convenciones de código
 

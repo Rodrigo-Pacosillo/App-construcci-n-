@@ -38,9 +38,11 @@ export async function getCotizaciones() {
 
   try {
     const cotizaciones = await prisma.cotizacion.findMany({
-      include: { cliente: true },
+      include: {
+        cliente: true,
+        contratos: { select: { id: true } },
+      },
       orderBy: { creadoEn: "desc" },
-      take: 50,
     });
 
     return cotizaciones.map((c) => ({
@@ -51,43 +53,5 @@ export async function getCotizaciones() {
   } catch (error) {
     console.error("Error en getCotizaciones:", error);
     return [];
-  }
-}
-
-export async function getCotizacionesPorEstado() {
-  await requireAdmin();
-
-  try {
-    const cotizaciones = await prisma.cotizacion.findMany({
-      include: { cliente: true },
-      orderBy: { creadoEn: "desc" },
-      take: 50,
-    });
-
-    const cotizacionesMapped = cotizaciones.map((c) => ({
-      ...c,
-      montoEstimado: c.montoEstimado ? Number(c.montoEstimado) : null,
-      montoCerrado: c.montoCerrado ? Number(c.montoCerrado) : null,
-    }));
-
-    const porEstado: Record<string, typeof cotizacionesMapped> = {
-      nuevo: [],
-      contactado: [],
-      visita_tecnica: [],
-      presupuestado: [],
-      ganado: [],
-      perdido: [],
-    };
-
-    for (const c of cotizacionesMapped) {
-      if (porEstado[c.estado]) {
-        porEstado[c.estado].push(c);
-      }
-    }
-
-    return porEstado;
-  } catch (error) {
-    console.error("Error en getCotizacionesPorEstado:", error);
-    return { nuevo: [], contactado: [], visita_tecnica: [], presupuestado: [], ganado: [], perdido: [] };
   }
 }

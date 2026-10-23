@@ -22,7 +22,7 @@ import {
   Package,
   type LucideIcon,
 } from "lucide-react";
-import { ADMIN_NAV_SECTIONS, type NavItem } from "@/lib/constants";
+import { ADMIN_NAV_SECTIONS, type NavSection, type NavItem } from "@/lib/constants";
 
 const ICONS: Record<string, LucideIcon> = {
   LayoutDashboard,
@@ -42,6 +42,10 @@ const ICONS: Record<string, LucideIcon> = {
 function isActive(pathname: string, href: string) {
   if (href === "/admin") return pathname === "/admin";
   return pathname === href || pathname.startsWith(href + "/");
+}
+
+interface SectionState {
+  isExpanded: boolean;
 }
 
 function SidebarFooter({ email }: { email: string }) {
@@ -85,32 +89,66 @@ function NavLink({
   );
 }
 
+interface NavSectionsProps {
+  pathname: string;
+  onNavigate?: () => void;
+  sectionStates?: Record<string, SectionState>;
+  toggleSection?: (sectionId: string) => void;
+}
+
 function NavSections({
   pathname,
   onNavigate,
-}: {
-  pathname: string;
-  onNavigate?: () => void;
-}) {
+  sectionStates,
+  toggleSection,
+}: NavSectionsProps) {
   return (
     <div className="space-y-6">
-      {ADMIN_NAV_SECTIONS.map((section) => (
-        <div key={section.id}>
-          <p className="mb-2 px-3 font-mono text-[10px] uppercase tracking-widest text-ink-faint">
-            {section.label}
-          </p>
-          <div className="space-y-1">
-            {section.items.map((item) => (
-              <NavLink
-                key={item.id}
-                item={item}
-                active={isActive(pathname, item.href)}
-                onClick={onNavigate}
-              />
-            ))}
+      {ADMIN_NAV_SECTIONS.map((section) => {
+        const state = sectionStates?.[section.id];
+        const isExpanded = state?.isExpanded ?? true;
+
+        return (
+          <div key={section.id} className="accordion-item">
+            <button
+              type="button"
+              aria-expanded={isExpanded}
+              aria-controls={`nav-section-${section.id}`}
+              className={`flex w-full cursor-pointer items-center justify-between gap-2 rounded px-3 py-2 text-sm transition-colors hover:bg-ink/5 ${
+                isExpanded
+                  ? "text-ink font-medium"
+                  : "text-ink-muted"
+              }`}
+              onClick={() => toggleSection?.(section.id)}
+            >
+              <span className="font-mono text-[10px] uppercase tracking-widest text-ink-faint">
+                {section.label}
+              </span>
+              <svg
+                className={`h-3 w-3 shrink-0 text-ink-faint transition-transform ${
+                  isExpanded ? "rotate-90" : ""
+                }`}
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+            {isExpanded && (
+              <div id={`nav-section-${section.id}`} className="space-y-1 pt-2">
+                {section.items.map((item) => (
+                  <NavLink
+                    key={item.id}
+                    item={item}
+                    active={isActive(pathname, item.href)}
+                    onClick={onNavigate}
+                  />
+                ))}
+              </div>
+            )}
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -118,6 +156,18 @@ function NavSections({
 export function AdminSidebar({ email }: { email: string }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+
+  // Solo la primera sección arranca expandida para mejorar la visibilidad
+  const [sectionStates, setSectionStates] = useState<
+    Record<string, SectionState>
+  >(
+    Object.fromEntries(
+      ADMIN_NAV_SECTIONS.map((section, index) => [
+        section.id,
+        { isExpanded: index === 0 },
+      ])
+    )
+  );
 
   return (
     <>
@@ -155,7 +205,18 @@ export function AdminSidebar({ email }: { email: string }) {
               </Link>
             </div>
             <div className="flex-1 overflow-y-auto p-4">
-              <NavSections pathname={pathname} onNavigate={() => setOpen(false)} />
+              <NavSections
+                pathname={pathname}
+                onNavigate={() => setOpen(false)}
+                sectionStates={sectionStates}
+                toggleSection={(id) => {
+                  setSectionStates((prev) => {
+                    const newStates = { ...prev };
+                    newStates[id].isExpanded = !newStates[id].isExpanded;
+                    return newStates;
+                  });
+                }}
+              />
             </div>
             <div className="shrink-0">
               <SidebarFooter email={email} />
@@ -165,14 +226,26 @@ export function AdminSidebar({ email }: { email: string }) {
       )}
 
       {/* Desktop sidebar */}
-      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-border bg-surface lg:flex">
+      <aside
+        className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-border bg-surface lg:flex"
+      >
         <div className="flex h-16 shrink-0 items-center border-b border-border px-6">
           <Link href="/admin" className="font-heading text-lg font-bold">
             ADMIN
           </Link>
         </div>
         <nav className="flex-1 overflow-y-auto p-4">
-          <NavSections pathname={pathname} />
+          <NavSections
+            pathname={pathname}
+            sectionStates={sectionStates}
+            toggleSection={(id) => {
+              setSectionStates((prev) => {
+                const newStates = { ...prev };
+                newStates[id].isExpanded = !newStates[id].isExpanded;
+                return newStates;
+              });
+            }}
+          />
         </nav>
         <div className="shrink-0">
           <SidebarFooter email={email} />

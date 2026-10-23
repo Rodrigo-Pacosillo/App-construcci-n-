@@ -1,8 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition } from "react";
 import {
-  createObra,
   updateObraEstado,
   updateObraProgreso,
   deleteObra,
@@ -13,6 +13,7 @@ import {
   togglePagoEstado,
   deletePago,
 } from "@/app/admin/(panel)/obras/actions";
+import { ObraForm } from "@/components/admin/ObraForm";
 import {
   ESTADO_OBRA_LABELS,
   ESTADO_OBRA_COLORES,
@@ -106,28 +107,10 @@ export function ObrasAdmin({
 }) {
   const [isPending, startTransition] = useTransition();
   const [showForm, setShowForm] = useState(false);
-  const [error, setError] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [addHitoFor, setAddHitoFor] = useState<string | null>(null);
   const [addPagoFor, setAddPagoFor] = useState<string | null>(null);
   const [progresoEdit, setProgresoEdit] = useState<string | null>(null);
-
-  function handleCreate(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    setError("");
-    startTransition(async () => {
-      const res = await createObra(formData);
-      if (res?.success) {
-        setShowForm(false);
-      } else {
-        const err = (res && "error" in res ? res.error : null) as
-          | { _form?: string[] }
-          | undefined;
-        setError(err?._form?.[0] ?? "Error al crear la obra.");
-      }
-    });
-  }
 
   function handleEstado(obraId: string, estado: string) {
     startTransition(async () => {
@@ -167,7 +150,13 @@ export function ObrasAdmin({
 
   return (
     <div>
-      <div className="mb-4 flex justify-end">
+      <div className="mb-4 flex justify-end gap-2">
+        <Link
+          href="/admin/obras/new"
+          className="rounded border border-border px-4 py-2 text-xs font-medium transition-colors hover:border-accent"
+        >
+          Abrir formulario completo
+        </Link>
         <button
           onClick={() => setShowForm(!showForm)}
           className="accent-btn rounded px-4 py-2 text-xs font-medium"
@@ -177,86 +166,13 @@ export function ObrasAdmin({
       </div>
 
       {showForm && (
-        <form
-          onSubmit={handleCreate}
-          className="mb-6 space-y-3 rounded border border-border bg-surface p-4"
-        >
-          <div className="grid gap-3 sm:grid-cols-2">
-            <select
-              name="clienteId"
-              required
-              className="w-full rounded border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent"
-              defaultValue=""
-            >
-              <option value="" disabled>
-                Cliente
-              </option>
-              {clientes.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.nombre} {c.apellidos}
-                </option>
-              ))}
-            </select>
-            <select
-              name="contratoId"
-              className="w-full rounded border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent"
-              defaultValue=""
-            >
-              <option value="">Sin contrato</option>
-              {contratos.map((ct) => (
-                <option key={ct.id} value={ct.id}>
-                  {ct.clienteNombre} — ${ct.montoTotal.toLocaleString("es-AR")}
-                </option>
-              ))}
-            </select>
-          </div>
-          <input
-            name="direccionObra"
-            required
-            placeholder="Dirección de la obra"
-            className="w-full rounded border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent"
+        <div className="mb-6">
+          <ObraForm
+            clientes={clientes}
+            contratos={contratos}
+            onSuccess={() => setShowForm(false)}
           />
-          <input
-            name="fechaInicio"
-            type="date"
-            required
-            className="w-full rounded border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent"
-          />
-          <input
-            name="fechaFinEstimada"
-            type="date"
-            className="w-full rounded border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent"
-          />
-          <div className="grid gap-3 sm:grid-cols-2">
-            <select
-              name="estado"
-              className="w-full rounded border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent"
-              defaultValue="en_curso"
-            >
-              {ESTADOS_OBRA.map((s) => (
-                <option key={s} value={s}>
-                  {ESTADO_OBRA_LABELS[s]}
-                </option>
-              ))}
-            </select>
-            <input
-              name="progreso"
-              type="number"
-              min={0}
-              max={100}
-              placeholder="Progreso (0-100)"
-              className="w-full rounded border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent"
-            />
-          </div>
-          {error && <p className="text-sm text-red-500">{error}</p>}
-          <button
-            type="submit"
-            disabled={isPending}
-            className="accent-btn rounded px-4 py-2 text-xs font-medium"
-          >
-            Crear obra
-          </button>
-        </form>
+        </div>
       )}
 
       <div className="space-y-4">

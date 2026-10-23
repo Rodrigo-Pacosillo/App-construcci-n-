@@ -1,12 +1,23 @@
-import { requireAdmin } from "@/lib/auth-utils";
-import { ModuloPlaceholder } from "@/components/admin/ModuloPlaceholder";
+import { getUsuarios } from "./actions";
+import { UsuariosList } from "@/components/admin/UsuariosList";
+
+export const dynamic = "force-dynamic";
 
 export default async function AdminUsuariosPage() {
-  await requireAdmin();
+  const usuarios = await getUsuarios();
+
   return (
-    <ModuloPlaceholder
-      titulo="Usuarios"
-      descripcion="Usuarios del sistema (admins y clientes), con activar/desactivar y reseteo de contraseña."
-    />
+    <div>
+      <div>
+        <h1 className="font-heading text-3xl font-bold">Usuarios</h1>
+        <p className="mt-1 text-ink-muted">
+          Cuentas de acceso al portal. Un prospecto sin cuenta no aparece aquí.
+        </p>
+      </div>
+
+      <div className="mt-8">
+        <UsuariosList usuarios={usuarios} />
+      </div>
+    </div>
   );
 }

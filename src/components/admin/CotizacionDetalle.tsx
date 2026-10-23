@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { ESTADOS_COTIZACION, ESTADO_LABELS } from "@/lib/constants";
+import { ESTADOS_COTIZACION, ESTADO_LABELS, ESTADO_COLORES } from "@/lib/constants";
 
 type Cotizacion = {
   id: string;
@@ -68,7 +68,7 @@ export function CotizacionDetalle({ cotizacion }: { cotizacion: Cotizacion }) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="section-label mb-1 text-ink-faint">COTIZACIÓN #{cotizacion.id.slice(0, 8).toUpperCase()}</p>
+          <p className="section-label mb-1 text-ink-faint">COTIZACIÓN</p>
           <h1 className="font-heading text-3xl font-bold">
             {cotizacion.cliente?.nombre || "—"} {cotizacion.cliente?.apellidos || ""}
           </h1>
@@ -148,7 +148,7 @@ export function CotizacionDetalle({ cotizacion }: { cotizacion: Cotizacion }) {
               </select>
             ) : (
               <div className="flex items-center gap-2">
-                <span className={`inline-flex items-center rounded bg-ink/5 px-2 py-1 text-xs font-medium ${cotizacion.estado === "ganado" ? "text-green-700 bg-green-100" : cotizacion.estado === "perdido" ? "text-red-700 bg-red-100" : "text-ink-muted"}`}>
+                <span className={`inline-flex items-center rounded px-2 py-1 text-xs font-medium ${ESTADO_COLORES[cotizacion.estado as keyof typeof ESTADO_COLORES] ?? "bg-ink/5 text-ink-muted"}`}>
                   {ESTADO_LABELS[cotizacion.estado as keyof typeof ESTADO_LABELS]}
                 </span>
                 <button

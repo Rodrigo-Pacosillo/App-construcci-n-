@@ -2,6 +2,12 @@
 
 import { useState } from "react";
 import { createCotizacion } from "./actions";
+import {
+  TIPO_OBRA_LABELS,
+  TIPO_CONSTRUCCION_LABELS,
+  RANGO_M2_LABELS,
+  PLAZO_INICIO_LABELS,
+} from "@/lib/constants";
 
 export default function CotizacionPage() {
   const [submitted, setSubmitted] = useState(false);
@@ -61,7 +67,7 @@ export default function CotizacionPage() {
           <div className="grid gap-6 sm:grid-cols-2">
             <div>
               <label htmlFor="nombre" className="section-label block text-ink-faint">
-                Nombre(s)
+                Nombre(s) <span className="text-accent-strong" aria-hidden="true">*</span>
               </label>
               <input
                 id="nombre"
@@ -73,7 +79,7 @@ export default function CotizacionPage() {
             </div>
             <div>
               <label htmlFor="apellidos" className="section-label block text-ink-faint">
-                Apellidos
+                Apellidos <span className="text-accent-strong" aria-hidden="true">*</span>
               </label>
               <input
                 id="apellidos"
@@ -88,7 +94,7 @@ export default function CotizacionPage() {
           <div className="grid gap-6 sm:grid-cols-2">
             <div>
               <label htmlFor="telefono" className="section-label block text-ink-faint">
-                Teléfono
+                Teléfono <span className="text-accent-strong" aria-hidden="true">*</span>
               </label>
               <input
                 id="telefono"
@@ -100,13 +106,14 @@ export default function CotizacionPage() {
             </div>
             <div>
               <label htmlFor="email" className="section-label block text-ink-faint">
-                Email
+                Email <span className="text-ink-faint">(opcional)</span>
               </label>
               <input
                 id="email"
                 name="email"
                 type="email"
                 maxLength={100}
+                placeholder="correo@ejemplo.com"
                 className="mt-1 block w-full rounded border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent"
               />
             </div>
@@ -115,30 +122,36 @@ export default function CotizacionPage() {
           <div className="grid gap-6 sm:grid-cols-2">
             <div>
               <label htmlFor="tipoObra" className="section-label block text-ink-faint">
-                Tipo de obra
+                Tipo de obra <span className="text-accent-strong" aria-hidden="true">*</span>
               </label>
               <select
                 id="tipoObra"
                 name="tipoObra"
+                required
                 className="mt-1 block w-full rounded border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent"
               >
-                <option value="vivienda_nueva">Vivienda nueva</option>
-                <option value="ampliacion">Ampliación</option>
-                <option value="otro">Otro</option>
+                {Object.entries(TIPO_OBRA_LABELS).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
               <label htmlFor="tipoConstruccion" className="section-label block text-ink-faint">
-                Tipo de construcción
+                Tipo de construcción <span className="text-accent-strong" aria-hidden="true">*</span>
               </label>
               <select
                 id="tipoConstruccion"
                 name="tipoConstruccion"
+                required
                 className="mt-1 block w-full rounded border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent"
               >
-                <option value="seco">Steel frame / Seco</option>
-                <option value="tradicional">Tradicional</option>
-                <option value="no_sabe">No sabe</option>
+                {Object.entries(TIPO_CONSTRUCCION_LABELS).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -146,7 +159,7 @@ export default function CotizacionPage() {
           <div className="grid gap-6 sm:grid-cols-2">
             <div>
               <label htmlFor="rangoM2" className="section-label block text-ink-faint">
-                Superficie estimada
+                Superficie estimada <span className="text-accent-strong" aria-hidden="true">*</span>
               </label>
               <select
                 id="rangoM2"
@@ -154,15 +167,16 @@ export default function CotizacionPage() {
                 required
                 className="mt-1 block w-full rounded border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent"
               >
-                <option value="hasta_50">Hasta 50 m2</option>
-                <option value="m50_100">50 - 100 m2</option>
-                <option value="m100_200">100 - 200 m2</option>
-                <option value="mas_200">Más de 200 m2</option>
+                {Object.entries(RANGO_M2_LABELS).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
               <label htmlFor="plazoInicio" className="section-label block text-ink-faint">
-                Cuándo desea empezar
+                Cuándo desea empezar <span className="text-accent-strong" aria-hidden="true">*</span>
               </label>
               <select
                 id="plazoInicio"
@@ -170,21 +184,24 @@ export default function CotizacionPage() {
                 required
                 className="mt-1 block w-full rounded border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent"
               >
-                <option value="lo_antes_posible">Lo antes posible</option>
-                <option value="en_3_meses">En 3 meses</option>
-                <option value="no_sabe">No sabe</option>
+                {Object.entries(PLAZO_INICIO_LABELS).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
 
           <div>
             <label htmlFor="ubicacion" className="section-label block text-ink-faint">
-              Ubicación de la obra
+              Ubicación de la obra <span className="text-accent-strong" aria-hidden="true">*</span>
             </label>
             <input
               id="ubicacion"
               name="ubicacion"
-              placeholder="Barrio, Ciudad"
+              required
+              placeholder="Barrio, Ciudad (ej. Sopocachi, La Paz)"
               maxLength={200}
               className="mt-1 block w-full rounded border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent"
             />
@@ -192,13 +209,14 @@ export default function CotizacionPage() {
 
           <div>
             <label htmlFor="descripcion" className="section-label block text-ink-faint">
-              Describa su proyecto
+              Describa su proyecto <span className="text-ink-faint">(opcional)</span>
             </label>
             <textarea
               id="descripcion"
               name="descripcion"
               rows={4}
               maxLength={1000}
+              placeholder="Detalles, referencias, necesidades especiales... (opcional)"
               className="mt-1 block w-full rounded border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent"
             />
           </div>

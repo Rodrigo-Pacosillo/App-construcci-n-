@@ -1,12 +1,20 @@
-import { requireAdmin } from "@/lib/auth-utils";
-import { ModuloPlaceholder } from "@/components/admin/ModuloPlaceholder";
+import { notFound } from "next/navigation";
+import { getClienteById } from "../actions";
+import { ClienteDetalle } from "@/components/admin/ClienteDetalle";
 
-export default async function AdminClienteDetallePage() {
-  await requireAdmin();
-  return (
-    <ModuloPlaceholder
-      titulo="Ficha de cliente"
-      descripcion="El flujo de negocio: cotizaciones → contratos → obras → acceso al portal cliente."
-    />
-  );
+export const dynamic = "force-dynamic";
+
+export default async function AdminClienteDetallePage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const cliente = await getClienteById(id);
+
+  if (!cliente) {
+    notFound();
+  }
+
+  return <ClienteDetalle cliente={cliente} />;
 }

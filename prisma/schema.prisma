@@ -36,7 +36,9 @@ enum RangoM2 {
 
 enum PlazoInicio {
   lo_antes_posible
+  en_1_mes
   en_3_meses
+  en_6_meses
   no_sabe
 }
 

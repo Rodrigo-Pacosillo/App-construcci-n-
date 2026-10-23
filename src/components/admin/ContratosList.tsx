@@ -1,34 +1,34 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { FileText, UserPlus, Users } from "lucide-react";
 
-type Contrato = {
+type ContratoDisplay = {
   id: string;
   montoTotal: number;
-  fechaFirma: Date | null;
   creadoEn: Date;
-  cliente: { nombre: string; apellidos: string; email: string | null } | null;
+  cliente: {
+    id: string;
+    nombre: string;
+    apellidos: string;
+    email: string | null;
+    usuario?: { id: string } | null;
+  } | null;
   cotizacion: { tipoObra: string; estado: string } | null;
   obras: { id: string; direccionObra: string }[];
 };
 
-export function ContratosList({ contratos }: { contratos: Contrato[] }) {
-  const [search, setSearch] = useState("");
-
-  const filtrados = contratos.filter((c) =>
-    c.cliente?.nombre.toLowerCase().includes(search.toLowerCase()) ||
-    c.cliente?.apellidos.toLowerCase().includes(search.toLowerCase()) ||
-    c.cotizacion?.tipoObra.toLowerCase().includes(search.toLowerCase()) ||
-    c.id.toLowerCase().includes(search.toLowerCase())
-  );
-
+export function ContratosList({ contratos }: { contratos: ContratoDisplay[] }) {
   return (
-    <div className="space-y-6">
+    <div>
       <div className="flex items-center justify-between">
         <div>
-          <p className="section-label mb-1 text-ink-faint">CONTRATOS</p>
-          <h1 className="font-heading text-3xl font-bold">Listado de contratos</h1>
+          <h1 className="font-heading text-3xl font-bold">Contratos</h1>
+          <p className="mt-1 text-ink-muted">
+            {contratos.length === 1
+              ? "1 contrato en total"
+              : `${contratos.length} contratos en total`}
+          </p>
         </div>
         <Link
           href="/admin/contratos/new"
@@ -38,90 +38,92 @@ export function ContratosList({ contratos }: { contratos: Contrato[] }) {
         </Link>
       </div>
 
-      <div className="rounded border border-border bg-surface">
-        <div className="p-4 border-b border-border">
-          <input
-            type="search"
-            placeholder="Buscar por cliente, tipo de obra, ID..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full max-w-md rounded border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-accent"
-          />
-        </div>
+      <div className="mt-8">
+        <div className="rounded border border-border bg-surface">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="px-4 py-3 section-label text-ink-faint">Cliente</th>
+                  <th className="hidden px-4 py-3 section-label text-ink-faint md:table-cell">
+                    Obra vinculada
+                  </th>
+                  <th className="px-4 py-3 section-label text-ink-faint">Monto total</th>
+                  <th className="px-4 py-3 text-right section-label text-ink-faint">
+                    Acciones
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {contratos.map((contrato) => {
+                  const cliente = contrato.cliente;
+                  const obra = contrato.obras?.[0];
+                  const tieneUsuario = Boolean(cliente?.usuario?.id);
+                  const usuarioId = cliente?.usuario?.id;
+                  const nombre = cliente ? `${cliente.nombre} ${cliente.apellidos}`.trim() : "—";
+                  const query = new URLSearchParams();
+                  if (cliente?.id) query.set("clienteId", cliente.id);
+                  if (cliente?.nombre) query.set("nombre", cliente.nombre);
+                  if (cliente?.apellidos) query.set("apellidos", cliente.apellidos);
+                  if (cliente?.email) query.set("email", cliente.email);
+                  const crearUsuarioHref = `/admin/autorizar-cuentas/crear?${query.toString()}`;
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="px-4 py-3 section-label text-ink-faint">ID</th>
-                <th className="px-4 py-3 section-label text-ink-faint">Cliente</th>
-                <th className="px-4 py-3 section-label text-ink-faint">Cotización origen</th>
-                <th className="px-4 py-3 section-label text-ink-faint">Obra vinculada</th>
-                <th className="px-4 py-3 section-label text-ink-faint">Monto total</th>
-                <th className="px-4 py-3 section-label text-ink-faint">Fecha firma</th>
-                <th className="px-4 py-3 section-label text-ink-faint">Creado</th>
-                <th className="px-4 py-3 section-label text-ink-faint">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtrados.map((c) => (
-                <tr key={c.id} className="border-b border-border last:border-0">
-                  <td className="px-4 py-3 font-mono text-xs text-ink-muted">{c.id.slice(0, 8).toUpperCase()}</td>
-                  <td className="px-4 py-3">
-                    <p className="font-medium">{c.cliente?.nombre || "—"} {c.cliente?.apellidos || ""}</p>
-                    {c.cliente?.email && <p className="text-xs text-ink-muted">{c.cliente.email}</p>}
-                  </td>
-                  <td className="px-4 py-3">
-                    {c.cotizacion ? (
-                      <>
-                        <p className="capitalize text-ink-muted">{c.cotizacion.tipoObra.replace("_", " ")}</p>
-                        <p className="text-xs text-ink-faint">{c.cotizacion.estado}</p>
-                      </>
-                    ) : (
-                      <p className="text-ink-faint">— Sin cotización —</p>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    {c.obras.length > 0 ? (
-                      <ul className="space-y-1">
-                        {c.obras.map((o) => (
-                          <li key={o.id} className="text-xs text-ink-muted">{o.direccionObra}</li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="text-ink-faint">— Sin obra —</p>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 font-heading font-bold text-accent-strong">
-                    ${Number(c.montoTotal).toLocaleString("es-AR")}
-                  </td>
-                  <td className="px-4 py-3 text-ink-muted">
-                    {c.fechaFirma
-                      ? new Date(c.fechaFirma).toLocaleDateString("es-AR")
-                      : "—"}
-                  </td>
-                  <td className="px-4 py-3 text-ink-muted">
-                    {new Date(c.creadoEn).toLocaleDateString("es-AR")}
-                  </td>
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/admin/contratos/${c.id}`}
-                      className="text-xs text-accent-strong hover:underline"
+                  return (
+                    <tr
+                      key={contrato.id}
+                      className="border-b border-border last:border-0 hover:bg-ink/[0.02]"
                     >
-                      Ver / Editar
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-              {filtrados.length === 0 && (
-                <tr>
-                  <td colSpan={8} className="px-4 py-8 text-center text-ink-faint">
-                    No hay contratos
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                      <td className="px-4 py-3">
+                        <p className="font-medium text-ink">{nombre}</p>
+                        <p className="text-xs text-ink-faint">{cliente?.email || "Sin email"}</p>
+                      </td>
+                      <td className="hidden px-4 py-3 text-ink-muted md:table-cell">
+                        {obra?.direccionObra || "—"}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-ink">
+                        ${contrato.montoTotal.toLocaleString("es-AR")}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-wrap items-center justify-end gap-2 whitespace-nowrap">
+                          <Link
+                            href={`/admin/contratos/${contrato.id}`}
+                            className="inline-flex items-center gap-1.5 rounded border border-border px-3 py-1.5 text-xs font-medium text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink"
+                          >
+                            <FileText className="h-3.5 w-3.5" />
+                            Ver / Editar
+                          </Link>
+                          {tieneUsuario && usuarioId ? (
+                            <Link
+                              href={`/admin/usuarios/${usuarioId}`}
+                              className="inline-flex items-center gap-1.5 rounded border border-border px-3 py-1.5 text-xs font-medium text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink"
+                            >
+                              <Users className="h-3.5 w-3.5" />
+                              Usuario existente
+                            </Link>
+                          ) : (
+                            <Link
+                              href={crearUsuarioHref}
+                              className="inline-flex items-center gap-1.5 rounded border border-accent-strong/60 bg-accent/10 px-3 py-1.5 text-xs font-medium text-ink transition-colors hover:bg-accent/20"
+                            >
+                              <UserPlus className="h-3.5 w-3.5" />
+                              Crear usuario
+                            </Link>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {contratos.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="px-4 py-10 text-center text-ink-faint">
+                      No hay contratos registrados.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

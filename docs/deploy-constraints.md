@@ -47,7 +47,9 @@ La restricción vieja de "no importar Prisma/Auth.js" aplicaba solo a
 
 - Imágenes: servidas desde `/public/img/` (stock de demo), NO de storage externo
 - Contenido: todo sale de la BD (en demo: del seed)
-- Auth demo: admin `admin@demo.com`/`admin123` y cliente `cliente@demo.com`/`cliente123`
+- Auth demo (credenciales reales del seed): admin `admin@gmail.com`/`admin123`
+  y cliente `cliente@gmail.com`/`cliente123`
 - Fase 2 implementada: portal de cliente (`/cliente`) y obras activas
   (`/admin/obras`, hitos y pagos)
 - Copy UI: español neutro con trato de usted
+- El seed carga **0 cotizaciones** (no asumir datos de embudo en la demo)

@@ -5,13 +5,29 @@ import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth-utils";
 import { z } from "zod";
 
+const emptyToUndefined = (v: unknown) => {
+  if (v === "" || v === null || v === undefined) return undefined;
+  return v;
+};
+
 const contratoSchema = z.object({
-  clienteId: z.string().cuid(),
-  cotizacionId: z.string().cuid().optional().or(z.literal("")),
-  archivoPdfUrl: z.string().url().optional().or(z.literal("")),
-  fechaFirma: z.coerce.date({ message: "Fecha inválida" }).optional().or(z.literal("")),
-  montoTotal: z.number().positive("El monto debe ser mayor a 0"),
-  observaciones: z.string().optional(),
+  clienteId: z.string().cuid({ message: "Cliente inválido" }),
+  cotizacionId: z.preprocess(
+    emptyToUndefined,
+    z.string().cuid({ message: "Cotización inválida" }).optional()
+  ),
+  archivoPdfUrl: z.preprocess(
+    emptyToUndefined,
+    z.string().url({ message: "URL inválida" }).optional()
+  ),
+  fechaFirma: z.preprocess(
+    emptyToUndefined,
+    z.coerce.date({ message: "Fecha inválida" }).optional()
+  ),
+  montoTotal: z.coerce
+    .number("Monto inválido")
+    .positive("El monto debe ser mayor a 0"),
+  observaciones: z.preprocess(emptyToUndefined, z.string().optional()),
 });
 
 export async function getContratos() {
@@ -56,11 +72,11 @@ export async function createContrato(formData: FormData) {
 
   const data = {
     clienteId: formData.get("clienteId") as string,
-    cotizacionId: (formData.get("cotizacionId") as string) || null,
-    archivoPdfUrl: (formData.get("archivoPdfUrl") as string) || null,
-    fechaFirma: (formData.get("fechaFirma") as string) || null,
-    montoTotal: parseFloat(formData.get("montoTotal") as string),
-    observaciones: (formData.get("observaciones") as string) || null,
+    cotizacionId: formData.get("cotizacionId") as string | null,
+    archivoPdfUrl: formData.get("archivoPdfUrl") as string | null,
+    fechaFirma: formData.get("fechaFirma") as string | null,
+    montoTotal: formData.get("montoTotal") as string,
+    observaciones: formData.get("observaciones") as string | null,
   };
 
   const parsed = contratoSchema.safeParse(data);
@@ -74,25 +90,63 @@ export async function createContrato(formData: FormData) {
 
   try {
     const { cotizacionId, ...rest } = parsed.data;
-    const contrato = await prisma.contrato.create({
-      data: {
-        ...rest,
-        cotizacionId: cotizacionId || null,
-        fechaFirma: parsed.data.fechaFirma ? new Date(parsed.data.fechaFirma) : null,
-      },
-    });
 
-    // Si hay cotización vinculada, actualizar estado a "ganado"
-    if (cotizacionId) {
-      await prisma.cotizacion.update({
-        where: { id: cotizacionId },
-        data: { estado: "ganado" },
-      });
+    // §6.5 — validar en servidor que el cliente existe.
+    const cliente = await prisma.cliente.findUnique({
+      where: { id: rest.clienteId },
+      select: { id: true },
+    });
+    if (!cliente) {
+      return { success: false, error: { clienteId: ["El cliente no existe"] } };
     }
+
+    // §6.5 — si hay cotización, validar que corresponde al mismo cliente
+    // y que no tenga ya un contrato (§5.8: impedir duplicados).
+    if (cotizacionId) {
+      const cotizacion = await prisma.cotizacion.findUnique({
+        where: { id: cotizacionId },
+        select: { id: true, clienteId: true, contratos: { select: { id: true } } },
+      });
+      if (!cotizacion) {
+        return { success: false, error: { cotizacionId: ["La cotización no existe"] } };
+      }
+      if (cotizacion.clienteId !== rest.clienteId) {
+        return {
+          success: false,
+          error: { cotizacionId: ["La cotización pertenece a otro cliente"] },
+        };
+      }
+      if (cotizacion.contratos.length > 0) {
+        return {
+          success: false,
+          error: { cotizacionId: ["Esta cotización ya tiene un contrato asociado"] },
+        };
+      }
+    }
+
+    // §10.3 — transacción: crear contrato + marcar cotización como
+    // `contratado` en la misma operación lógica.
+    const contrato = await prisma.$transaction(async (tx) => {
+      const nuevo = await tx.contrato.create({
+        data: {
+          ...rest,
+          cotizacionId: cotizacionId ?? null,
+          fechaFirma: parsed.data.fechaFirma ? new Date(parsed.data.fechaFirma) : null,
+        },
+      });
+      if (cotizacionId) {
+        await tx.cotizacion.update({
+          where: { id: cotizacionId },
+          data: { estado: "contratado" },
+        });
+      }
+      return nuevo;
+    });
 
     revalidatePath("/admin/contratos");
     revalidatePath("/admin/cotizaciones");
-    return { success: true, data: contrato };
+    revalidatePath("/admin");
+    return { success: true, data: contrato, clienteId: rest.clienteId };
   } catch (error) {
     console.error("Error creando contrato:", error);
     return {
@@ -170,11 +224,64 @@ export async function getClientesForSelect() {
   });
 }
 
-export async function getCotizacionesGanadasForSelect() {
+export async function getCotizacionesGanadasForSelect(
+  incluirCotizacionId?: string
+) {
   await requireAdmin();
   return prisma.cotizacion.findMany({
-    where: { estado: "ganado", contratos: { none: {} } },
+    where: {
+      contratos: { none: {} },
+      ...(incluirCotizacionId
+        ? { OR: [{ estado: "contratado" }, { id: incluirCotizacionId }] }
+        : { estado: "contratado" }),
+    },
     select: { id: true, tipoObra: true, cliente: { select: { nombre: true, apellidos: true } } },
     orderBy: { creadoEn: "desc" },
   });
+}
+
+/**
+ * §6.4 — después de guardar el contrato, decide a dónde lleva al admin:
+ * si el cliente ya tiene cuenta, a la ficha de esa cuenta; si no, al
+ * alta de cuenta con los datos precargados. Nunca crea una cuenta sola.
+ */
+export async function getDestinoPostContrato(clienteId: string) {
+  await requireAdmin();
+
+  try {
+    const cliente = await prisma.cliente.findUnique({
+      where: { id: clienteId },
+      select: {
+        id: true,
+        nombre: true,
+        apellidos: true,
+        email: true,
+        usuario: { select: { id: true } },
+      },
+    });
+
+    if (!cliente) return null;
+
+    if (cliente.usuario) {
+      return {
+        tipo: "usuario-existente" as const,
+        href: `/admin/usuarios/${cliente.usuario.id}`,
+      };
+    }
+
+    const params = new URLSearchParams({
+      clienteId: cliente.id,
+      nombre: cliente.nombre,
+      apellidos: cliente.apellidos,
+    });
+    if (cliente.email) params.set("email", cliente.email);
+
+    return {
+      tipo: "crear-cuenta" as const,
+      href: `/admin/autorizar-cuentas/crear?${params.toString()}`,
+    };
+  } catch (error) {
+    console.error("Error en getDestinoPostContrato:", error);
+    return null;
+  }
 }
