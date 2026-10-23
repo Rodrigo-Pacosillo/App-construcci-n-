@@ -11,7 +11,7 @@ import {
   type EstadoCotizacion,
   type GrupoCotizacion,
 } from "@/lib/constants";
-import { formatFecha, telefonoParaWhatsApp } from "@/lib/format";
+import { telefonoParaWhatsApp } from "@/lib/format";
 
 type Cotizacion = {
   id: string;
@@ -22,7 +22,9 @@ type Cotizacion = {
   origen: string;
   ubicacionObra: string | null;
   creadoEn: Date;
+  contratos: { id: string }[];
   cliente: {
+    id: string;
     nombre: string;
     apellidos: string;
     telefono: string;
@@ -78,6 +80,16 @@ export function CotizacionesList({
 }) {
   const [filtro, setFiltro] = useState<Filtro>(filtroInicial ?? "todos");
   const [busqueda, setBusqueda] = useState("");
+  const [contactadas, setContactadas] = useState<Set<string>>(new Set());
+
+  function marcarContactada(id: string) {
+    setContactadas((prev) => {
+      if (prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+  }
 
   const filtradas = useMemo(() => {
     const q = busqueda.trim().toLowerCase();
@@ -149,12 +161,6 @@ export function CotizacionesList({
                 <th className="hidden px-4 py-3 section-label text-ink-faint sm:table-cell">
                   M2
                 </th>
-                <th className="hidden px-4 py-3 section-label text-ink-faint lg:table-cell">
-                  Ubicación
-                </th>
-                <th className="hidden px-4 py-3 section-label text-ink-faint lg:table-cell">
-                  Fecha
-                </th>
                 <th className="px-4 py-3 section-label text-ink-faint">Estado</th>
                 <th className="px-4 py-3 text-right section-label text-ink-faint">
                   Acciones
@@ -168,6 +174,12 @@ export function CotizacionesList({
                   ? `https://wa.me/${telefono}?text=${encodeURIComponent(mensajeWhatsApp(c))}`
                   : null;
                 const estado = c.estado as EstadoCotizacion;
+                const contratoExistente = c.contratos?.[0]?.id;
+                const habilitadoCrear =
+                  estado === "contactado" ||
+                  estado === "contratado" ||
+                  contactadas.has(c.id);
+                const mostrarCrear = estado !== "no_concretado";
 
                 return (
                   <tr
@@ -186,14 +198,8 @@ export function CotizacionesList({
                         {tipoConstruccionLabel(c.tipoConstruccion)}
                       </p>
                     </td>
-                    <td className="hidden px-4 py-3 text-ink-muted sm:table-cell">
+                    <td className="hidden px-4 py-3 whitespace-nowrap text-ink-muted sm:table-cell">
                       {rangoM2Label(c.rangoM2)}
-                    </td>
-                    <td className="hidden px-4 py-3 text-ink-muted lg:table-cell">
-                      {c.ubicacionObra || "—"}
-                    </td>
-                    <td className="hidden px-4 py-3 text-ink-muted lg:table-cell">
-                      {formatFecha(c.creadoEn)}
                     </td>
                     <td className="px-4 py-3">
                       <span
@@ -205,12 +211,13 @@ export function CotizacionesList({
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex flex-wrap items-center justify-end gap-2 whitespace-nowrap">
                         {waUrl ? (
                           <a
                             href={waUrl}
                             target="_blank"
                             rel="noopener noreferrer"
+                            onClick={() => marcarContactada(c.id)}
                             className="inline-flex items-center gap-1.5 rounded bg-green-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-green-700"
                           >
                             <MessageCircle className="h-3.5 w-3.5" />
@@ -232,6 +239,31 @@ export function CotizacionesList({
                         >
                           Ver
                         </Link>
+                        {contratoExistente ? (
+                          <Link
+                            href={`/admin/contratos/${contratoExistente}`}
+                            className="inline-flex items-center rounded border border-accent-strong/60 bg-accent/10 px-3 py-1.5 text-xs font-medium text-ink transition-colors hover:bg-accent/20"
+                          >
+                            Contrato existente
+                          </Link>
+                        ) : mostrarCrear ? (
+                          habilitadoCrear ? (
+                            <Link
+                              href={`/admin/contratos/new?cotizacionId=${c.id}&clienteId=${c.cliente?.id ?? ""}`}
+                              className="inline-flex items-center rounded border border-border px-3 py-1.5 text-xs font-medium text-ink transition-colors hover:bg-ink/5"
+                            >
+                              Crear contrato
+                            </Link>
+                          ) : (
+                            <span
+                              aria-disabled="true"
+                              title="Contactá al cliente para habilitar la creación del contrato"
+                              className="inline-flex cursor-not-allowed items-center rounded border border-border px-3 py-1.5 text-xs font-medium text-ink-faint"
+                            >
+                              Crear contrato
+                            </span>
+                          )
+                        ) : null}
                       </div>
                     </td>
                   </tr>
@@ -239,7 +271,7 @@ export function CotizacionesList({
               })}
               {filtradas.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-4 py-10 text-center text-ink-faint">
+                  <td colSpan={5} className="px-4 py-10 text-center text-ink-faint">
                     {busqueda
                       ? "No hay cotizaciones que coincidan con la búsqueda."
                       : "No hay cotizaciones en este grupo."}

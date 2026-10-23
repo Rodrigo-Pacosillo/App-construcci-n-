@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect, useCallback } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createContrato, getClientesForSelect, getCotizacionesGanadasForSelect, getDestinoPostContrato } from "@/app/admin/(panel)/contratos/actions";
 
@@ -22,20 +22,28 @@ export default function AdminNuevoContratoPage() {
   const [clientes, setClientes] = useState<ClienteSelect[]>([]);
   const [cotizaciones, setCotizaciones] = useState<CotizacionSelect[]>([]);
 
-  const loadSelectData = useCallback(async () => {
-    const [cli, cot] = await Promise.all([
-      getClientesForSelect(),
-      getCotizacionesGanadasForSelect(),
-    ]);
-    setClientes(cli);
-    setCotizaciones(cot);
-  }, []);
-
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const cotizacionIdParam = params.get("cotizacionId") ?? "";
+    const clienteIdParam = params.get("clienteId") ?? "";
+
     (async () => {
-      await loadSelectData();
+      const [cli, cot] = await Promise.all([
+        getClientesForSelect(),
+        getCotizacionesGanadasForSelect(cotizacionIdParam || undefined),
+      ]);
+      setClientes(cli);
+      setCotizaciones(cot);
+
+      if (cotizacionIdParam || clienteIdParam) {
+        setFormData((prev) => ({
+          ...prev,
+          cotizacionId: cotizacionIdParam || prev.cotizacionId,
+          clienteId: clienteIdParam || prev.clienteId,
+        }));
+      }
     })();
-  }, [loadSelectData]);
+  }, []);
 
   function handleChange(field: string, value: string) {
     setFormData((prev) => ({ ...prev, [field]: value }));

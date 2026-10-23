@@ -208,10 +208,17 @@ export async function getClientesForSelect() {
   });
 }
 
-export async function getCotizacionesGanadasForSelect() {
+export async function getCotizacionesGanadasForSelect(
+  incluirCotizacionId?: string
+) {
   await requireAdmin();
   return prisma.cotizacion.findMany({
-    where: { estado: "contratado", contratos: { none: {} } },
+    where: {
+      contratos: { none: {} },
+      ...(incluirCotizacionId
+        ? { OR: [{ estado: "contratado" }, { id: incluirCotizacionId }] }
+        : { estado: "contratado" }),
+    },
     select: { id: true, tipoObra: true, cliente: { select: { nombre: true, apellidos: true } } },
     orderBy: { creadoEn: "desc" },
   });

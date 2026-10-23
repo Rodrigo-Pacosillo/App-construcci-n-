@@ -38,7 +38,10 @@ export async function getCotizaciones() {
 
   try {
     const cotizaciones = await prisma.cotizacion.findMany({
-      include: { cliente: true },
+      include: {
+        cliente: true,
+        contratos: { select: { id: true } },
+      },
       orderBy: { creadoEn: "desc" },
     });
 
