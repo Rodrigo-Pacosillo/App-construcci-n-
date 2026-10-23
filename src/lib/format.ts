@@ -56,10 +56,14 @@ export function formatTelefono(telefono: string | null | undefined): string {
 
 /**
  * Normaliza un teléfono para un enlace de WhatsApp: solo dígitos.
+ * Si el número tiene 8 dígitos se asume Bolivia y se antepone 591.
  */
 export function telefonoParaWhatsApp(telefono: string | null | undefined): string {
   if (!telefono) return "";
-  return telefono.replace(/\D/g, "");
+  const digitos = telefono.replace(/\D/g, "").replace(/^0+/, "");
+  if (!digitos) return "";
+  if (digitos.length === 8) return `591${digitos}`;
+  return digitos;
 }
 
 /**
