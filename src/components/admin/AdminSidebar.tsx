@@ -112,39 +112,30 @@ function NavSections({
           <div key={section.id} className="accordion-item">
             <button
               type="button"
-              className={`flex items-center gap-2 rounded px-3 py-2 text-sm transition-colors hover:bg-ink/5 cursor-pointer w-full justify-between ${
+              aria-expanded={isExpanded}
+              aria-controls={`nav-section-${section.id}`}
+              className={`flex w-full cursor-pointer items-center justify-between gap-2 rounded px-3 py-2 text-sm transition-colors hover:bg-ink/5 ${
                 isExpanded
                   ? "text-ink font-medium"
                   : "text-ink-muted"
               }`}
               onClick={() => toggleSection?.(section.id)}
             >
-              <span className="flex items-center gap-2">
-                <p className="mb-2 px-3 font-mono text-[10px] uppercase tracking-widest text-ink-faint">
-                  {section.label}
-                </p>
-                {isExpanded ? (
-                  <svg
-                    className="h-4 w-4 shrink-0 rotate-180 text-ink-faint"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <path d="M9 5l7 7-7 7" />
-                  </svg>
-                ) : (
-                  <svg
-                    className="h-4 w-4 shrink-0 text-ink-faint"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <path d="M9 16l7-7 7 7" />
-                  </svg>
-                )}
+              <span className="font-mono text-[10px] uppercase tracking-widest text-ink-faint">
+                {section.label}
               </span>
-              <span className="hidden md:block">{section.label}</span>
+              <svg
+                className={`h-3 w-3 shrink-0 text-ink-faint transition-transform ${
+                  isExpanded ? "rotate-90" : ""
+                }`}
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path d="M9 5l7 7-7 7" />
+              </svg>
             </button>
             {isExpanded && (
-              <div className="space-y-1 pt-2">
+              <div id={`nav-section-${section.id}`} className="space-y-1 pt-2">
                 {section.items.map((item) => (
                   <NavLink
                     key={item.id}
@@ -166,12 +157,15 @@ export function AdminSidebar({ email }: { email: string }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
-  // Initialize section states: all expanded by default
+  // Solo la primera sección arranca expandida para mejorar la visibilidad
   const [sectionStates, setSectionStates] = useState<
     Record<string, SectionState>
   >(
     Object.fromEntries(
-      ADMIN_NAV_SECTIONS.map((section) => [section.id, { isExpanded: true }])
+      ADMIN_NAV_SECTIONS.map((section, index) => [
+        section.id,
+        { isExpanded: index === 0 },
+      ])
     )
   );
 
