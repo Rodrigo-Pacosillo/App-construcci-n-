@@ -1,0 +1,71 @@
+/* intro.css: importar UNA vez en el CSS global (o en app/layout.tsx).
+   Variante B: "el logo se dibuja". Duración total ~2 s.
+   Secuencia: contorno (0-0.55) -> pausa solo lineas (0.55-0.85)
+   -> relleno (0.85-1.15) -> texto (0.95-1.35) -> telon (1.55-1.95). */
+
+.intro {
+  /* Always dark, independent of the site theme. Values from the project's
+     dark theme: --bg-dark, --ink-dark and --color-accent. */
+  --intro-bg: #0f1013;
+  --intro-fg: #f2f1ec;
+  --intro-amber: #ffb300;
+  --intro-line: #9aa0a8;
+
+  position: fixed;
+  inset: 0;
+  z-index: 200;                       /* por encima del header y del botón de WhatsApp */
+  display: grid;
+  place-items: center;
+  background: var(--intro-bg);
+  border-bottom: 2px solid var(--intro-amber);
+  animation: intro-up 0.4s cubic-bezier(0.7, 0, 0.2, 1) 1.55s forwards;
+}
+
+html[data-intro="done"] .intro {
+  display: none;
+}
+
+/* Logo: responsive. 82vw en celular, tope de 28rem en pantallas grandes,
+   y nunca más alto que la pantalla en horizontal (celular acostado). */
+.intro-logo {
+  width: min(82vw, 28rem, 120vh);     /* respaldo para navegadores sin svh */
+  width: min(82vw, 28rem, 120svh);
+}
+.intro-logo svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.intro-fill-fg { fill: var(--intro-fg); }
+.intro-fill-am { fill: var(--intro-amber); }
+
+/* Ícono: contorno que se traza (0 - 0.55 s), pausa de 0.3 s solo con líneas,
+   y relleno (0.85 - 1.15 s). La pausa se logra retrasando el fill. */
+.intro-ic {
+  fill-opacity: 0;
+  stroke-width: 2.2;                  /* unidades del viewBox: ~1.4 px en celular, ~1.6 px en desktop */
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation:
+    intro-draw 0.55s ease-out forwards,
+    intro-fill 0.3s ease 0.85s forwards;
+}
+.intro-ic.fg { fill: var(--intro-fg);    stroke: var(--intro-line); }
+.intro-ic.am { fill: var(--intro-amber); stroke: var(--intro-amber); }
+
+/* Texto: se descubre de izquierda a derecha (0.95 - 1.35 s) */
+.intro-text {
+  clip-path: inset(0 100% 0 0);
+  animation: intro-wipe 0.4s ease 0.95s forwards;
+}
+
+@keyframes intro-draw { to { stroke-dashoffset: 0; } }
+@keyframes intro-fill { to { fill-opacity: 1; } }
+@keyframes intro-wipe { to { clip-path: inset(0 0 0 0); } }
+@keyframes intro-up   { to { transform: translateY(-101%); visibility: hidden; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .intro { display: none; }
+}

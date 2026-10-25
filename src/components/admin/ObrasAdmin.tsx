@@ -1,0 +1,492 @@
+"use client";
+
+import Link from "next/link";
+import { useState, useTransition } from "react";
+import {
+  updateObraEstado,
+  updateObraProgreso,
+  deleteObra,
+  createHito,
+  toggleHitoVisible,
+  deleteHito,
+  createPago,
+  togglePagoEstado,
+  deletePago,
+} from "@/app/admin/(panel)/obras/actions";
+import { ObraForm } from "@/components/admin/ObraForm";
+import {
+  ESTADO_OBRA_LABELS,
+  ESTADO_OBRA_COLORES,
+  ESTADOS_OBRA,
+  ESTADO_PAGO_LABELS,
+  ESTADO_PAGO_COLORES,
+  ESTADOS_PAGO,
+  type EstadoObraLabel,
+  type EstadoPagoLabel,
+} from "@/lib/constants";
+
+type Obra = {
+  id: string;
+  clienteId: string;
+  direccionObra: string;
+  estado: EstadoObraLabel;
+  progreso: number;
+  fechaInicio: string;
+  fechaFinEstimada: string | null;
+  cliente: { id: string; nombre: string; apellidos: string } | null;
+  contrato: { id: string; montoTotal: number } | null;
+  hitos: {
+    id: string;
+    titulo: string;
+    descripcion: string;
+    fecha: string;
+    visibleCliente: boolean;
+  }[];
+  pagos: {
+    id: string;
+    monto: number;
+    fecha: string;
+    concepto: string;
+    estado: EstadoPagoLabel;
+  }[];
+};
+
+type Cliente = { id: string; nombre: string; apellidos: string };
+type Contrato = { id: string; montoTotal: number; clienteNombre: string };
+
+const fmtFecha = (iso: string) =>
+  new Date(iso).toLocaleDateString("es-AR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+
+function ProgresoEditor({
+  value,
+  onSave,
+  onCancel,
+}: {
+  value: number;
+  onSave: (v: number) => void;
+  onCancel: () => void;
+}) {
+  const [val, setVal] = useState(value);
+
+  return (
+    <span className="flex items-center gap-2">
+      <input
+        type="number"
+        min={0}
+        max={100}
+        value={val}
+        onChange={(e) => setVal(Number(e.target.value) || 0)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") onSave(val);
+          if (e.key === "Escape") onCancel();
+        }}
+        className="w-20 rounded border border-border bg-background px-2 py-1 text-sm outline-none focus:border-accent"
+      />
+      <button onClick={() => onSave(val)} className="text-xs text-ink-muted hover:underline">
+        OK
+      </button>
+      <button onClick={onCancel} className="text-xs text-ink-faint hover:underline">
+        Cancelar
+      </button>
+    </span>
+  );
+}
+
+export function ObrasAdmin({
+  obras,
+  clientes,
+  contratos,
+}: {
+  obras: Obra[];
+  clientes: Cliente[];
+  contratos: Contrato[];
+}) {
+  const [isPending, startTransition] = useTransition();
+  const [showForm, setShowForm] = useState(false);
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [addHitoFor, setAddHitoFor] = useState<string | null>(null);
+  const [addPagoFor, setAddPagoFor] = useState<string | null>(null);
+  const [progresoEdit, setProgresoEdit] = useState<string | null>(null);
+
+  function handleEstado(obraId: string, estado: string) {
+    startTransition(async () => {
+      await updateObraEstado(obraId, estado);
+    });
+  }
+
+  function handleProgreso(id: string, progreso: number) {
+    startTransition(async () => {
+      await updateObraProgreso(id, progreso);
+      setProgresoEdit(null);
+    });
+  }
+
+  function handleDelete(id: string) {
+    if (!confirm("¿Eliminar esta obra y todos sus hitos/pagos?")) return;
+    startTransition(async () => {
+      await deleteObra(id);
+    });
+  }
+
+  function handleCreateHito(obraId: string, e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    startTransition(async () => {
+      const res = await createHito(obraId, new FormData(e.currentTarget));
+      if (res?.success) setAddHitoFor(null);
+    });
+  }
+
+  function handleCreatePago(obraId: string, e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    startTransition(async () => {
+      const res = await createPago(obraId, new FormData(e.currentTarget));
+      if (res?.success) setAddPagoFor(null);
+    });
+  }
+
+  return (
+    <div>
+      <div className="mb-4 flex justify-end gap-2">
+        <Link
+          href="/admin/obras/new"
+          className="rounded border border-border px-4 py-2 text-xs font-medium transition-colors hover:border-accent"
+        >
+          Abrir formulario completo
+        </Link>
+        <button
+          onClick={() => setShowForm(!showForm)}
+          className="accent-btn rounded px-4 py-2 text-xs font-medium"
+        >
+          {showForm ? "Cancelar" : "+ Nueva obra"}
+        </button>
+      </div>
+
+      {showForm && (
+        <div className="mb-6">
+          <ObraForm
+            clientes={clientes}
+            contratos={contratos}
+            onSuccess={() => setShowForm(false)}
+          />
+        </div>
+      )}
+
+      <div className="space-y-4">
+        {obras.length === 0 && (
+          <div className="rounded border border-border bg-surface p-8 text-center text-ink-faint">
+            No hay obras registradas
+          </div>
+        )}
+
+        {obras.map((obra) => (
+          <div key={obra.id} className="rounded border border-border bg-surface">
+            <button
+              type="button"
+              onClick={() => setExpanded(expanded === obra.id ? null : obra.id)}
+              className="flex w-full items-center justify-between gap-4 p-4 text-left"
+            >
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="font-heading text-lg font-bold">
+                    {obra.direccionObra}
+                  </h2>
+                  <span
+                    className={`rounded px-2 py-0.5 text-xs font-medium ${ESTADO_OBRA_COLORES[obra.estado]}`}
+                  >
+                    {ESTADO_OBRA_LABELS[obra.estado]}
+                  </span>
+                </div>
+                <p className="mt-1 text-sm text-ink-muted">
+                  {obra.cliente?.nombre ?? "Sin cliente"} {obra.cliente?.apellidos ?? ""} · Desde{" "}
+                  {fmtFecha(obra.fechaInicio)}
+                  {obra.fechaFinEstimada
+                    ? ` · Hasta ${fmtFecha(obra.fechaFinEstimada)}`
+                    : ""}
+                  {obra.contrato
+                    ? ` · Contrato $${obra.contrato.montoTotal.toLocaleString("es-AR")}`
+                    : ""}
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-2xl font-bold text-accent-strong">
+                  {obra.progreso}%
+                </span>
+                <span className="text-ink-faint">{expanded === obra.id ? "▾" : "▸"}</span>
+              </div>
+            </button>
+
+            {expanded === obra.id && (
+              <div className="border-t border-border p-4 space-y-6">
+                {/* Edición rápida */}
+                <div className="flex flex-wrap items-center gap-3">
+                  <label className="section-label text-ink-faint text-xs">
+                    Estado
+                  </label>
+                  <select
+                    value={obra.estado}
+                    onChange={(e) => handleEstado(obra.id, e.target.value)}
+                    disabled={isPending}
+                    className="rounded border border-border bg-background px-2 py-1 text-sm outline-none focus:border-accent"
+                  >
+                    {ESTADOS_OBRA.map((s) => (
+                      <option key={s} value={s}>
+                        {ESTADO_OBRA_LABELS[s]}
+                      </option>
+                    ))}
+                  </select>
+
+                  {progresoEdit === obra.id ? (
+                    <ProgresoEditor
+                      value={obra.progreso}
+                      onSave={(v) => handleProgreso(obra.id, v)}
+                      onCancel={() => setProgresoEdit(null)}
+                    />
+                  ) : (
+                    <button
+                      onClick={() => setProgresoEdit(obra.id)}
+                      className="rounded bg-ink/5 px-2 py-1 text-xs text-ink-muted hover:text-ink"
+                    >
+                      Progreso: {obra.progreso}% ✎
+                    </button>
+                  )}
+
+                  <button
+                    onClick={() => handleDelete(obra.id)}
+                    disabled={isPending}
+                    className="ml-auto text-xs text-red-500 hover:underline"
+                  >
+                    Eliminar obra
+                  </button>
+                </div>
+
+                {/* Hitos */}
+                <div>
+                  <div className="flex items-center justify-between">
+                    <p className="section-label text-ink-faint">
+                      HITOS ({obra.hitos.length})
+                    </p>
+                    <button
+                      onClick={() => setAddHitoFor(addHitoFor === obra.id ? null : obra.id)}
+                      className="text-xs text-ink-muted hover:text-ink"
+                    >
+                      {addHitoFor === obra.id ? "Cancelar" : "+ Agregar hito"}
+                    </button>
+                  </div>
+
+                  {addHitoFor === obra.id && (
+                    <form
+                      onSubmit={(e) => handleCreateHito(obra.id, e)}
+                      className="mt-3 space-y-2 rounded border border-border bg-background p-3"
+                    >
+                      <input
+                        name="titulo"
+                        required
+                        placeholder="Título (ej: Estructura lista)"
+                        className="w-full rounded border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-accent"
+                      />
+                      <textarea
+                        name="descripcion"
+                        required
+                        placeholder="Descripción del avance"
+                        rows={2}
+                        className="w-full rounded border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-accent"
+                      />
+                      <div className="flex items-center gap-3">
+                        <input
+                          name="fecha"
+                          type="date"
+                          required
+                          className="rounded border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-accent"
+                        />
+                        <label className="flex items-center gap-2 text-sm text-ink-muted">
+                          <input
+                            name="visibleCliente"
+                            type="checkbox"
+                            value="true"
+                            className="accent-[#FFB300]"
+                          />
+                          Visible para el cliente
+                        </label>
+                      </div>
+                      <button
+                        type="submit"
+                        disabled={isPending}
+                        className="accent-btn rounded px-3 py-1.5 text-xs font-medium"
+                      >
+                        Agregar
+                      </button>
+                    </form>
+                  )}
+
+                  <div className="mt-3 space-y-2">
+                    {obra.hitos.map((h) => (
+                      <div
+                        key={h.id}
+                        className="flex items-start justify-between gap-3 rounded border border-border bg-background p-3"
+                      >
+                        <div>
+                          <p className="font-medium">{h.titulo}</p>
+                          <p className="text-sm text-ink-muted">{h.descripcion}</p>
+                          <p className="mt-1 text-xs text-ink-faint">
+                            {fmtFecha(h.fecha)}
+                          </p>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-2">
+                          <button
+                            onClick={() =>
+                              startTransition(async () => {
+                                await toggleHitoVisible(h.id, !h.visibleCliente);
+                              })
+                            }
+                            disabled={isPending}
+                            className={`rounded px-2 py-0.5 text-xs font-medium ${
+                              h.visibleCliente
+                              ? "bg-accent text-ink"
+                              : "border border-border bg-surface text-ink-faint"
+                            }`}
+                          >
+                            {h.visibleCliente ? "Visible" : "Oculto"}
+                          </button>
+                          <button
+                            onClick={() =>
+                              startTransition(async () => {
+                                await deleteHito(h.id);
+                              })
+                            }
+                            disabled={isPending}
+                            className="text-xs text-red-500 hover:underline"
+                          >
+                            Borrar
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    {obra.hitos.length === 0 && (
+                      <p className="text-sm text-ink-faint">Sin hitos registrados</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Pagos */}
+                <div>
+                  <div className="flex items-center justify-between">
+                    <p className="section-label text-ink-faint">
+                      PAGOS ({obra.pagos.length})
+                    </p>
+                    <button
+                      onClick={() => setAddPagoFor(addPagoFor === obra.id ? null : obra.id)}
+                      className="text-xs text-ink-muted hover:text-ink"
+                    >
+                      {addPagoFor === obra.id ? "Cancelar" : "+ Agregar pago"}
+                    </button>
+                  </div>
+
+                  {addPagoFor === obra.id && (
+                    <form
+                      onSubmit={(e) => handleCreatePago(obra.id, e)}
+                      className="mt-3 space-y-2 rounded border border-border bg-background p-3"
+                    >
+                      <input
+                        name="concepto"
+                        required
+                        placeholder="Concepto (ej: Anticipo — 30%)"
+                        className="w-full rounded border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-accent"
+                      />
+                      <div className="flex flex-wrap items-center gap-3">
+                        <input
+                          name="monto"
+                          type="number"
+                          min={0}
+                          step="0.01"
+                          required
+                          placeholder="Monto (AR$)"
+                          className="rounded border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-accent"
+                        />
+                        <input
+                          name="fecha"
+                          type="date"
+                          required
+                          className="rounded border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-accent"
+                        />
+                        <select
+                          name="estado"
+                          className="rounded border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-accent"
+                          defaultValue="registrado"
+                        >
+                          {ESTADOS_PAGO.map((s) => (
+                            <option key={s} value={s}>
+                              {ESTADO_PAGO_LABELS[s]}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <button
+                        type="submit"
+                        disabled={isPending}
+                        className="accent-btn rounded px-3 py-1.5 text-xs font-medium"
+                      >
+                        Agregar
+                      </button>
+                    </form>
+                  )}
+
+                  <div className="mt-3 space-y-2">
+                    {obra.pagos.map((p) => (
+                      <div
+                        key={p.id}
+                        className="flex items-center justify-between gap-3 rounded border border-border bg-background p-3"
+                      >
+                        <div>
+                          <p className="font-medium">{p.concepto}</p>
+                          <p className="text-sm text-ink-muted">
+                            ${p.monto.toLocaleString("es-AR")} · {fmtFecha(p.fecha)}
+                          </p>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-2">
+                          <button
+                            onClick={() =>
+                              startTransition(async () => {
+                                await togglePagoEstado(
+                                  p.id,
+                                  p.estado === "confirmado" ? "registrado" : "confirmado",
+                                );
+                              })
+                            }
+                            disabled={isPending}
+                            className={`rounded px-2 py-0.5 text-xs font-medium ${
+                              ESTADO_PAGO_COLORES[p.estado]
+                            }`}
+                          >
+                            {ESTADO_PAGO_LABELS[p.estado]}
+                          </button>
+                          <button
+                            onClick={() =>
+                              startTransition(async () => {
+                                await deletePago(p.id);
+                              })
+                            }
+                            disabled={isPending}
+                            className="text-xs text-red-500 hover:underline"
+                          >
+                            Borrar
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    {obra.pagos.length === 0 && (
+                      <p className="text-sm text-ink-faint">Sin pagos registrados</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

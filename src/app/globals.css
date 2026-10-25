@@ -1,0 +1,163 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-archivo);
+
+  /* Light theme */
+  --color-background: var(--bg);
+  --color-foreground: var(--ink);
+  --color-surface: var(--surface);
+  --color-border: var(--border-color);
+
+  /* Ink — semantic alias used by most components
+     (text-ink, text-ink/40, bg-ink/5, border-ink/*) */
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
+
+  /* Dark theme */
+  --color-background-dark: var(--bg-dark);
+  --color-foreground-dark: var(--ink-dark);
+  --color-surface-dark: var(--surface-dark);
+  --color-border-dark: var(--border-dark);
+
+  /* Blocks — always dark */
+  --color-block: #0C0D10;
+
+  /* Accent — amber */
+  --color-accent: #FFB300;
+  --color-accent-foreground: #17181A;
+
+  /* Accent for light surfaces — rotates with theme
+     (light: dark amber for AA, dark: pure amber) */
+  --color-accent-strong: var(--accent-strong);
+}
+
+:root {
+  /* Light — printed plan */
+  --bg: #FAFAF8;
+  --ink: #17181A;
+  --ink-muted: #33363B;
+  --ink-faint: #56595F;
+  --surface: #FFFFFF;
+  --border-color: #DDD8CF;
+  --accent-strong: #B45309;
+
+  /* Blocks — rotate with theme (light: paper, dark: blueprint) */
+  --block-bg: var(--bg);
+  --block-radial: radial-gradient(ellipse at 50% 50%, rgba(255, 179, 0, 0.02) 0%, transparent 70%);
+
+  /* Blueprint drawing — light variant */
+  --bp-stud: rgba(38, 39, 43, 0.45);
+  --bp-accent: rgba(180, 83, 9, 0.55);
+  --bp-panel: rgba(180, 83, 9, 0.1);
+  --bp-plate: rgba(38, 39, 43, 0.05);
+  --bp-glow: rgba(180, 83, 9, 0.35);
+  --bp-grid: rgba(38, 39, 43, 0.1);
+
+  /* Dark */
+  --bg-dark: #0F1013;
+  --ink-dark: #F2F1EC;
+  --surface-dark: #15171B;
+  --border-dark: #23262B;
+}
+
+.dark {
+  --bg: #0F1013;
+  --ink: #F2F1EC;
+  --ink-muted: #A6A6A3;
+  --ink-faint: #8F8F8A;
+  --surface: #15171B;
+  --border-color: #23262B;
+  --accent-strong: #FFB300;
+
+  /* Blocks — dark blueprint */
+  --block-bg: #0C0D10;
+  --block-radial: radial-gradient(ellipse at 50% 50%, rgba(255, 179, 0, 0.035) 0%, transparent 70%);
+
+  /* Blueprint drawing — dark variant */
+  --bp-stud: rgba(255, 255, 255, 0.4);
+  --bp-accent: rgba(255, 179, 0, 0.6);
+  --bp-panel: rgba(255, 179, 0, 0.08);
+  --bp-plate: rgba(255, 255, 255, 0.05);
+  --bp-glow: rgba(255, 179, 0, 0.3);
+  --bp-grid: rgba(255, 255, 255, 0.1);
+}
+
+/* Blocks — theme-aware (light: printed plan; dark: dark blueprint).
+   `block-dark` is kept as an alias for contexts that need it. */
+.block,
+.block-dark {
+  background-color: var(--block-bg);
+  background-image: var(--block-radial);
+}
+
+/* Accent button */
+.accent-btn {
+  background-color: #FFB300;
+  color: #17181A;
+}
+
+/* Body */
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* Focus ring — amber, visible on both themes */
+*:focus-visible {
+  outline: 2px solid #FFB300;
+  outline-offset: 2px;
+}
+
+/* Skip link */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.75rem 1.5rem;
+  background: #FFB300;
+  color: #17181A;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  z-index: 100;
+  transition: top 0.2s;
+}
+.skip-link:focus {
+  top: 1rem;
+}
+
+/* Utility: section heading number + label pattern */
+.section-label {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+/* Hide scrollbar */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

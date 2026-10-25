@@ -1,0 +1,63 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# env files (can opt-in for committing if needed)
+.env*
+
+# lockfile no usado (el proyecto usa npm — ver README)
+pnpm-lock.yaml
+
+# metadatos de agentes externos (no son parte de la app)
+.atl/
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# IDE / editor
+.agents/
+.vscode/
+*.swp
+*.swo
+
+# Skills system (not part of app)
+skills-lock.json
+
+# Temporal analysis docs (keep in local only)
+ANALISIS-FASES.md
+HERO_PLAN_FINAL.md
+INSTRUCCIONES_ACTUALIZACION_DOCUMENTACION_CONTRART.md
+INTRO_B_GUIA.md
+LOGO_GUIA.md
+ESPECIFICACION_PANEL_ADMIN_CONTRART.md
