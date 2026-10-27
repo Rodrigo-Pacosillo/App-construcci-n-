@@ -125,10 +125,10 @@ export function CotizacionesList({
             <button
               key={f.id}
               onClick={() => setFiltro(f.id)}
-              className={`rounded px-3 py-1.5 text-xs font-medium transition-colors ${
+              className={`inline-flex h-8 items-center justify-center rounded border px-3 text-xs font-medium transition-colors ${
                 filtro === f.id
-                  ? "bg-ink text-white"
-                  : "bg-ink/5 text-ink-muted hover:bg-ink/10"
+                  ? "border-ink bg-ink text-white"
+                  : "border-border bg-surface text-ink-muted hover:bg-ink/5 hover:text-ink"
               }`}
             >
               {f.label} ({contar(f.id)})
@@ -218,7 +218,7 @@ export function CotizacionesList({
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={() => marcarContactada(c.id)}
-                            className="inline-flex h-8 items-center justify-center gap-1.5 rounded border border-border px-3 text-xs font-medium text-ink transition-colors hover:bg-ink/5"
+                            className="inline-flex h-8 items-center justify-center gap-1.5 rounded bg-green-600 px-3 text-xs font-medium text-white transition-colors hover:bg-green-700"
                           >
                             <MessageCircle className="h-3.5 w-3.5" />
                             Contactar

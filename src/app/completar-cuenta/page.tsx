@@ -3,6 +3,7 @@
 import { useState, useTransition, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import { Eye, EyeOff } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +16,8 @@ function CompletarCuentaContent() {
   const [validando, setValidando] = useState(!token);
   const [invitacion, setInvitacion] = useState<{ id: string; cliente: { id: string; nombre: string | null; apellidos: string | null; email: string | null; telefono: string | null } } | null>(null);
   const [formData, setFormData] = useState({ email: "", password: "", confirmar: "" });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
     if (!token) return;
@@ -106,23 +109,43 @@ function CompletarCuentaContent() {
           </div>
           <div>
             <label className="section-label block text-ink-faint mb-1">Contraseña</label>
-            <input
-              type="password"
-              value={formData.password}
-              onChange={(e) => setFormData((p) => ({ ...p, password: e.target.value }))}
-              className="rounded border border-border bg-surface w-full px-3 py-2 text-sm outline-none focus:border-accent"
-              required
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={formData.password}
+                onChange={(e) => setFormData((p) => ({ ...p, password: e.target.value }))}
+                className="rounded border border-border bg-surface w-full px-3 py-2 pr-10 text-sm outline-none focus:border-accent"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute inset-y-0 right-0 flex items-center px-3 text-ink-faint hover:text-ink"
+                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
           <div>
             <label className="section-label block text-ink-faint mb-1">Confirmar contraseña</label>
-            <input
-              type="password"
-              value={formData.confirmar}
-              onChange={(e) => setFormData((p) => ({ ...p, confirmar: e.target.value }))}
-              className="rounded border border-border bg-surface w-full px-3 py-2 text-sm outline-none focus:border-accent"
-              required
-            />
+            <div className="relative">
+              <input
+                type={showConfirm ? "text" : "password"}
+                value={formData.confirmar}
+                onChange={(e) => setFormData((p) => ({ ...p, confirmar: e.target.value }))}
+                className="rounded border border-border bg-surface w-full px-3 py-2 pr-10 text-sm outline-none focus:border-accent"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirm((v) => !v)}
+                className="absolute inset-y-0 right-0 flex items-center px-3 text-ink-faint hover:text-ink"
+                aria-label={showConfirm ? "Ocultar contraseña" : "Mostrar contraseña"}
+              >
+                {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
           <button type="submit" disabled={isPending} className="accent-btn rounded px-4 py-2 text-sm font-medium w-full disabled:opacity-50">
             {isPending ? "Creando cuenta..." : "Crear cuenta y acceder"}

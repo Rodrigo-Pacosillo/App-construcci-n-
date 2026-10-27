@@ -199,7 +199,7 @@ Una vez completado el registro, podrás iniciar sesión para ver toda la informa
                     </button>
                     <button
                       onClick={compartirWhatsApp}
-                      className="inline-flex h-8 items-center justify-center gap-1.5 rounded border border-border bg-surface px-3 text-xs font-medium text-ink transition-colors hover:bg-ink/5"
+                      className="inline-flex h-8 items-center justify-center gap-1.5 rounded bg-green-600 px-3 text-xs font-medium text-white transition-colors hover:bg-green-700"
                     >
                       <MessageCircle className="h-3.5 w-3.5" />
                       Enviar por WhatsApp
