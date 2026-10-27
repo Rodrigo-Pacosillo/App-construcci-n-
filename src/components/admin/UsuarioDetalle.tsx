@@ -55,7 +55,7 @@ export function UsuarioDetalle({ usuario }: { usuario: Usuario }) {
         <div>
           <Link
             href="/admin/usuarios"
-            className="mb-2 inline-block text-sm text-ink-muted hover:text-ink"
+            className="mb-3 inline-flex items-center gap-1.5 text-xs text-ink-muted hover:text-ink"
           >
             ← Volver a Usuarios
           </Link>
@@ -64,7 +64,7 @@ export function UsuarioDetalle({ usuario }: { usuario: Usuario }) {
           </h1>
           <p className="mt-1 text-ink-muted">{usuario.email}</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           <Badge variante={usuario.activo ? "success" : "danger"}>
             {usuario.activo ? "Cuenta activa" : "Cuenta suspendida"}
           </Badge>
@@ -79,7 +79,7 @@ export function UsuarioDetalle({ usuario }: { usuario: Usuario }) {
             textoConfirmar={usuario.activo ? "Suspender cuenta" : "Reactivar cuenta"}
             variante={usuario.activo ? "danger" : "neutral"}
             onConfirm={() => toggleUsuarioActivo(usuario.id, !usuario.activo)}
-            className="rounded border border-border px-4 py-2 text-sm font-medium transition-colors hover:border-accent"
+            className="inline-flex h-9 items-center justify-center rounded border border-border px-4 text-sm font-medium transition-colors hover:bg-ink/5"
           >
             {usuario.activo ? "Suspender cuenta" : "Reactivar cuenta"}
           </ConfirmButton>
@@ -200,10 +200,10 @@ export function UsuarioDetalle({ usuario }: { usuario: Usuario }) {
                       {k.fechaFirma ? formatFecha(k.fechaFirma) : "—"}
                     </td>
                     <td className="px-4 py-3 text-ink-muted">{formatFecha(k.creadoEn)}</td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 text-right">
                       <Link
                         href={`/admin/contratos/${k.id}`}
-                        className="text-accent-strong hover:underline"
+                        className="inline-flex h-8 items-center justify-center rounded border border-border px-3 text-xs font-medium text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink"
                       >
                         Ver contrato
                       </Link>
@@ -252,10 +252,10 @@ export function UsuarioDetalle({ usuario }: { usuario: Usuario }) {
                     </td>
                     <td className="px-4 py-3">{o.progreso}%</td>
                     <td className="px-4 py-3 text-ink-muted">{formatFecha(o.fechaInicio)}</td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 text-right">
                       <Link
                         href={`/admin/obras/${o.id}`}
-                        className="text-accent-strong hover:underline"
+                        className="inline-flex h-8 items-center justify-center rounded border border-border px-3 text-xs font-medium text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink"
                       >
                         Ver obra
                       </Link>

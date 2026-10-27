@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { Eye, Hammer } from "lucide-react";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -29,7 +30,6 @@ type Usuario = {
 export function UsuariosList({ usuarios }: { usuarios: Usuario[] }) {
   const [search, setSearch] = useState("");
 
-  // §7.2: búsqueda por nombre/apellidos y teléfono del cliente relacionado.
   const q = search.trim().toLowerCase();
   const filtrados = q
     ? usuarios.filter((u) => {
@@ -53,7 +53,7 @@ export function UsuariosList({ usuarios }: { usuarios: Usuario[] }) {
         accion={
           <Link
             href="/admin/autorizar-cuentas"
-            className="rounded border border-border px-4 py-2 text-sm font-medium transition-colors hover:border-accent"
+            className="rounded border border-border px-4 py-2 text-sm font-medium transition-colors hover:bg-ink/5"
           >
             Ir a Autorizar cuentas
           </Link>
@@ -74,12 +74,11 @@ export function UsuariosList({ usuarios }: { usuarios: Usuario[] }) {
         <DataTableHead>
           <tr>
             <th className="px-4 py-3 font-medium">Cuenta</th>
-            <th className="px-4 py-3 font-medium">Cliente</th>
             <th className="px-4 py-3 font-medium">Teléfono</th>
             <th className="px-4 py-3 font-medium">Estado</th>
             <th className="px-4 py-3 font-medium">Obras</th>
             <th className="px-4 py-3 font-medium">Creada</th>
-            <th className="px-4 py-3 font-medium">Acciones</th>
+            <th className="px-4 py-3 text-right font-medium">Acciones</th>
           </tr>
         </DataTableHead>
         <tbody className="divide-y divide-border">
@@ -90,17 +89,8 @@ export function UsuariosList({ usuarios }: { usuarios: Usuario[] }) {
                   {u.nombre} {u.apellidos}
                 </p>
                 <p className="text-xs text-ink-muted">{u.email}</p>
-              </td>
-              <td className="px-4 py-3">
-                {u.cliente ? (
-                  <>
-                    <p>{u.cliente.nombre} {u.cliente.apellidos}</p>
-                    {u.cliente.ciudad && (
-                      <p className="text-xs text-ink-muted">{u.cliente.ciudad}</p>
-                    )}
-                  </>
-                ) : (
-                  <span className="text-ink-faint">Sin cliente vinculado</span>
+                {u.cliente?.ciudad && (
+                  <p className="text-xs text-ink-faint">{u.cliente.ciudad}</p>
                 )}
               </td>
               <td className="px-4 py-3 text-ink-muted">
@@ -116,19 +106,20 @@ export function UsuariosList({ usuarios }: { usuarios: Usuario[] }) {
               </td>
               <td className="px-4 py-3 text-ink-muted">{formatFecha(u.creadoEn)}</td>
               <td className="px-4 py-3">
-                {/* §7.2: dos acciones claras por fila */}
-                <div className="flex gap-3 text-sm">
+                <div className="flex flex-wrap items-center justify-end gap-2">
                   <Link
                     href={`/admin/usuarios/${u.id}`}
-                    className="text-accent-strong hover:underline"
+                    className="inline-flex h-8 items-center justify-center gap-1.5 rounded border border-border px-3 text-xs font-medium text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink"
                   >
+                    <Eye className="h-3.5 w-3.5" />
                     Ver información
                   </Link>
                   {u.cliente && (
                     <Link
                       href={`/admin/obras?cliente=${u.cliente.id}`}
-                      className="text-ink-muted hover:underline"
+                      className="inline-flex h-8 items-center justify-center gap-1.5 rounded border border-border px-3 text-xs font-medium text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink"
                     >
+                      <Hammer className="h-3.5 w-3.5" />
                       Ver obras
                     </Link>
                   )}

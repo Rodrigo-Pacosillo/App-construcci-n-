@@ -127,7 +127,7 @@ export function CotizacionesList({
               onClick={() => setFiltro(f.id)}
               className={`inline-flex h-8 items-center justify-center rounded border px-3 text-xs font-medium transition-colors ${
                 filtro === f.id
-                  ? "border-ink bg-ink text-white"
+                  ? "border-ink bg-ink text-white dark:border-white dark:bg-white dark:text-black"
                   : "border-border bg-surface text-ink-muted hover:bg-ink/5 hover:text-ink"
               }`}
             >
