@@ -1,10 +1,10 @@
 # Base de Datos — Contr-art Demo
-> Esquema Prisma actual (PostgreSQL / Neon) — 20 tablas
+> Esquema Prisma actual (PostgreSQL / Neon) — 21 tablas
 ---
 ## Resumen por módulos
 | Módulo | Tablas |
 |--------|--------|
-| Acceso y clientes | `usuarios`, `clientes` |
+| Acceso y clientes | `usuarios`, `clientes`, `invitaciones_usuario` |
 | Proceso de venta | `cotizaciones`, `contratos`, `precio_referencia` |
 | Sitio web (portafolio) | `proyectos`, `fotos_proyecto`, `testimonios`, `servicios`, `faqs`, `certificaciones` |
 | Obras en ejecución | `obras_activas`, `hitos_obra`, `pagos_obra` |
@@ -44,6 +44,22 @@
 - `contratos` → `Contrato[]` (1:N)
 - `proyectos` → `Proyecto[]` (1:N)
 - `obras` → `ObraActiva[]` (1:N)
+- `invitaciones` → `InvitacionUsuario[]` (1:N)
+
+### 3. `invitaciones_usuario` (InvitacionUsuario)
+| Campo | Tipo | Constraints | Descripción |
+|-------|------|-------------|-------------|
+| `id` | `String` | `@id @default(cuid())` | PK |
+| `cliente_id` | `String` | `@map("cliente_id")` | FK → `clientes.id` |
+| `token` | `String` | `@unique` | Token hexadecimal (32 bytes) generado con `crypto.randomBytes` |
+| `usado` | `Boolean` | `@default(false)` | Se marca `true` al completar la cuenta vía `/completar-cuenta` |
+| `expira_en` | `DateTime` | `@map("expira_en")` | Fecha/hora de expiración (actualmente 48 horas) |
+| `creado_en` | `DateTime` | `@default(now()) @map("creado_en")` | Timestamp |
+| `creado_por` | `String?` | `@map("creado_por")` | ID/usuario que generó la invitación (opcional) |
+
+**Índice**: `cliente_id`  
+**Relaciones**
+- `cliente` → `Cliente` (N:1, `onDelete: Cascade`)
 ---
 ## Módulo 2 — Proceso de venta
 ### 3. `cotizaciones` (Cotizacion)
@@ -344,6 +360,7 @@ erDiagram
     CLIENTE ||--o{ CONTRATO : "cliente_id"
     CLIENTE ||--o{ PROYECTO : "cliente_id"
     CLIENTE ||--o{ OBRA_ACTIVA : "cliente_id"
+    CLIENTE ||--o{ INVITACION_USUARIO : "cliente_id"
     COTIZACION ||--o{ CONTRATO : "cotizacion_id"
     CONTRATO ||--o{ OBRA_ACTIVA : "contrato_id"
     PROYECTO ||--o{ FOTO_PROYECTO : "proyecto_id (cascade)"
