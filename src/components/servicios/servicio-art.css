@@ -1,0 +1,84 @@
+/* Dibujos animados de servicios.
+   Importar UNA vez (en globals.css con @import, o en el layout). CSS puro, compatible con Tailwind v3 y v4. */
+
+.art {
+  /* Tema oscuro (el del sitio). Ver bloque de tema claro más abajo. */
+  --art-paper: #14161a;
+  --art-grid: #1e2025;
+  --art-steel: #8f9ba3;
+  --art-hi: #c9d2d7;
+  --art-amber: #ffb400;
+  --art-muted: #8a929b;
+  --art-line: #26282d;
+
+  width: 100%;
+  aspect-ratio: 320 / 240; /* reserva el espacio: evita saltos de layout */
+  overflow: hidden;
+  border: 1px solid var(--art-line);
+  border-radius: 6px;
+  background: var(--art-paper);
+  transition: opacity 0.4s;
+}
+.art[data-out="true"] { opacity: 0; }
+.art svg { display: block; width: 100%; height: auto; }
+
+/* Tema claro: AJUSTAR al mecanismo que ya use el sitio (clase .light, data-theme, etc.).
+   Ejemplo:
+   [data-theme="light"] .art {
+     --art-paper:#fff; --art-grid:#e4e7ea; --art-steel:#6f7e87; --art-hi:#46555d;
+     --art-amber:#d99200; --art-muted:#5f676f; --art-line:#d5d9dd;
+   } */
+
+/* ---------- formas ---------- */
+.art .p { stroke: var(--art-hi); stroke-width: 1.6; fill: var(--art-steel); fill-opacity: 0.2; stroke-dasharray: 1; stroke-linejoin: round; }
+.art .l { fill: none; stroke: var(--art-hi); stroke-width: 1.4; stroke-dasharray: 1; stroke-linecap: round; }
+.art .a { fill: none; stroke: var(--art-amber); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; }
+.art .f { opacity: 0.4; }
+.art .o { fill: var(--art-amber); transform-box: fill-box; transform-origin: center; }
+.art .b { fill: var(--art-amber); fill-opacity: 0.1; stroke: var(--art-amber); stroke-width: 1.6; stroke-dasharray: 6 5; }
+.art .cone { fill: var(--art-amber); fill-opacity: 0.14; }
+.art .pn { fill: var(--art-amber); fill-opacity: 0.16; stroke: var(--art-amber); stroke-width: 1.4; transform-box: fill-box; transform-origin: center; }
+.art .doc { fill: var(--art-paper); stroke: var(--art-hi); stroke-width: 1.6; }
+.art .box { fill: none; stroke: var(--art-hi); stroke-width: 1.4; }
+.art .stripe { fill: var(--art-amber); fill-opacity: 0.38; }
+.art .glass { fill: var(--art-amber); fill-opacity: 0.07; }
+.art .stampbox { fill: var(--art-paper); stroke: var(--art-amber); stroke-width: 2.2; }
+.art .sign { fill: var(--art-amber); transform-box: fill-box; transform-origin: center; }
+
+/* ---------- textos dentro del SVG ---------- */
+.art .lbl { fill: var(--art-muted); font: 500 9px var(--font-mono, ui-monospace, "JetBrains Mono", monospace); letter-spacing: 0.14em; }
+.art .lbl.sm { font-size: 8px; letter-spacing: 0.12em; }
+.art .lbl.am { fill: var(--art-amber); }
+.art .stamp-t { fill: var(--art-amber); font: 700 9.5px var(--font-mono, ui-monospace, monospace); letter-spacing: 0.1em; }
+.art .sign-t { fill: #14161a; font: 700 6.5px var(--font-mono, ui-monospace, monospace); letter-spacing: 0.08em; }
+
+/* ---------- animación ----------
+   Cada elemento trae su retraso en la variable --d (segundos).
+   Solo se anima con transform, opacity y stroke-dashoffset (baratas para el navegador).
+   Sin data-play="true" el dibujo se ve completo y quieto. */
+.art[data-play="true"] .p { animation: art-draw .7s ease-out calc(var(--d) * 1s) both, art-fill .4s ease calc(var(--d) * 1s + .5s) both; }
+.art[data-play="true"] .a,
+.art[data-play="true"] .l { animation: art-draw .9s ease-in-out calc(var(--d) * 1s) both; }
+.art[data-play="true"] .o,
+.art[data-play="true"] .sign,
+.art[data-play="true"] .sign-t { animation: art-pop .3s ease calc(var(--d) * 1s) both; }
+.art[data-play="true"] .cone,
+.art[data-play="true"] .glass,
+.art[data-play="true"] .lbl { animation: art-fade .6s ease calc(var(--d) * 1s) both; }
+.art[data-play="true"] .stripe { animation: art-fade .35s ease calc(var(--d) * 1s) both; }
+.art[data-play="true"] .b,
+.art[data-play="true"] .slide { animation: art-slide .9s cubic-bezier(.3,.7,.3,1) calc(var(--d) * 1s) both; }
+.art[data-play="true"] .pn { animation: art-panel .4s ease calc(var(--d) * 1s) both; }
+.art[data-play="true"] .stamp { transform-box: fill-box; transform-origin: center; animation: art-stamp .45s cubic-bezier(.2,.9,.3,1.2) calc(var(--d) * 1s) both; }
+
+@keyframes art-draw  { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes art-fill  { from { fill-opacity: 0; } to { fill-opacity: .2; } }
+@keyframes art-pop   { from { opacity: 0; transform: scale(0); } to { opacity: 1; transform: scale(1); } }
+@keyframes art-fade  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes art-slide { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
+@keyframes art-panel { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: none; } }
+@keyframes art-stamp { from { opacity: 0; transform: scale(2); } to { opacity: 1; transform: scale(1); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .art, .art * { animation: none !important; transition: none !important; }
+}

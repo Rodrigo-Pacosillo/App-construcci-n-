@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "../components/servicios/servicio-art.css";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -107,6 +108,17 @@ body {
   background: var(--bg);
   color: var(--ink);
   font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* Tema claro para dibujos de servicios */
+:root:not(.dark) .art {
+  --art-paper: #ffffff;
+  --art-grid: #e4e7ea;
+  --art-steel: #6f7e87;
+  --art-hi: #46555d;
+  --art-amber: #d99200;
+  --art-muted: #5f676f;
+  --art-line: #d5d9dd;
 }
 
 /* Focus ring — amber, visible on both themes */

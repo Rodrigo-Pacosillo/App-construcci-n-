@@ -3,7 +3,7 @@
 import { MessageCircle } from "lucide-react";
 
 export function WhatsAppFloat() {
-  const telefono = "59170646000";
+  const telefono = "59170646841";
   const mensaje = "Hola, quiero consultar por una construcción";
   const url = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`;
 

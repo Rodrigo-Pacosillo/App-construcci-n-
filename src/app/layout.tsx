@@ -88,7 +88,7 @@ export default function RootLayout({
               name="CONSTR-ART"
               url="https://app-construcci-n.vercel.app"
               logo="https://app-construcci-n.vercel.app/logotipo/logo-full-light.png"
-              telephone="+591 70646xxx"
+              telephone="+591 70646841"
               email="niwdecc7@gmail.com"
               address={{
                 streetAddress: "Calle Principal 123",
@@ -103,9 +103,9 @@ export default function RootLayout({
               priceRange="$$"
               description="Contratista independiente de construcción: steel frame, construcción tradicional, soluciones integrales. Cobertura nacional en Bolivia."
               sameAs={[
-                "https://www.facebook.com/construccion.art",
+                "https://www.facebook.com/share/1GWUeQkz9y/",
                 "https://www.instagram.com/construccion.art",
-                "https://www.tiktok.com/@construccion.art",
+                "https://www.tiktok.com/@constr_art?_r=1&_t=ZS-9ArNWZIANz3",
               ]}
             />
             <a href="#main-content" className="skip-link">

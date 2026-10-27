@@ -15,7 +15,7 @@ import {
 const SOCIAL_LINKS = [
   {
     name: "Facebook",
-    href: "https://www.facebook.com/construccion.art",
+    href: "https://www.facebook.com/share/1GWUeQkz9y/",
     icon: FaFacebook,
     ariaLabel: "Síguenos en Facebook",
   },
@@ -27,7 +27,7 @@ const SOCIAL_LINKS = [
   },
   {
     name: "TikTok",
-    href: "https://www.tiktok.com/@construccion.art",
+    href: "https://www.tiktok.com/@constr_art?_r=1&_t=ZS-9ArNWZIANz3",
     icon: FaTiktok,
     ariaLabel: "Síguenos en TikTok",
   },
@@ -111,12 +111,12 @@ export function Footer() {
                 <div className="flex flex-col">
                   <span className="text-xs text-ink-faint">Teléfono</span>
                   <a
-                    href="https://wa.me/59168078184"
+                    href="https://wa.me/59170646841"
                     className="transition-colors hover:text-accent-strong focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-strong focus-visible:outline-offset-2 rounded"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    +591 68078184
+                    +591 70646841
                   </a>
                 </div>
               </li>
