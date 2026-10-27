@@ -118,8 +118,8 @@ export function CotizacionDetalle({ cotizacion }: { cotizacion: Cotizacion }) {
           </div>
           <div>
             <p className="section-label text-ink-faint">FECHAS</p>
-            <p className="text-ink-muted">Creada: {new Date(cotizacion.creadoEn).toLocaleDateString("es-AR")}</p>
-            <p className="text-ink-muted">Actualizada: {new Date(cotizacion.actualizadoEn).toLocaleDateString("es-AR")}</p>
+            <p className="text-ink-muted">Creada: {new Date(cotizacion.creadoEn).toLocaleString("es-AR")}</p>
+            <p className="text-ink-muted">Actualizada: {new Date(cotizacion.actualizadoEn).toLocaleString("es-AR")}</p>
           </div>
         </div>
         {cotizacion.ubicacionObra && (

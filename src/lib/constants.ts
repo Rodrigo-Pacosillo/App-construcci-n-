@@ -148,9 +148,9 @@ export const CLIENTE_NAV_SECTIONS: NavSection[] = [
 // Etiquetas según §5.3 de la especificación.
 export const ESTADO_LABELS: Record<EstadoCotizacion, string> = {
   nuevo: "Por revisar",
-  contactado: "Pendiente",
-  contratado: "Contratada",
-  no_concretado: "No concretada",
+  contactado: "En seguimiento",
+  contratado: "Concretado",
+  no_concretado: "No concretado",
 };
 
 export const ORIGEN_LABELS: Record<OrigenCotizacion, string> = {

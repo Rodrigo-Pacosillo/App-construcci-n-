@@ -159,7 +159,7 @@ export function CotizacionesList({
                   Solicitud
                 </th>
                 <th className="hidden px-4 py-3 section-label text-ink-faint sm:table-cell">
-                  M2
+                  Fecha
                 </th>
                 <th className="px-4 py-3 section-label text-ink-faint">Estado</th>
                 <th className="px-4 py-3 text-right section-label text-ink-faint">
@@ -199,7 +199,7 @@ export function CotizacionesList({
                       </p>
                     </td>
                     <td className="hidden px-4 py-3 whitespace-nowrap text-ink-muted sm:table-cell">
-                      {rangoM2Label(c.rangoM2)}
+                      {new Date(c.creadoEn).toLocaleString("es-AR")}
                     </td>
                     <td className="px-4 py-3">
                       <span
@@ -242,7 +242,7 @@ export function CotizacionesList({
                         {contratoExistente ? (
                           <Link
                             href={`/admin/contratos/${contratoExistente}`}
-                            className="inline-flex items-center rounded border border-accent-strong/60 bg-accent/10 px-3 py-1.5 text-xs font-medium text-ink transition-colors hover:bg-accent/20"
+                            className="inline-flex items-center justify-center rounded border border-border px-3 py-1.5 text-xs font-medium text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink min-w-[138px] text-center whitespace-nowrap"
                           >
                             Contrato existente
                           </Link>
@@ -250,7 +250,7 @@ export function CotizacionesList({
                           habilitadoCrear ? (
                             <Link
                               href={`/admin/contratos/new?cotizacionId=${c.id}&clienteId=${c.cliente?.id ?? ""}`}
-                              className="inline-flex items-center rounded border border-border px-3 py-1.5 text-xs font-medium text-ink transition-colors hover:bg-ink/5"
+                              className="inline-flex items-center justify-center rounded border border-border px-3 py-1.5 text-xs font-medium text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink min-w-[138px] text-center whitespace-nowrap"
                             >
                               Crear contrato
                             </Link>
@@ -258,7 +258,7 @@ export function CotizacionesList({
                             <span
                               aria-disabled="true"
                               title="Contactá al cliente para habilitar la creación del contrato"
-                              className="inline-flex cursor-not-allowed items-center rounded border border-border px-3 py-1.5 text-xs font-medium text-ink-faint"
+                              className="inline-flex cursor-not-allowed items-center justify-center rounded border border-border px-3 py-1.5 text-xs font-medium text-ink-faint min-w-[138px] text-center whitespace-nowrap"
                             >
                               Crear contrato
                             </span>
