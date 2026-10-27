@@ -323,8 +323,6 @@ export default function AdminContratoDetallePage({
           <p className="text-ink-muted whitespace-pre-wrap">{contrato.observaciones || "— Sin observaciones —"}</p>
         )}
       </div>
-        </div>
-      </div>
     </div>
   );
 }
