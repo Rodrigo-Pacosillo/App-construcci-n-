@@ -14,7 +14,11 @@ export async function GET(
     const contrato = await prisma.contrato.findUnique({
       where: { id },
       include: {
-        cliente: true,
+        cliente: {
+          include: {
+            usuario: { select: { id: true } },
+          },
+        },
         cotizacion: true,
         obras: true,
       },
@@ -27,7 +31,12 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(contrato);
+    const tieneUsuario = Boolean(contrato.cliente?.usuario?.id);
+
+    return NextResponse.json({
+      ...contrato,
+      tieneUsuario,
+    });
   } catch (error) {
     console.error("Error obteniendo contrato:", error);
     return NextResponse.json(

@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { ESTADOS_COTIZACION, ESTADO_LABELS, ESTADO_COLORES } from "@/lib/constants";
 
 type Cotizacion = {
@@ -68,6 +70,13 @@ export function CotizacionDetalle({ cotizacion }: { cotizacion: Cotizacion }) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
+          <Link
+            href="/admin/cotizaciones"
+            className="mb-3 inline-flex items-center gap-1.5 text-xs text-ink-muted hover:text-ink"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Volver a cotizaciones
+          </Link>
           <p className="section-label mb-1 text-ink-faint">COTIZACIÓN</p>
           <h1 className="font-heading text-3xl font-bold">
             {cotizacion.cliente?.nombre || "—"} {cotizacion.cliente?.apellidos || ""}
