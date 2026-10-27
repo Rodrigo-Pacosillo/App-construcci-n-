@@ -41,6 +41,7 @@ export function LoginForm({ callbackUrl }: { callbackUrl: string }) {
 
     setLoading(false);
     router.push(callbackUrl || "/");
+    router.refresh();
   }
 
   return (

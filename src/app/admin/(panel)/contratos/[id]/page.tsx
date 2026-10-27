@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useTransition, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useTransition, useEffect, useLayoutEffect, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Copy, MessageCircle, X } from "lucide-react";
 import { updateContrato, getClientesForSelect, getCotizacionesGanadasForSelect } from "@/app/admin/(panel)/contratos/actions";
 import { ESTADO_LABELS } from "@/lib/constants";
 
@@ -18,9 +18,10 @@ type ContratoData = {
   montoTotal: number;
   observaciones: string | null;
   creadoEn: string;
-  cliente: { nombre: string; apellidos: string; email: string | null } | null;
+  cliente: { nombre: string; apellidos: string; email: string | null; telefono: string | null } | null;
   cotizacion: { tipoObra: string; estado: string } | null;
   obras: { id: string; direccionObra: string }[];
+  tieneUsuario: boolean;
 };
 
 export default function AdminContratoDetallePage({
@@ -29,6 +30,7 @@ export default function AdminContratoDetallePage({
   params: Promise<{ id: string }>;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [editMode, setEditMode] = useState(false);
   const [error, setError] = useState<Record<string, string[] | undefined>>({});
@@ -43,6 +45,10 @@ export default function AdminContratoDetallePage({
   const [clientes, setClientes] = useState<ClienteSelect[]>([]);
   const [cotizaciones, setCotizaciones] = useState<CotizacionSelect[]>([]);
   const [contrato, setContrato] = useState<ContratoData | null>(null);
+  const [showAccessBanner, setShowAccessBanner] = useState(false);
+  const [accessLink, setAccessLink] = useState<string | null>(null);
+  const [generatingLink, setGeneratingLink] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const loadData = useCallback(async () => {
     try {
@@ -80,6 +86,14 @@ export default function AdminContratoDetallePage({
     })();
   }, [loadData]);
 
+  useEffect(() => {
+    const shouldShowBanner = searchParams.get("created") === "1" && contrato?.tieneUsuario === false;
+    if (shouldShowBanner !== showAccessBanner) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setShowAccessBanner(shouldShowBanner);
+    }
+  }, [searchParams, contrato?.tieneUsuario]);
+
   function handleChange(field: string, value: string) {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (error[field]) {
@@ -105,6 +119,44 @@ export default function AdminContratoDetallePage({
     });
   }
 
+  async function generarEnlace() {
+    if (!contrato?.cliente) return;
+    setGeneratingLink(true);
+    try {
+      const res = await fetch("/api/admin/invitaciones", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clienteId: contrato.clienteId }),
+      });
+      const data = await res.json();
+      if (data.success && data.link) {
+        setAccessLink(data.link);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setGeneratingLink(false);
+    }
+  }
+
+  function copiarEnlace() {
+    if (!accessLink) return;
+    navigator.clipboard.writeText(accessLink);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }
+
+  function compartirWhatsApp() {
+    if (!accessLink || !contrato?.cliente) return;
+    const nombre = contrato.cliente.nombre?.split(" ")[0] || "Hola";
+    const mensaje = `Hola ${nombre}, te envío el enlace para que completes tu acceso al portal de CONSTR-ART y puedas ver el avance de tu obra: ${accessLink}`;
+    const telefono = contrato.cliente.telefono;
+    const url = telefono
+      ? `https://wa.me/${telefono.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(mensaje)}`
+      : `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+
   if (!contrato) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -115,6 +167,62 @@ export default function AdminContratoDetallePage({
 
   return (
     <div className="space-y-6">
+      {showAccessBanner && (
+        <div className="rounded border border-accent/40 bg-accent/10 p-4">
+          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+            <div>
+              <p className="font-medium text-ink">Dar acceso al portal al cliente</p>
+              <p className="mt-1 text-sm text-ink-muted">
+                Ya se creó la obra vinculada a este contrato. Para que el cliente pueda ver sus hitos, pagos, documentos y avances desde /cliente, podés enviarle un enlace para que complete su cuenta él mismo.
+              </p>
+              {accessLink && (
+                <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <input
+                    readOnly
+                    value={accessLink}
+                    className="w-full rounded border border-border bg-surface px-3 py-2 text-xs sm:w-80"
+                  />
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={copiarEnlace}
+                      className="inline-flex items-center gap-1.5 rounded border border-border bg-surface px-3 py-1.5 text-xs font-medium hover:bg-ink/5"
+                    >
+                      <Copy className="h-3.5 w-3.5" />
+                      {copied ? "Copiado" : "Copiar link"}
+                    </button>
+                    <button
+                      onClick={compartirWhatsApp}
+                      className="inline-flex items-center gap-1.5 rounded bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700"
+                    >
+                      <MessageCircle className="h-3.5 w-3.5" />
+                      Enviar por WhatsApp
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {!accessLink && (
+                <button
+                  onClick={generarEnlace}
+                  disabled={generatingLink}
+                  className="accent-btn rounded px-3 py-1.5 text-xs font-medium disabled:opacity-50"
+                >
+                  {generatingLink ? "Generando..." : "Generar enlace para completar cuenta"}
+                </button>
+              )}
+              <button
+                onClick={() => setShowAccessBanner(false)}
+                className="inline-flex items-center gap-1.5 rounded border border-border bg-surface px-3 py-1.5 text-xs font-medium hover:bg-ink/5"
+              >
+                <X className="h-3.5 w-3.5" />
+                Solo para administración
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <div>
           <nav className="mb-2 text-xs text-ink-faint">

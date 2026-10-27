@@ -97,6 +97,20 @@ model Usuario {
   @@map("usuarios")
 }
 
+model InvitacionUsuario {
+  id        String   @id @default(cuid())
+  clienteId String   @map("cliente_id")
+  cliente   Cliente  @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  usado     Boolean  @default(false)
+  expiraEn  DateTime @map("expira_en")
+  creadoEn  DateTime @default(now()) @map("creado_en")
+  creadoPor String?  @map("creado_por")
+
+  @@index([clienteId])
+  @@map("invitaciones_usuario")
+}
+
 model Cliente {
   id       String   @id @default(cuid())
   nombre   String
@@ -111,6 +125,7 @@ model Cliente {
   contratos    Contrato[]
   proyectos    Proyecto[]
   obras        ObraActiva[]
+  invitaciones InvitacionUsuario[]
 
   @@map("clientes")
 }

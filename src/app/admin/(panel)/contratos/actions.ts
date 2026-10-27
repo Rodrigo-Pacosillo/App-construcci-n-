@@ -53,14 +53,27 @@ export async function getContratoById(id: string) {
   await requireAdmin();
 
   try {
-    return await prisma.contrato.findUnique({
+    const contrato = await prisma.contrato.findUnique({
       where: { id },
       include: {
-        cliente: true,
+        cliente: {
+          include: {
+            usuario: { select: { id: true } },
+          },
+        },
         cotizacion: true,
         obras: true,
       },
     });
+
+    if (!contrato) {
+      return null;
+    }
+
+    return {
+      ...contrato,
+      tieneUsuario: Boolean(contrato.cliente.usuario?.id),
+    };
   } catch (error) {
     console.error("Error en getContratoById:", error);
     return null;
@@ -125,7 +138,7 @@ export async function createContrato(formData: FormData) {
     }
 
     // §10.3 — transacción: crear contrato + marcar cotización como
-    // `contratado` en la misma operación lógica.
+    // `contratado` + crear obra automáticamente en la misma operación lógica.
     const contrato = await prisma.$transaction(async (tx) => {
       const nuevo = await tx.contrato.create({
         data: {
@@ -140,13 +153,49 @@ export async function createContrato(formData: FormData) {
           data: { estado: "contratado" },
         });
       }
+
+      // Crear obra automáticamente si no existe ya una vinculada
+      const obraExistente = await tx.obraActiva.findFirst({
+        where: { contratoId: nuevo.id },
+        select: { id: true },
+      });
+      if (!obraExistente) {
+        let direccionObra = "A definir";
+        if (cotizacionId) {
+          const cotizacionOrigen = await tx.cotizacion.findUnique({
+            where: { id: cotizacionId },
+            select: { ubicacionObra: true },
+          });
+          if (cotizacionOrigen?.ubicacionObra) {
+            direccionObra = cotizacionOrigen.ubicacionObra;
+          }
+        }
+        await tx.obraActiva.create({
+          data: {
+            clienteId: rest.clienteId,
+            contratoId: nuevo.id,
+            direccionObra,
+            fechaInicio: new Date(),
+            estado: "en_curso",
+            progreso: 0,
+          },
+        });
+      }
+
       return nuevo;
+    });
+
+    // Verificar si el cliente ya tiene usuario
+    const clienteConUsuario = await prisma.cliente.findUnique({
+      where: { id: rest.clienteId },
+      select: { usuario: { select: { id: true } } },
     });
 
     revalidatePath("/admin/contratos");
     revalidatePath("/admin/cotizaciones");
+    revalidatePath("/admin/obras");
     revalidatePath("/admin");
-    return { success: true, data: contrato, clienteId: rest.clienteId };
+    return { success: true, data: contrato, clienteId: rest.clienteId, tieneUsuario: Boolean(clienteConUsuario?.usuario?.id) };
   } catch (error) {
     console.error("Error creando contrato:", error);
     return {

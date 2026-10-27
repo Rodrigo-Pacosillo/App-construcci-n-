@@ -82,6 +82,9 @@ export default function AdminNuevoContratoPage() {
       const res = await createContrato(fd);
       if (!res.success) {
         setError(res.error || { _form: ["Error al crear"] });
+      } else if (res.data?.id) {
+        router.push(`/admin/contratos/${res.data.id}?created=1`);
+        router.refresh();
       } else {
         router.push("/admin/contratos");
         router.refresh();
