@@ -218,7 +218,7 @@ export function CotizacionesList({
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={() => marcarContactada(c.id)}
-                            className="inline-flex items-center gap-1.5 rounded bg-green-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-green-700"
+                            className="inline-flex h-8 items-center justify-center gap-1.5 rounded border border-border px-3 text-xs font-medium text-ink transition-colors hover:bg-ink/5"
                           >
                             <MessageCircle className="h-3.5 w-3.5" />
                             Contactar
@@ -227,7 +227,7 @@ export function CotizacionesList({
                           <span
                             aria-disabled="true"
                             title="El cliente no tiene teléfono registrado"
-                            className="inline-flex cursor-not-allowed items-center gap-1.5 rounded bg-ink/5 px-3 py-1.5 text-xs font-medium text-ink-faint"
+                            className="inline-flex h-8 cursor-not-allowed items-center justify-center gap-1.5 rounded border border-border px-3 text-xs font-medium text-ink-faint"
                           >
                             <MessageCircle className="h-3.5 w-3.5" />
                             Contactar
@@ -235,14 +235,14 @@ export function CotizacionesList({
                         )}
                         <Link
                           href={`/admin/cotizaciones/${c.id}`}
-                          className="inline-flex items-center rounded border border-border px-3 py-1.5 text-xs font-medium text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink"
+                          className="inline-flex h-8 items-center justify-center rounded border border-border px-3 text-xs font-medium text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink"
                         >
                           Ver
                         </Link>
                         {contratoExistente ? (
                           <Link
                             href={`/admin/contratos/${contratoExistente}`}
-                            className="inline-flex items-center justify-center rounded border border-border px-3 py-1.5 text-xs font-medium text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink min-w-[138px] text-center whitespace-nowrap"
+                            className="inline-flex h-8 items-center justify-center rounded border border-border px-3 text-xs font-medium text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink"
                           >
                             Contrato existente
                           </Link>
@@ -250,7 +250,7 @@ export function CotizacionesList({
                           habilitadoCrear ? (
                             <Link
                               href={`/admin/contratos/new?cotizacionId=${c.id}&clienteId=${c.cliente?.id ?? ""}`}
-                              className="inline-flex items-center justify-center rounded border border-border px-3 py-1.5 text-xs font-medium text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink min-w-[138px] text-center whitespace-nowrap"
+                              className="inline-flex h-8 items-center justify-center rounded border border-border px-3 text-xs font-medium text-ink transition-colors hover:bg-ink/5"
                             >
                               Crear contrato
                             </Link>
@@ -258,7 +258,7 @@ export function CotizacionesList({
                             <span
                               aria-disabled="true"
                               title="Contactá al cliente para habilitar la creación del contrato"
-                              className="inline-flex cursor-not-allowed items-center justify-center rounded border border-border px-3 py-1.5 text-xs font-medium text-ink-faint min-w-[138px] text-center whitespace-nowrap"
+                              className="inline-flex h-8 cursor-not-allowed items-center justify-center rounded border border-border px-3 text-xs font-medium text-ink-faint"
                             >
                               Crear contrato
                             </span>

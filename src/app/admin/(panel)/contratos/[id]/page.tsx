@@ -149,7 +149,14 @@ export default function AdminContratoDetallePage({
   function compartirWhatsApp() {
     if (!accessLink || !contrato?.cliente) return;
     const nombre = contrato.cliente.nombre?.split(" ")[0] || "Hola";
-    const mensaje = `Hola ${nombre}, te envío el enlace para que completes tu acceso al portal de CONSTR-ART y puedas ver el avance de tu obra: ${accessLink}`;
+    const mensaje = `Hola ${nombre}, te envío el enlace para completar el acceso al portal de CONSTR-ART.
+
+Desde el portal podrás consultar el avance de tu obra, los hitos, los pagos, los documentos y los contratos.
+
+Para completar tu cuenta, ingresá al siguiente enlace:
+${accessLink}
+
+Una vez completado el registro, podrás iniciar sesión para ver toda la información de tu obra.`;
     const telefono = contrato.cliente.telefono;
     const url = telefono
       ? `https://wa.me/${telefono.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(mensaje)}`
@@ -168,31 +175,31 @@ export default function AdminContratoDetallePage({
   return (
     <div className="space-y-6">
       {showAccessBanner && (
-        <div className="rounded border border-accent/40 bg-accent/10 p-4">
-          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-            <div>
-              <p className="font-medium text-ink">Dar acceso al portal al cliente</p>
+        <div className="rounded border border-border bg-surface p-4 shadow-sm">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="max-w-2xl">
+              <p className="font-medium text-ink">Acceso al portal del cliente</p>
               <p className="mt-1 text-sm text-ink-muted">
-                Ya se creó la obra vinculada a este contrato. Para que el cliente pueda ver sus hitos, pagos, documentos y avances desde /cliente, podés enviarle un enlace para que complete su cuenta él mismo.
+                La obra ya está vinculada a este contrato. Para que el cliente pueda acceder al portal (/cliente) y consultar el avance de su obra, los hitos, los pagos, los documentos y los contratos, envíele un enlace para completar su cuenta.
               </p>
               {accessLink && (
-                <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+                <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
                   <input
                     readOnly
                     value={accessLink}
                     className="w-full rounded border border-border bg-surface px-3 py-2 text-xs sm:w-80"
                   />
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <button
                       onClick={copiarEnlace}
-                      className="inline-flex items-center gap-1.5 rounded border border-border bg-surface px-3 py-1.5 text-xs font-medium hover:bg-ink/5"
+                      className="inline-flex h-8 items-center justify-center gap-1.5 rounded border border-border px-3 text-xs font-medium text-ink transition-colors hover:bg-ink/5"
                     >
                       <Copy className="h-3.5 w-3.5" />
-                      {copied ? "Copiado" : "Copiar link"}
+                      {copied ? "Copiado" : "Copiar enlace"}
                     </button>
                     <button
                       onClick={compartirWhatsApp}
-                      className="inline-flex items-center gap-1.5 rounded bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700"
+                      className="inline-flex h-8 items-center justify-center gap-1.5 rounded border border-border bg-surface px-3 text-xs font-medium text-ink transition-colors hover:bg-ink/5"
                     >
                       <MessageCircle className="h-3.5 w-3.5" />
                       Enviar por WhatsApp
@@ -206,17 +213,16 @@ export default function AdminContratoDetallePage({
                 <button
                   onClick={generarEnlace}
                   disabled={generatingLink}
-                  className="accent-btn rounded px-3 py-1.5 text-xs font-medium disabled:opacity-50"
+                  className="accent-btn inline-flex h-8 items-center justify-center rounded px-3 text-xs font-medium disabled:opacity-50"
                 >
-                  {generatingLink ? "Generando..." : "Generar enlace para completar cuenta"}
+                  {generatingLink ? "Generando..." : "Generar enlace"}
                 </button>
               )}
               <button
                 onClick={() => setShowAccessBanner(false)}
-                className="inline-flex items-center gap-1.5 rounded border border-border bg-surface px-3 py-1.5 text-xs font-medium hover:bg-ink/5"
+                className="inline-flex h-8 items-center justify-center rounded px-2 text-xs font-medium text-ink-faint transition-colors hover:text-ink"
               >
-                <X className="h-3.5 w-3.5" />
-                Solo para administración
+                Cerrar
               </button>
             </div>
           </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FileText, UserPlus, Users } from "lucide-react";
+import { FileText, Mail, Users } from "lucide-react";
 
 type ContratoDisplay = {
   id: string;
@@ -32,7 +32,7 @@ export function ContratosList({ contratos }: { contratos: ContratoDisplay[] }) {
         </div>
         <Link
           href="/admin/contratos/new"
-          className="accent-btn rounded px-4 py-2 text-sm font-medium"
+          className="accent-btn inline-flex h-9 items-center justify-center rounded px-4 text-sm font-medium"
         >
           Nuevo contrato
         </Link>
@@ -61,12 +61,6 @@ export function ContratosList({ contratos }: { contratos: ContratoDisplay[] }) {
                   const tieneUsuario = Boolean(cliente?.usuario?.id);
                   const usuarioId = cliente?.usuario?.id;
                   const nombre = cliente ? `${cliente.nombre} ${cliente.apellidos}`.trim() : "—";
-                  const query = new URLSearchParams();
-                  if (cliente?.id) query.set("clienteId", cliente.id);
-                  if (cliente?.nombre) query.set("nombre", cliente.nombre);
-                  if (cliente?.apellidos) query.set("apellidos", cliente.apellidos);
-                  if (cliente?.email) query.set("email", cliente.email);
-                  const crearUsuarioHref = `/admin/autorizar-cuentas/crear?${query.toString()}`;
 
                   return (
                     <tr
@@ -87,7 +81,7 @@ export function ContratosList({ contratos }: { contratos: ContratoDisplay[] }) {
                         <div className="flex flex-wrap items-center justify-end gap-2 whitespace-nowrap">
                           <Link
                             href={`/admin/contratos/${contrato.id}`}
-                            className="inline-flex items-center gap-1.5 rounded border border-border px-3 py-1.5 text-xs font-medium text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink"
+                            className="inline-flex h-8 items-center justify-center gap-1.5 rounded border border-border px-3 text-xs font-medium text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink"
                           >
                             <FileText className="h-3.5 w-3.5" />
                             Ver
@@ -95,18 +89,18 @@ export function ContratosList({ contratos }: { contratos: ContratoDisplay[] }) {
                           {tieneUsuario && usuarioId ? (
                             <Link
                               href={`/admin/usuarios/${usuarioId}`}
-                              className="inline-flex items-center gap-1.5 rounded border border-border px-3 py-1.5 text-xs font-medium text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink"
+                              className="inline-flex h-8 items-center justify-center gap-1.5 rounded border border-border px-3 text-xs font-medium text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink"
                             >
                               <Users className="h-3.5 w-3.5" />
                               Usuario existente
                             </Link>
                           ) : (
                             <Link
-                              href={crearUsuarioHref}
-                              className="inline-flex items-center gap-1.5 rounded border border-accent-strong/60 bg-accent/10 px-3 py-1.5 text-xs font-medium text-ink transition-colors hover:bg-accent/20"
+                              href={`/admin/contratos/${contrato.id}?created=1`}
+                              className="inline-flex h-8 items-center justify-center gap-1.5 rounded border border-border bg-surface px-3 text-xs font-medium text-ink transition-colors hover:bg-ink/5"
                             >
-                              <UserPlus className="h-3.5 w-3.5" />
-                              Crear usuario
+                              <Mail className="h-3.5 w-3.5" />
+                              Invitar al portal
                             </Link>
                           )}
                         </div>
