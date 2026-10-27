@@ -33,7 +33,7 @@ export default function Home() {
       <HeroSection />
       <Marquee />
       <ServiciosSection />
-      <ProyectosSection />
+      
       <CertificacionesSection />
       <TestimoniosSection />
       <NumerosSection />
