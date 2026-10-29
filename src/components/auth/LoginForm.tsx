@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { getSession, signIn } from "next-auth/react";
 import { Eye, EyeOff } from "lucide-react";
 
 const INPUT_CLASS =
@@ -41,8 +41,18 @@ export function LoginForm({ callbackUrl }: { callbackUrl: string }) {
       return;
     }
 
+    if (callbackUrl) {
+      setLoading(false);
+      router.push(callbackUrl);
+      router.refresh();
+      return;
+    }
+
+    const session = await getSession();
+    const destination = session?.user?.role === "admin" ? "/admin" : "/cliente";
+
     setLoading(false);
-    router.push(callbackUrl || "/");
+    router.push(destination);
     router.refresh();
   }
 
