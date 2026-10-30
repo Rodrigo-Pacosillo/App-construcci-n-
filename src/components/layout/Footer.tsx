@@ -12,6 +12,8 @@ import {
   Phone,
 } from "lucide-react";
 
+import { WHATSAPP_NUMERO, WHATSAPP_NUMERO_FORMATO } from "@/lib/constants";
+
 const SOCIAL_LINKS = [
   {
     name: "Facebook",
@@ -111,12 +113,12 @@ export function Footer() {
                 <div className="flex flex-col">
                   <span className="text-xs text-ink-faint">Teléfono</span>
                   <a
-                    href="https://wa.me/59170646841"
+                    href={`https://wa.me/${WHATSAPP_NUMERO}`}
                     className="transition-colors hover:text-accent-strong focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-strong focus-visible:outline-offset-2 rounded"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    +591 70646841
+                    {WHATSAPP_NUMERO_FORMATO}
                   </a>
                 </div>
               </li>

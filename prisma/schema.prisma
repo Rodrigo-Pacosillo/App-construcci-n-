@@ -121,6 +121,7 @@ model Cliente {
   proyectos    Proyecto[]
   obras        ObraActiva[]
   invitaciones InvitacionUsuario[]
+  chatSesiones ChatSesion[]
 
   @@map("clientes")
 }
@@ -143,6 +144,7 @@ model Cotizacion {
   actualizadoEn    DateTime       @updatedAt @map("actualizado_en")
 
   contratos Contrato[]
+  chatSesiones ChatSesion[]
 
   @@index([clienteId])
   @@index([estado])
@@ -403,4 +405,36 @@ model PrestamoHerramienta {
   @@index([herramientaId])
   @@index([obraId])
   @@map("prestamos_herramienta")
+}
+
+// ─── Chat (Punto 1 del chatbot) ──────────────────────────────────────
+
+model ChatSesion {
+  id           String   @id @default(cuid()) @map("id")
+  sessionId    String   @unique @map("session_id")
+  clienteId    String   @map("cliente_id")
+  cotizacionId String?  @map("cotizacion_id")
+  mensajeCount Int      @default(0) @map("mensaje_count")
+  creadoEn     DateTime @default(now()) @map("creado_en")
+
+  cliente    Cliente?    @relation(fields: [clienteId], references: [id])
+  cotizacion Cotizacion? @relation(fields: [cotizacionId], references: [id])
+  mensajes   ChatMensaje[]
+
+  @@index([clienteId])
+  @@index([cotizacionId])
+  @@map("chat_sesiones")
+}
+
+model ChatMensaje {
+  id        String   @id @default(cuid()) @map("id")
+  sesionId  String   @map("sesion_id")
+  rol       String   // "user" o "assistant"
+  contenido String   @db.Text
+  creadoEn  DateTime @default(now()) @map("creado_en")
+
+  sesion ChatSesion @relation(fields: [sesionId], references: [id], onDelete: Cascade)
+
+  @@index([sesionId, creadoEn])
+  @@map("chat_mensajes")
 }

@@ -125,7 +125,10 @@ export async function createCotizacion(formData: FormData) {
 
     return {
       success: true,
-      data: cotizacion,
+      data: {
+        clienteId: clienteIdFinal,
+        cotizacionId: cotizacion.id,
+      },
     };
   } catch (error) {
     console.error("Error creando cotización:", error);

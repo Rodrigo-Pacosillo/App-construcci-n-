@@ -221,3 +221,7 @@ export const ESTADO_PAGO_COLORES: Record<EstadoPagoLabel, string> = {
   registrado: "bg-gray-100 text-gray-600",
   confirmado: "bg-green-100 text-green-800",
 };
+
+// ─── Contacto ────────────────────────────────────────────────────────
+export const WHATSAPP_NUMERO = "59170646841";
+export const WHATSAPP_NUMERO_FORMATO = "+591 70646841";

@@ -171,9 +171,9 @@ Sistema web para un contratista independiente de construcción en seco
 - `src/app/api/` — route handlers: `auth/[...nextauth]` y
   `admin/{clientes,contratos,cotizaciones,empleados,herramientas,materiales}`.
 - `src/components/` — `sections/`, `proyecto/`, `ui/`, `admin/`, `cliente/`,
-  `auth/`.
+  `auth/`, `chat/`.
 - `src/lib/` — `db.ts`, `auth.ts`, `auth-utils.ts`, `constants.ts`,
-  `validators.ts`.
+  `validators.ts`, `chat/`.
 - `src/proxy.ts` — guard de `/admin` (ver Gotchas).
 - `prisma/` — `schema.prisma` (fuente de verdad del modelo) + `seed.ts`.
 - `public/img/` — imágenes de demo.
@@ -215,6 +215,7 @@ mismos tokens pero es funcional, sin storytelling.
 | Admin · Empleados / Materiales / Herramientas | Parcial (hay API routes; revisar UI) |
 | Alta de cuentas (`/admin/autorizar-cuentas`) | Implementado (vía separada del panel Usuarios) |
 | Auto-registro público (`/registro`) | **Eliminado** — cumple la regla "nadie se registra solo" |
+| Chat post-cotización (`/cotizacion/exito` + `/api/chat`) | Implementado — panel slide-over, NVIDIA NIM, BD |
 | Tests automatizados | Playwright configurado (`npm run test`) |
 
 ## Comandos
@@ -241,6 +242,8 @@ mismos tokens pero es funcional, sin storytelling.
 - **El seed crea 0 cotizaciones.** Documentación antigua afirmaba ~12-15.
   Si una tarea necesita cotizaciones de demo, hay que agregarlas al seed (o
   cargarlas a mano), no asumir que existen.
+- **NVIDIA_API_KEY:** requerida para el chatbot (`/api/chat`). Configurarla
+  en `.env` y en Vercel antes de usar el chat post-cotización.
 
 ## Infraestructura
 

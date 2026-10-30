@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { createCotizacion } from "./actions";
 import {
   TIPO_OBRA_LABELS,
@@ -10,7 +11,7 @@ import {
 } from "@/lib/constants";
 
 export default function CotizacionPage() {
-  const [submitted, setSubmitted] = useState(false);
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -24,8 +25,10 @@ export default function CotizacionPage() {
     try {
       const result = await createCotizacion(formData);
 
-      if (result.success) {
-        setSubmitted(true);
+      if (result.success && result.data) {
+        router.replace(
+          `/cotizacion/exito?clienteId=${result.data.clienteId}&cotizacionId=${result.data.cotizacionId}`
+        );
       } else {
         setError("Error al enviar el formulario. Por favor inténtelo nuevamente.");
       }
@@ -34,22 +37,6 @@ export default function CotizacionPage() {
     } finally {
       setLoading(false);
     }
-  }
-
-  if (submitted) {
-    return (
-      <div className="py-24 text-center lg:py-32">
-        <div className="mx-auto max-w-md px-4">
-          <p className="section-label mb-4 text-accent-strong">MUCHAS GRACIAS</p>
-          <h1 className="font-heading text-3xl font-bold">
-            Su solicitud fue enviada
-          </h1>
-          <p className="mt-4 text-ink-muted">
-            Nos comunicaremos con usted en menos de 24 horas para coordinar una visita técnica.
-          </p>
-        </div>
-      </div>
-    );
   }
 
   return (

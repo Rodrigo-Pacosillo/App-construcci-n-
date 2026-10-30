@@ -1,6 +1,6 @@
 # Base de Datos — Contr-art Demo
 
-> Esquema Prisma actual (PostgreSQL / Neon) — 20 tablas
+> Esquema Prisma actual (PostgreSQL / Neon) — 22 tablas
 
 ---
 
@@ -15,6 +15,7 @@
 | 5. Empleados | `empleados`, `asignaciones_obra` |
 | 6. Materiales | `materiales`, `materiales_obra` |
 | 7. Herramientas | `herramientas`, `prestamos_herramienta` |
+| 8. Chat | `chat_sesiones`, `chat_mensajes` |
 
 ---
 
@@ -50,7 +51,7 @@
 | `ciudad` | `String?` | | Opcional |
 | `creado_en` | `DateTime` | `@default(now()) @map("creado_en")` | Timestamp |
 
-**Relaciones:** `usuario` (1:1 inversa), `cotizaciones[]`, `contratos[]`, `proyectos[]`, `obras[]`, `invitaciones[]`
+**Relaciones:** `usuario` (1:1 inversa), `cotizaciones[]`, `contratos[]`, `proyectos[]`, `obras[]`, `invitaciones[]`, `chat_sesiones[]`
 
 > **Cliente vs Usuario:** `clientes` es la **ficha comercial** (puede existir sin cuenta). `usuarios` es la **cuenta de acceso**. Como máximo una cuenta por ficha. No tratarlas como si fueran la misma tabla.
 
@@ -98,7 +99,7 @@ Una cotización es una **estimación**, no un monto cerrado.
 **Eliminado:** `monto_cerrado`. El monto definitivo vive en `contratos.monto_total`.
 
 **Índices:** `cliente_id`, `estado`
-**Relaciones:** `cliente` (N:1), `contratos[]` (1:N)
+**Relaciones:** `cliente` (N:1), `contratos[]` (1:N), `chat_sesiones[]`
 
 **Flujo del dinero:**
 ```
@@ -402,6 +403,39 @@ Registra **qué herramienta salió, para qué obra, cuándo y si volvió**. Ya n
 
 ---
 
+## Módulo 8 — Chat
+
+### 21. `chat_sesiones` (ChatSesion)
+
+| Campo | Tipo | Constraints | Descripción |
+|-------|------|-------------|-------------|
+| `id` | `String` | `@id @default(cuid())` | PK |
+| `session_id` | `String` | `@unique` | Identificador de sesión usado por el frontend |
+| `cliente_id` | `String` | FK → `clientes.id` | Cliente propietario de la sesión |
+| `cotizacion_id` | `String?` | FK → `cotizaciones.id` | Cotización asociada (opcional) |
+| `mensaje_count` | `Int` | `@default(0)` | Contador para rate limiting |
+| `creado_en` | `DateTime` | `@default(now())` | Timestamp de creación |
+
+**Índices:** `cliente_id`, `cotizacion_id`
+**Relaciones:** `cliente` (N:1), `cotizacion` (N:1 opcional), `mensajes[]`
+
+---
+
+### 22. `chat_mensajes` (ChatMensaje)
+
+| Campo | Tipo | Constraints | Descripción |
+|-------|------|-------------|-------------|
+| `id` | `String` | `@id @default(cuid())` | PK |
+| `sesion_id` | `String` | FK → `chat_sesiones.id` | Sesión a la que pertenece |
+| `rol` | `String` | | `"user"` o `"assistant"` |
+| `contenido` | `String` | `@db.Text` | Texto del mensaje |
+| `creado_en` | `DateTime` | `@default(now())` | Timestamp de creación |
+
+**Índices:** `(sesion_id, creado_en)`
+**Relaciones:** `sesion` (N:1)
+
+---
+
 ## Enums
 
 | Enum | Valores |
@@ -443,6 +477,9 @@ erDiagram
     OBRA_ACTIVA ||--o{ MATERIAL_OBRA : "obra_id"
     HERRAMIENTA ||--o{ PRESTAMO_HERRAMIENTA : "herramienta_id"
     OBRA_ACTIVA ||--o{ PRESTAMO_HERRAMIENTA : "obra_id"
+    CLIENTE ||--o{ CHAT_SESION : "cliente_id"
+    COTIZACION ||--o{ CHAT_SESION : "cotizacion_id (opcional)"
+    CHAT_SESION ||--o{ CHAT_MENSAJE : "sesion_id"
 
     SERVICIO {
         string id PK
@@ -463,6 +500,21 @@ erDiagram
         string id PK
         string tipo_construccion
         string rango_m2
+    }
+    CHAT_SESION {
+        string id PK
+        string session_id unique
+        string cliente_id FK
+        string cotizacion_id FK opcional
+        int mensaje_count
+        datetime creado_en
+    }
+    CHAT_MENSAJE {
+        string id PK
+        string sesion_id FK
+        string rol
+        text contenido
+        datetime creado_en
     }
 ```
 
@@ -494,7 +546,8 @@ Zod es la **única** barrera de integridad de los campos que son `String` libre 
 - **Migraciones versionadas** (`prisma/migrations/`):
   `20260918031323_init`, `20260920120000_bd_hardening`,
   `20261019000000_fix_drift_and_modules_5_7`, más las 12 migraciones del plan v2
-  (hasta `20261029173000_herramienta_codigo_opcional`).
+  (hasta `20261029173000_herramienta_codigo_opcional`),
+  `20261030164016_add_chat_sesiones_y_mensajes`.
 - **Seed:** `prisma/seed.ts` es **destructivo** (`deleteMany()` por tabla). **Nunca ejecutarlo contra la BD de producción.** Las credenciales de demo viven solo en el seed; no se documentan aquí. Tras el Paso 4 el seed ya no crea fotos de proyecto.
 - **NextAuth:** sesiones JWT con Credentials sobre `usuarios`. `@auth/prisma-adapter` está configurado pero las tablas del adapter (`account`, `session`, `verification_token`, `authenticator`) no existen en el schema; con JWT + Credentials no se usan. **Decisión pendiente:** quitar el adapter.
 
