@@ -81,7 +81,8 @@ export async function POST(req: NextRequest) {
           ],
           temperature: 0.7,
         });
-      } catch {
+      } catch (error) {
+        console.error("[NVIDIA] Error al generar mensaje inicial:", error);
         // Si falla la IA, guardar mensaje de error genérico y seguir
         await prisma.chatMensaje.create({
           data: {
@@ -208,7 +209,8 @@ export async function POST(req: NextRequest) {
         ],
         temperature: 0.7,
       });
-    } catch {
+    } catch (error) {
+      console.error("[NVIDIA] Error al generar respuesta:", error);
       await prisma.chatMensaje.create({
         data: {
           sesionId: sesion.id,
@@ -245,7 +247,8 @@ export async function POST(req: NextRequest) {
       mensajeId: mensajeGuardado.id,
       respuesta: mensajeGuardado.contenido,
     });
-  } catch {
+  } catch (error) {
+    console.error("[CHAT] Error inesperado:", error);
     return errorResponse(MENSAJE_ERROR_GENERICO, 500);
   }
 }
