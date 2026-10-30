@@ -87,8 +87,8 @@ export default async function ExitoPage({
 
   return (
     <div className="min-h-screen bg-white dark:bg-neutral-950">
-      <div className="container mx-auto px-4 py-16">
-        <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-8 items-start">
+      <div className="container mx-auto px-4 py-8 lg:py-16">
+        <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-8 items-center">
           {/* Columna izquierda: mensaje de éxito y resumen */}
           <div className="lg:col-span-1">
             <div className="text-center lg:text-left mb-8">
