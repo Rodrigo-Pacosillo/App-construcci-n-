@@ -206,10 +206,10 @@ export function ChatPanel({
           </div>
           <div>
             <h3 className="font-semibold text-neutral-900 dark:text-white">
-              Asistente virtual
+              Asistente CONSTR-ART
             </h3>
             <p className="text-sm text-neutral-500 dark:text-neutral-400">
-              Te ayudo con tu cotización
+              Te ayuda con tu cotización, dudas sobre construcción y el proceso de obra
             </p>
           </div>
         </div>
