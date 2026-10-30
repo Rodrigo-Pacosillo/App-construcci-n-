@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { TikTokPlayer } from "@/components/proyecto/TikTokPlayer";
 import { prisma } from "@/lib/db";
 import { FALLBACK_PROYECTOS } from "@/lib/fallback-data";
 import type { Metadata } from "next";
@@ -8,7 +9,14 @@ async function getProyecto(slug: string) {
   try {
     const proyecto = await prisma.proyecto.findUnique({
       where: { slug },
-      include: { fotos: { orderBy: { orden: "asc" } } },
+      select: {
+        id: true, slug: true, titulo: true, tipoConstruccion: true,
+        m2Construidos: true, diasEjecucion: true, ubicacion: true,
+        videoUrl: true, portadaUrl: true, orden: true,
+        problemaCliente: true, solucion: true,
+        destacado: true, publicado: true,
+        creadoEn: true, actualizadoEn: true,
+      },
     });
     return proyecto || FALLBACK_PROYECTOS.find((p) => p.slug === slug) || null;
   } catch {
@@ -34,7 +42,7 @@ export async function generateMetadata({
 
   return {
     title: proyecto.titulo,
-    description: `${tipoConstructivo} · ${proyecto.m2Construidos}m² · ${proyecto.ubicacion}`,
+    description: `${tipoConstructivo} · ${proyecto.m2Construidos ?? "—"}m² · ${proyecto.ubicacion}`,
     openGraph: {
       images: [
         {
@@ -96,29 +104,22 @@ export default async function ProyectoPage({
           </div>
           <div>
             <span className="section-label block text-ink-faint">SUPERFICIE</span>
-            {proyecto.m2Construidos}m2
+            {(proyecto.m2Construidos ?? "—")}m2
           </div>
           <div>
             <span className="section-label block text-ink-faint">PLAZO</span>
-            {proyecto.diasEjecucion} días
+            {(proyecto.diasEjecucion ?? "—")} días
           </div>
         </div>
 
-        {/* Galería */}
-        {"fotos" in proyecto && proyecto.fotos && proyecto.fotos.length > 0 && (
-          <div className="mt-12 grid gap-4 sm:grid-cols-2">
-            {(proyecto.fotos as { url: string; fase: string }[]).map(
-              (foto, i) => (
-                <div
-                  key={i}
-                  className="relative aspect-[4/3] overflow-hidden rounded border border-border bg-surface"
-                >
-                  <div className="flex h-full items-center justify-center bg-ink/5 text-xs text-ink-faint">
-                    {foto.fase.toUpperCase()}
-                  </div>
-                </div>
-              )
-            )}
+        {proyecto.videoUrl && (
+          <div className="mt-12">
+            <p className="section-label mb-2 text-ink-faint">VIDEO DE OBRA</p>
+            <TikTokPlayer
+              videoUrl={proyecto.videoUrl}
+              portadaUrl={proyecto.portadaUrl}
+              titulo={proyecto.titulo}
+            />
           </div>
         )}
 
@@ -126,12 +127,14 @@ export default async function ProyectoPage({
           <div className="rounded border border-border bg-surface p-6">
             <p className="section-label text-ink-faint">PROBLEMA DEL CLIENTE</p>
             <p className="mt-3 text-sm text-ink-muted">
-              {proyecto.problemaCliente}
+              {proyecto.problemaCliente ?? "— Sin datos —"}
             </p>
           </div>
           <div className="rounded border border-border bg-surface p-6">
             <p className="section-label text-ink-faint">NUESTRA SOLUCION</p>
-            <p className="mt-3 text-sm text-ink-muted">{proyecto.solucion}</p>
+            <p className="mt-3 text-sm text-ink-muted">
+              {proyecto.solucion ?? "— Sin datos —"}
+            </p>
           </div>
         </div>
 

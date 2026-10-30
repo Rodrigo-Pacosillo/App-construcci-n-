@@ -7,7 +7,7 @@ import { ESTADO_HERRAMIENTA_LABELS, ESTADO_HERRAMIENTA_COLORES } from "@/app/adm
 type Herramienta = {
   id: string;
   nombre: string;
-  codigo: string;
+  codigo: string | null;
   estado: string;
   activo: boolean;
 };
@@ -40,7 +40,7 @@ export function HerramientasList({ herramientas }: { herramientas: Herramienta[]
   }
 
   function startEdit(h: Herramienta) {
-    setFormData({ nombre: h.nombre, codigo: h.codigo, estado: h.estado, activo: h.activo });
+    setFormData({ nombre: h.nombre, codigo: h.codigo ?? "", estado: h.estado, activo: h.activo });
     setEditingId(h.id);
     setError({});
     setShowForm(true);
@@ -101,8 +101,8 @@ export function HerramientasList({ herramientas }: { herramientas: Herramienta[]
                   {error.nombre && <p className="text-xs text-red-500 mt-1">{error.nombre[0]}</p>}
                 </div>
                 <div>
-                  <label className="section-label block text-ink-faint mb-1">Código *</label>
-                  <input value={formData.codigo} onChange={(e) => handleChange("codigo", e.target.value)} className="rounded border border-border bg-surface w-full px-3 py-2 text-sm outline-none focus:border-accent" required />
+                  <label className="section-label block text-ink-faint mb-1">Código</label>
+                  <input value={formData.codigo} onChange={(e) => handleChange("codigo", e.target.value)} className="rounded border border-border bg-surface w-full px-3 py-2 text-sm outline-none focus:border-accent" />
                   {error.codigo && <p className="text-xs text-red-500 mt-1">{error.codigo[0]}</p>}
                 </div>
                 <div>
@@ -148,7 +148,7 @@ export function HerramientasList({ herramientas }: { herramientas: Herramienta[]
               {herramientas.map((h) => (
                 <tr key={h.id} className="border-b border-border last:border-0">
                   <td className="px-4 py-3 font-medium">{h.nombre}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-ink-muted">{h.codigo}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-ink-muted">{h.codigo ?? "—"}</td>
                   <td className="px-4 py-3">
                     <span className={`inline-flex items-center rounded px-2 py-1 text-xs font-medium ${ESTADO_HERRAMIENTA_COLORES[h.estado]}`}>
                       {ESTADO_HERRAMIENTA_LABELS[h.estado] || h.estado}

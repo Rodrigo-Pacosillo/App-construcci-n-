@@ -8,10 +8,8 @@ type CotizacionDisplay = {
   tipoObra: string;
   tipoConstruccion: string;
   rangoM2: string;
-  origen: string;
   ubicacionObra: string | null;
   montoEstimado: number | null;
-  montoCerrado: number | null;
   notasInternas: string | null;
   creadoEn: Date;
   actualizadoEn: Date;
@@ -43,7 +41,6 @@ export default async function AdminCotizacionDetallePage({
   const display: CotizacionDisplay = {
     ...cotizacion,
     montoEstimado: cotizacion.montoEstimado ? Number(cotizacion.montoEstimado) : null,
-    montoCerrado: cotizacion.montoCerrado ? Number(cotizacion.montoCerrado) : null,
   };
 
   return <CotizacionDetalle cotizacion={display} />;

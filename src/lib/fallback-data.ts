@@ -71,17 +71,15 @@ export const FALLBACK_PROYECTOS = [
     m2Construidos: 220,
     diasEjecucion: 45,
     ubicacion: "Santa Cruz de la Sierra, Bolivia",
+    videoUrl: null,
+    portadaUrl: "/img/proyectos/pilar-despues.jpg",
+    orden: 1,
     problemaCliente:
       "La familia quería una casa moderna y sustentable, pero con presupuesto limitado y plazo ajustado para mudarse.",
     solucion:
       "Construcción en steel frame con aislación térmica de alta eficiencia. Reducción del 40% en tiempo de obra respecto a tradicional, con mejor aislación.",
     destacado: true,
     publicado: true,
-    fotos: [
-      { url: "/img/proyectos/pilar-antes.jpg", fase: "antes", orden: 1 },
-      { url: "/img/proyectos/pilar-durante.jpg", fase: "durante", orden: 2 },
-      { url: "/img/proyectos/pilar-despues.jpg", fase: "despues", orden: 3 },
-    ],
   },
   {
     id: "2",
@@ -91,16 +89,15 @@ export const FALLBACK_PROYECTOS = [
     m2Construidos: 65,
     diasEjecucion: 20,
     ubicacion: "Zona Sur, La Paz, Bolivia",
+    videoUrl: null,
+    portadaUrl: "/img/proyectos/vlopez-despues.jpg",
+    orden: 2,
     problemaCliente:
       "Necesitaban un estudio y un dormitorio extra en el piso superior, sin perder el jardín.",
     solucion:
       "Ampliación en steel frame sobre estructura existente. Se logró el doble de espacio sin demoler, con acabados idénticos a la casa original.",
     destacado: true,
     publicado: true,
-    fotos: [
-      { url: "/img/proyectos/vlopez-antes.jpg", fase: "antes", orden: 1 },
-      { url: "/img/proyectos/vlopez-despues.jpg", fase: "despues", orden: 2 },
-    ],
   },
   {
     id: "3",
@@ -110,16 +107,15 @@ export const FALLBACK_PROYECTOS = [
     m2Construidos: 90,
     diasEjecucion: 15,
     ubicacion: "Equipetrol, Santa Cruz, Bolivia",
+    videoUrl: null,
+    portadaUrl: "/img/proyectos/santelmo-despues.jpg",
+    orden: 3,
     problemaCliente:
       "Un emprendedor quería habilitar un local gastronómico en un sótano, con plazo mínimo de demora.",
     solucion:
       "Acondicionamiento completo con tabiquería drywall, cielorrasos suspendidos y revestimientos resistentes a humedad. Listo en 15 días.",
     destacado: false,
     publicado: true,
-    fotos: [
-      { url: "/img/proyectos/santelmo-durante.jpg", fase: "durante", orden: 1 },
-      { url: "/img/proyectos/santelmo-despues.jpg", fase: "despues", orden: 2 },
-    ],
   },
   {
     id: "4",
@@ -129,17 +125,15 @@ export const FALLBACK_PROYECTOS = [
     m2Construidos: 350,
     diasEjecucion: 80,
     ubicacion: "Tarija, Bolivia",
+    videoUrl: null,
+    portadaUrl: "/img/proyectos/sanpedro-despues.jpg",
+    orden: 4,
     problemaCliente:
       "Una quinta familiar con décadas de abandono que querían convertir en casa de fin de semana.",
     solucion:
       "Rehabilitación integral: estructura reforzada, nuevos tabiques, aislación, instalaciones. Se preservó la fachada original.",
     destacado: true,
     publicado: true,
-    fotos: [
-      { url: "/img/proyectos/sanpedro-antes.jpg", fase: "antes", orden: 1 },
-      { url: "/img/proyectos/sanpedro-durante.jpg", fase: "durante", orden: 2 },
-      { url: "/img/proyectos/sanpedro-despues.jpg", fase: "despues", orden: 3 },
-    ],
   },
   {
     id: "5",
@@ -149,16 +143,15 @@ export const FALLBACK_PROYECTOS = [
     m2Construidos: 180,
     diasEjecucion: 30,
     ubicacion: "La Paz, Bolivia",
+    videoUrl: null,
+    portadaUrl: "/img/proyectos/oficinas-despues.jpg",
+    orden: 5,
     problemaCliente:
       "Una startup necesitaba oficinas modulares que pudieran reconfigurar según crezca el equipo.",
     solucion:
       "Sistema de tabiques desmontables en drywall con puertas corredizas. El espacio se adapta al equipo sin obras.",
     destacado: false,
     publicado: true,
-    fotos: [
-      { url: "/img/proyectos/oficinas-durante.jpg", fase: "durante", orden: 1 },
-      { url: "/img/proyectos/oficinas-despues.jpg", fase: "despues", orden: 2 },
-    ],
   },
   {
     id: "6",
@@ -168,13 +161,15 @@ export const FALLBACK_PROYECTOS = [
     m2Construidos: 160,
     diasEjecucion: 35,
     ubicacion: "Cochabamba, Bolivia",
+    videoUrl: null,
+    portadaUrl: null,
+    orden: 6,
     problemaCliente:
       "Un arquitecto quería demostrar que la construcción en seco puede ser tan estética como la tradicional.",
     solucion:
       "Casa de diseño con tabiques vistos, cielorrasos de chapa ondulada y amplios vanos de vidrio. Publicada en revista de arquitectura.",
     destacado: false,
     publicado: true,
-    fotos: [],
   },
 ];
 
@@ -231,7 +226,7 @@ export const FALLBACK_FAQS: Faq[] = [
     id: "7",
     pregunta: "¿Puedo ver ejemplos de trabajos anteriores?",
     respuesta:
-      "Sí, en nuestra sección de proyectos encontrará casos reales con fotos de antes, durante y después, metros cuadrados y tiempos de ejecución.",
+      "Sí, en nuestra sección de proyectos encontrará casos reales con video de la obra, metros cuadrados y tiempos de ejecución.",
     orden: 7,
     activo: true,
   },
@@ -310,6 +305,7 @@ export const FALLBACK_CERTIFICACIONES: Certificacion[] = [
     titulo: "Matrícula Constructora Nacional",
     descripcion:
       "Matrícula habilitante para construcciones en todo el territorio boliviano.",
+    imageUrl: null,
     activo: true,
   },
   {
@@ -317,6 +313,7 @@ export const FALLBACK_CERTIFICACIONES: Certificacion[] = [
     titulo: "Certificación Steel Frame",
     descripcion:
       "Certificación oficial en sistemas de construcción en seco con perfilería de acero galvanizado.",
+    imageUrl: null,
     activo: true,
   },
   {
@@ -324,6 +321,7 @@ export const FALLBACK_CERTIFICACIONES: Certificacion[] = [
     titulo: "Garantía de 1 año",
     descripcion:
       "Garantía escrita de 1 año en todas nuestras obras por vicios de construcción y materiales.",
+    imageUrl: null,
     activo: true,
   },
   {
@@ -331,6 +329,7 @@ export const FALLBACK_CERTIFICACIONES: Certificacion[] = [
     titulo: "Equipo profesional y especializado",
     descripcion:
       "Más de 14 años de experiencia y 200+ obras ejecutadas a nivel nacional en Bolivia.",
+    imageUrl: null,
     activo: true,
   },
 ];

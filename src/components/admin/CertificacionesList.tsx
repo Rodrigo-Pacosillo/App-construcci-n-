@@ -12,6 +12,7 @@ type Certificacion = {
   id: string;
   titulo: string;
   descripcion: string;
+  imageUrl: string | null;
   activo: boolean;
 };
 
@@ -23,11 +24,11 @@ export function CertificacionesList({
   const [isPending, startTransition] = useTransition();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState({ titulo: "", descripcion: "" });
+  const [form, setForm] = useState({ titulo: "", descripcion: "", imageUrl: "" });
   const [error, setError] = useState("");
 
   function resetForm() {
-    setForm({ titulo: "", descripcion: "" });
+    setForm({ titulo: "", descripcion: "", imageUrl: "" });
     setEditingId(null);
     setShowForm(false);
   }
@@ -53,7 +54,7 @@ export function CertificacionesList({
 
   function handleEdit(c: Certificacion) {
     setEditingId(c.id);
-    setForm({ titulo: c.titulo, descripcion: c.descripcion });
+    setForm({ titulo: c.titulo, descripcion: c.descripcion, imageUrl: c.imageUrl ?? "" });
     setShowForm(true);
   }
 
@@ -100,6 +101,13 @@ export function CertificacionesList({
             placeholder="Descripción"
             required
             rows={3}
+            className="w-full rounded border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent"
+          />
+          <input
+            name="imageUrl"
+            value={form.imageUrl}
+            onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
+            placeholder="URL de la imagen (Cloudinary)"
             className="w-full rounded border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent"
           />
           <button

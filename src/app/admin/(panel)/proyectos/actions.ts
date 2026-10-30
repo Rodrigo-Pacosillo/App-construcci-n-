@@ -10,7 +10,6 @@ export async function getProyectos() {
 
   try {
     return await prisma.proyecto.findMany({
-      include: { fotos: true },
       orderBy: { creadoEn: "desc" },
       take: 50,
     });

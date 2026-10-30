@@ -1,8 +1,8 @@
 import { z } from "zod";
 import {
   ESTADOS_COTIZACION,
-  ORIGENES_COTIZACION,
 } from "./constants";
+import { cloudinaryImageUrl, emptyToUndefined, boolFromForm, portadaUrl, tiktokVideoUrl } from "./validators/media";
 
 // ─── Cotización (forms de admin) ───────────────────────────────────
 export const cotizacionAdminSchema = z.object({
@@ -12,10 +12,8 @@ export const cotizacionAdminSchema = z.object({
   rangoM2: z.enum(["hasta_50", "m50_100", "m100_200", "mas_200"]),
   ubicacionObra: z.string().optional(),
   plazoInicio: z.enum(["lo_antes_posible", "en_1_mes", "en_3_meses", "en_6_meses", "no_sabe"]),
-  origen: z.enum(ORIGENES_COTIZACION).optional(),
   estado: z.enum(ESTADOS_COTIZACION).optional(),
   montoEstimado: z.number().positive().optional(),
-  montoCerrado: z.number().positive().optional(),
   notasInternas: z.string().optional(),
 });
 
@@ -57,13 +55,16 @@ export const proyectoSchema = z.object({
     .regex(/^[a-z0-9-]+$/, "Slug solo puede contener letras, números y guiones"),
   titulo: z.string().min(1, "El título es requerido"),
   tipoConstruccion: z.enum(["tradicional", "seco", "no_sabe", "integral"]),
-  m2Construidos: z.number().int().positive(),
-  diasEjecucion: z.number().int().positive(),
   ubicacion: z.string().min(1, "La ubicación es requerida"),
-  problemaCliente: z.string().min(1, "El problema del cliente es requerido"),
-  solucion: z.string().min(1, "La solución es requerida"),
-  destacado: z.boolean().default(false),
-  publicado: z.boolean().default(false),
+  videoUrl: emptyToUndefined(tiktokVideoUrl).optional(),
+  portadaUrl: emptyToUndefined(portadaUrl).optional(),
+  orden: z.coerce.number().int().min(0).default(0),
+  destacado: boolFromForm.default(false),
+  publicado: boolFromForm.default(false),
+  m2Construidos: z.coerce.number().int().positive().nullable().optional(),
+  diasEjecucion: z.coerce.number().int().positive().nullable().optional(),
+  problemaCliente: emptyToUndefined(z.string()).optional(),
+  solucion: emptyToUndefined(z.string()).optional(),
 });
 
 export type ProyectoInput = z.infer<typeof proyectoSchema>;
@@ -74,8 +75,7 @@ export const testimonioSchema = z.object({
   clienteNombre: z.string().min(1, "El nombre del cliente es requerido"),
   texto: z.string().min(1, "El texto es requerido"),
   fotoUrl: z.string().url().optional().or(z.literal("")),
-  puntaje: z.number().int().min(1).max(5).optional(),
-  autorizaPublicar: z.boolean().default(false),
+  puntaje: z.number().int().min(1).max(5).nullable().optional(),
   publicado: z.boolean().default(false),
 });
 
@@ -109,7 +109,9 @@ export type FaqInput = z.infer<typeof faqSchema>;
 export const certificacionSchema = z.object({
   titulo: z.string().min(1, "El título es requerido"),
   descripcion: z.string().min(1, "La descripción es requerida"),
-  activo: z.boolean().default(true),
+  imageUrl: emptyToUndefined(cloudinaryImageUrl).optional(),
+  // `activo` NO se edita desde el formulario: se crea activo por defecto y se
+  // cambia solo con `toggleCertificacionActivo`.
 });
 
 export type CertificacionInput = z.infer<typeof certificacionSchema>;

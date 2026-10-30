@@ -19,7 +19,6 @@ type Cotizacion = {
   tipoObra: string;
   tipoConstruccion: string;
   rangoM2: string;
-  origen: string;
   ubicacionObra: string | null;
   creadoEn: Date;
   contratos: { id: string }[];

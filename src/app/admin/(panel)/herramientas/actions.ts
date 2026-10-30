@@ -4,10 +4,11 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth-utils";
 import { z } from "zod";
+import { emptyToUndefined } from "@/lib/validators/media";
 
 const herramientaSchema = z.object({
   nombre: z.string().min(1, "Nombre requerido").max(100),
-  codigo: z.string().min(1, "Código requerido").max(50),
+  codigo: emptyToUndefined(z.string().max(50)).optional(),
   estado: z.enum(["disponible", "en_uso", "mantenimiento", "baja"]),
   activo: z.boolean().default(true),
 });
@@ -34,7 +35,7 @@ export async function getHerramientaById(id: string) {
   try {
     return await prisma.herramienta.findUnique({
       where: { id },
-      include: { prestamos: { include: { empleado: true, obra: true } } },
+      include: { prestamos: { include: { obra: true } } },
     });
   } catch (error) {
     console.error("Error en getHerramientaById:", error);

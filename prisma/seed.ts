@@ -1,4 +1,4 @@
-import { PrismaClient, Rol, TipoConstruccion, RangoM2, FaseFoto, EstadoObra, EstadoPago } from "@prisma/client";
+import { PrismaClient, Rol, TipoConstruccion, RangoM2, EstadoObra, EstadoPago } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -14,7 +14,6 @@ async function main() {
   await prisma.pagoObra.deleteMany();
   await prisma.hitosObra.deleteMany();
   await prisma.obraActiva.deleteMany();
-  await prisma.fotoProyecto.deleteMany();
   await prisma.testimonio.deleteMany();
   await prisma.contrato.deleteMany();
   await prisma.cotizacion.deleteMany();
@@ -150,52 +149,6 @@ async function main() {
   ]);
   console.log(`   ✅ ${proyectos.length} proyectos creados`);
 
-  console.log("📸 Creando fotos de proyectos...");
-  const fotos = await Promise.all([
-    // Casa Santa Cruz
-    prisma.fotoProyecto.create({
-      data: { proyectoId: proyectos[0].id, url: "/img/proyectos/pilar-antes.jpg", fase: FaseFoto.antes, orden: 1 },
-    }),
-    prisma.fotoProyecto.create({
-      data: { proyectoId: proyectos[0].id, url: "/img/proyectos/pilar-durante.jpg", fase: FaseFoto.durante, orden: 2 },
-    }),
-    prisma.fotoProyecto.create({
-      data: { proyectoId: proyectos[0].id, url: "/img/proyectos/pilar-despues.jpg", fase: FaseFoto.despues, orden: 3 },
-    }),
-    // Ampliación La Paz
-    prisma.fotoProyecto.create({
-      data: { proyectoId: proyectos[1].id, url: "/img/proyectos/vlopez-antes.jpg", fase: FaseFoto.antes, orden: 1 },
-    }),
-    prisma.fotoProyecto.create({
-      data: { proyectoId: proyectos[1].id, url: "/img/proyectos/vlopez-despues.jpg", fase: FaseFoto.despues, orden: 2 },
-    }),
-    // Local Santa Cruz
-    prisma.fotoProyecto.create({
-      data: { proyectoId: proyectos[2].id, url: "/img/proyectos/santelmo-durante.jpg", fase: FaseFoto.durante, orden: 1 },
-    }),
-    prisma.fotoProyecto.create({
-      data: { proyectoId: proyectos[2].id, url: "/img/proyectos/santelmo-despues.jpg", fase: FaseFoto.despues, orden: 2 },
-    }),
-    // Quinta Tarija
-    prisma.fotoProyecto.create({
-      data: { proyectoId: proyectos[3].id, url: "/img/proyectos/sanpedro-antes.jpg", fase: FaseFoto.antes, orden: 1 },
-    }),
-    prisma.fotoProyecto.create({
-      data: { proyectoId: proyectos[3].id, url: "/img/proyectos/sanpedro-durante.jpg", fase: FaseFoto.durante, orden: 2 },
-    }),
-    prisma.fotoProyecto.create({
-      data: { proyectoId: proyectos[3].id, url: "/img/proyectos/sanpedro-despues.jpg", fase: FaseFoto.despues, orden: 3 },
-    }),
-    // Oficinas La Paz
-    prisma.fotoProyecto.create({
-      data: { proyectoId: proyectos[4].id, url: "/img/proyectos/oficinas-durante.jpg", fase: FaseFoto.durante, orden: 1 },
-    }),
-    prisma.fotoProyecto.create({
-      data: { proyectoId: proyectos[4].id, url: "/img/proyectos/oficinas-despues.jpg", fase: FaseFoto.despues, orden: 2 },
-    }),
-  ]);
-  console.log(`   ✅ ${fotos.length} fotos creadas`);
-
   console.log("💬 Creando testimonios...");
   const testimonios = await Promise.all([
     prisma.testimonio.create({
@@ -205,7 +158,6 @@ async function main() {
         texto:
           "Increíble cómo en 45 días pasamos de terreno a casa habitable. La calidad de los acabados superó nuestras expectativas. El aislamiento térmico es notable.",
         puntaje: 5,
-        autorizaPublicar: true,
         publicado: true,
       },
     }),
@@ -216,7 +168,6 @@ async function main() {
         texto:
           "Necesitábamos ampliar sin demoler y cumplieron exactamente lo prometido. La ampliación se ve como si siempre hubiera estado ahí.",
         puntaje: 5,
-        autorizaPublicar: true,
         publicado: true,
       },
     }),
@@ -227,7 +178,6 @@ async function main() {
         texto:
           "El local quedó listo en 15 días, justo antes de la inauguración. Profesionales de primera.",
         puntaje: 5,
-        autorizaPublicar: true,
         publicado: true,
       },
     }),
@@ -238,7 +188,6 @@ async function main() {
         texto:
           "Transformaron una quinta abandonada en una casa hermosa. Preservaron la fachada y modernizaron todo por dentro. Excelente trabajo.",
         puntaje: 4,
-        autorizaPublicar: true,
         publicado: true,
       },
     }),
@@ -248,7 +197,6 @@ async function main() {
         texto:
           "Contraté solo la cotización pero me sorprendió la profesionalidad y claridad del presupuesto. Muy recomendable.",
         puntaje: 5,
-        autorizaPublicar: true,
         publicado: true,
       },
     }),
@@ -576,7 +524,6 @@ async function main() {
   console.log(`   Cliente: 1 (Juan Pérez)`);
   console.log(`   Cotizaciones: 0`);
   console.log(`   Proyectos: ${proyectos.length}`);
-  console.log(`   Fotos: ${fotos.length}`);
   console.log(`   Testimonios: ${testimonios.length}`);
   console.log(`   Servicios: ${servicios.length}`);
   console.log(`   FAQs: ${faqs.length}`);

@@ -43,7 +43,6 @@ export async function updateTestimonio(
     texto: formData.get("texto") as string,
     fotoUrl: formData.get("fotoUrl") as string,
     puntaje: parseInt(formData.get("puntaje") as string, 10) || null,
-    autorizaPublicar: formData.get("autorizaPublicar") === "true",
     publicado: formData.get("publicado") === "true",
   };
 

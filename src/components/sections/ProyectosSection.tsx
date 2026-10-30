@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { FALLBACK_PROYECTOS } from "@/lib/fallback-data";
@@ -6,7 +7,10 @@ async function getProyectos() {
   try {
     const proyectos = await prisma.proyecto.findMany({
       where: { publicado: true, destacado: true },
-      include: { fotos: { orderBy: { orden: "asc" } } },
+      select: {
+        id: true, slug: true, titulo: true, tipoConstruccion: true,
+        m2Construidos: true, diasEjecucion: true, portadaUrl: true,
+      },
       take: 4,
     });
     return proyectos.length > 0 ? proyectos : FALLBACK_PROYECTOS;
@@ -33,7 +37,19 @@ export async function ProyectosSection() {
               href={`/proyectos/${proyecto.slug}`}
               className="group relative overflow-hidden rounded border border-border bg-surface"
             >
-              <div className="aspect-[4/3] bg-white/5" />
+              <div className="aspect-[4/3] relative">
+                {proyecto.portadaUrl ? (
+                  <Image
+                    src={proyecto.portadaUrl}
+                    alt={proyecto.titulo}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="absolute inset-0 bg-white/5" />
+                )}
+              </div>
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
               <div className="absolute bottom-0 left-0 p-6">
                 <p className="section-label text-accent">
@@ -43,7 +59,7 @@ export async function ProyectosSection() {
                   {proyecto.titulo}
                 </h3>
                 <p className="mt-1 text-sm text-white/50">
-                  {proyecto.m2Construidos}m2 · {proyecto.diasEjecucion} días
+                  {(proyecto.m2Construidos ?? "—")}m2 · {(proyecto.diasEjecucion ?? "—")} días
                 </p>
               </div>
             </Link>

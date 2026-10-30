@@ -28,7 +28,7 @@ type Usuario = {
       estado: string;
       tipoObra: string;
       creadoEn: Date;
-      montoCerrado: number | null;
+      montoEstimado: number | null;
     }[];
     contratos: {
       id: string;
@@ -146,7 +146,7 @@ export function UsuarioDetalle({ usuario }: { usuario: Usuario }) {
                 <tr>
                   <th className="px-4 py-3 font-medium">Tipo de obra</th>
                   <th className="px-4 py-3 font-medium">Estado</th>
-                  <th className="px-4 py-3 font-medium">Monto cerrado</th>
+                  <th className="px-4 py-3 font-medium">Monto estimado</th>
                   <th className="px-4 py-3 font-medium">Fecha</th>
                 </tr>
               </thead>
@@ -166,7 +166,7 @@ export function UsuarioDetalle({ usuario }: { usuario: Usuario }) {
                         {ESTADO_LABELS[cot.estado as keyof typeof ESTADO_LABELS] ?? cot.estado}
                       </span>
                     </td>
-                    <td className="px-4 py-3">{formatMonto(cot.montoCerrado)}</td>
+                    <td className="px-4 py-3">{formatMonto(cot.montoEstimado)}</td>
                     <td className="px-4 py-3 text-ink-muted">{formatFecha(cot.creadoEn)}</td>
                   </tr>
                 ))}

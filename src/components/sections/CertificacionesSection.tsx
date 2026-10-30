@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { prisma } from "@/lib/db";
 import { FALLBACK_CERTIFICACIONES } from "@/lib/fallback-data";
 
@@ -32,10 +33,20 @@ export async function CertificacionesSection() {
               key={certificacion.id}
               className="flex flex-col rounded border border-border bg-surface p-6"
             >
-              <div className="flex aspect-[4/3] items-center justify-center rounded border border-dashed border-ink/20 bg-ink/5">
-                <span className="section-label text-ink-faint">
-                  CERTIFICADO — IMAGEN
-                </span>
+              <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded border border-dashed border-ink/20 bg-ink/5">
+                {certificacion.imageUrl ? (
+                  <Image
+                    src={certificacion.imageUrl}
+                    alt={certificacion.titulo}
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                    className="object-cover"
+                  />
+                ) : (
+                  <span className="section-label text-ink-faint">
+                    CERTIFICADO — IMAGEN
+                  </span>
+                )}
               </div>
               <h3 className="mt-4 font-heading text-lg font-bold">
                 {certificacion.titulo}

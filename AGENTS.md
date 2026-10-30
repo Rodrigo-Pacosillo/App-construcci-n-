@@ -210,12 +210,12 @@ mismos tokens pero es funcional, sin storytelling.
 | Admin · Contratos (lista, detalle, alta) | Implementado |
 | Admin · Obras (lista, detalle, hitos, pagos) | Implementado — `/admin/obras/new` es placeholder |
 | Admin · Proyectos / Servicios / Testimonios / FAQs / Certificaciones | Implementado |
-| Admin · Clientes | **Stub** — "módulo en el siguiente paso" |
-| Admin · Usuarios | **Placeholder** (`ModuloPlaceholder`) |
+| Admin · Clientes | Implementado (`clientes/actions.ts` existe y funciona) |
+| Admin · Usuarios | Implementado (`usuarios/actions.ts` existe y funciona) |
 | Admin · Empleados / Materiales / Herramientas | Parcial (hay API routes; revisar UI) |
 | Alta de cuentas (`/admin/autorizar-cuentas`) | Implementado (vía separada del panel Usuarios) |
 | Auto-registro público (`/registro`) | **Eliminado** — cumple la regla "nadie se registra solo" |
-| Tests automatizados | **No hay test runner** (ver Gotchas) |
+| Tests automatizados | Playwright configurado (`npm run test`) |
 
 ## Comandos
 
@@ -233,8 +233,8 @@ mismos tokens pero es funcional, sin storytelling.
   El guard de `/admin` vive ahí (matcher `/admin/:path*`) y corre en runtime
   Node.js. Un `src/middleware.ts` mencionado en doc vieja **no se ejecuta**
   (no existe). El guard de `/cliente` vive en su layout, no en el proxy.
-- **No hay test runner configurado.** La verificación es `npm run build` +
-  `npm run lint` + `npm run db:seed` contra una BD.
+- **Test runner:** Playwright configurado (`npm run test`). La verificación
+  sigue siendo `npm run build` + `npm run lint` + `npm run db:seed` contra una BD.
 - **Credenciales de demo (reales del seed):** `admin@gmail.com` / `admin123`
   y `cliente@gmail.com` / `cliente123`. (Documentación antigua decía
   `admin@demo.com` / `cliente@demo.com`: **incorrecto**.)

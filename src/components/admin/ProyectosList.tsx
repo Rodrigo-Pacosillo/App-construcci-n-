@@ -12,8 +12,8 @@ type Proyecto = {
   titulo: string;
   slug: string;
   tipoConstruccion: string;
-  m2Construidos: number;
-  diasEjecucion: number;
+  m2Construidos: number | null;
+  diasEjecucion: number | null;
   ubicacion: string;
   publicado: boolean;
   destacado: boolean;
@@ -58,8 +58,8 @@ export function ProyectosList({ proyectos }: { proyectos: Proyecto[] }) {
                   <p className="text-xs text-ink-faint">{p.ubicacion}</p>
                 </td>
                 <td className="px-4 py-3 capitalize text-ink-muted">{p.tipoConstruccion}</td>
-                <td className="px-4 py-3 text-ink-muted">{p.m2Construidos}</td>
-                <td className="px-4 py-3 text-ink-muted">{p.diasEjecucion}</td>
+                <td className="px-4 py-3 text-ink-muted">{p.m2Construidos ?? "—"}</td>
+                <td className="px-4 py-3 text-ink-muted">{p.diasEjecucion ?? "—"}</td>
                 <td className="px-4 py-3">
 <button
                       type="button"

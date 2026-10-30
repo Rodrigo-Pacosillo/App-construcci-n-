@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import Image from "next/image";
 import { prisma } from "@/lib/db";
 
 async function getProyectos() {
@@ -15,7 +16,10 @@ async function getProyectos() {
 
   return prisma.proyecto.findMany({
     where: { clienteId: usuario.cliente.id },
-    include: { fotos: { orderBy: { orden: "asc" } } },
+    select: {
+      id: true, slug: true, titulo: true, tipoConstruccion: true,
+      m2Construidos: true, diasEjecucion: true, portadaUrl: true, creadoEn: true,
+    },
     orderBy: { creadoEn: "desc" },
   });
 }
@@ -43,15 +47,16 @@ export default async function ClientProyectosPage() {
               key={p.id}
               className="group relative overflow-hidden rounded border border-border bg-surface"
             >
-              {p.fotos && p.fotos.length > 0 ? (
-                <div
-                  className="aspect-video bg-ink/5"
-                  style={{
-                    backgroundImage: `url(${p.fotos[0].url})`,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                  }}
-                />
+              {p.portadaUrl ? (
+                <div className="aspect-video relative">
+                  <Image
+                    src={p.portadaUrl}
+                    alt={p.titulo}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                    className="object-cover"
+                  />
+                </div>
               ) : (
                 <div className="aspect-video bg-ink/5" />
               )}
@@ -64,8 +69,8 @@ export default async function ClientProyectosPage() {
                   {p.titulo}
                 </h2>
                 <div className="mt-2 flex gap-4 text-xs text-white/40">
-                  <span>{p.m2Construidos}m²</span>
-                  <span>{p.diasEjecucion} días</span>
+                  <span>{(p.m2Construidos ?? "—")}m²</span>
+                  <span>{(p.diasEjecucion ?? "—")} días</span>
                 </div>
               </div>
             </div>

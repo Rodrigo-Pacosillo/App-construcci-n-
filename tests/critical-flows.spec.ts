@@ -4,7 +4,7 @@ test.describe('Login Flow', () => {
   test('admin login redirects to /admin', async ({ page }) => {
     await page.goto('/login');
     
-    await page.fill('input[name="email"]', 'admin@demo.com');
+    await page.fill('input[name="email"]', 'admin@gmail.com');
     await page.fill('input[name="password"]', 'admin123');
     await page.click('button[type="submit"]');
     
@@ -15,7 +15,7 @@ test.describe('Login Flow', () => {
   test('client login redirects to /cliente', async ({ page }) => {
     await page.goto('/login');
     
-    await page.fill('input[name="email"]', 'cliente@demo.com');
+    await page.fill('input[name="email"]', 'cliente@gmail.com');
     await page.fill('input[name="password"]', 'cliente123');
     await page.click('button[type="submit"]');
     
@@ -59,7 +59,7 @@ test.describe('Cotización Flow', () => {
 test.describe('Admin Dashboard', () => {
   test('admin can access dashboard after login', async ({ page }) => {
     await page.goto('/login');
-    await page.fill('input[name="email"]', 'admin@demo.com');
+    await page.fill('input[name="email"]', 'admin@gmail.com');
     await page.fill('input[name="password"]', 'admin123');
     await page.click('button[type="submit"]');
     
@@ -69,7 +69,7 @@ test.describe('Admin Dashboard', () => {
 
   test('admin can navigate to cotizaciones', async ({ page }) => {
     await page.goto('/login');
-    await page.fill('input[name="email"]', 'admin@demo.com');
+    await page.fill('input[name="email"]', 'admin@gmail.com');
     await page.fill('input[name="password"]', 'admin123');
     await page.click('button[type="submit"]');
     
@@ -82,7 +82,7 @@ test.describe('Admin Dashboard', () => {
 test.describe('Client Portal', () => {
   test('client can access portal after login', async ({ page }) => {
     await page.goto('/login');
-    await page.fill('input[name="email"]', 'cliente@demo.com');
+    await page.fill('input[name="email"]', 'cliente@gmail.com');
     await page.fill('input[name="password"]', 'cliente123');
     await page.click('button[type="submit"]');
     
@@ -92,7 +92,7 @@ test.describe('Client Portal', () => {
 
   test('client can view cotizaciones', async ({ page }) => {
     await page.goto('/login');
-    await page.fill('input[name="email"]', 'cliente@demo.com');
+    await page.fill('input[name="email"]', 'cliente@gmail.com');
     await page.fill('input[name="password"]', 'cliente123');
     await page.click('button[type="submit"]');
     

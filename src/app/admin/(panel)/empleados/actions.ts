@@ -38,7 +38,7 @@ export async function getEmpleadoById(id: string) {
   try {
     return await prisma.empleado.findUnique({
       where: { id },
-      include: { asignaciones: { include: { obra: true } }, prestamos: { include: { herramienta: true, obra: true } } },
+      include: { asignaciones: { include: { obra: true } } },
     });
   } catch (error) {
     console.error("Error en getEmpleadoById:", error);

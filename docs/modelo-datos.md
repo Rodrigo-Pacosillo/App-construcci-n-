@@ -12,7 +12,7 @@ las decisiones detrás de ese schema, no lo duplica.
 
 | Tipo | Ejemplo | Cambia con... |
 |---|---|---|
-| **ENUM nativo de BD** | `TipoConstruccion`, `FaseFoto`, `Rol` | Migración de BD |
+| **ENUM nativo de BD** | `TipoConstruccion`, `Rol` | Migración de BD |
 | **VARCHAR + Zod** | `estado` cotización, `origen` cotización | `src/lib/constants.ts` |
 
 **Regla:** si el valor es estable y no va a cambiar (fases de una foto,
@@ -99,10 +99,9 @@ model Cotizacion {
   rangoM2           RangoM2           @map("rango_m2")
   ubicacionObra     String?           @map("ubicacion_obra")
   plazoInicio       PlazoInicio       @map("plazo_inicio")
-  origen            String            // VARCHAR + Zod (evolutivo)
   estado            String            @default("nuevo") // VARCHAR + Zod
   montoEstimado     Decimal?          @map("monto_estimado") @db.Decimal(12, 2)
-  montoCerrado      Decimal?          @map("monto_cerrado") @db.Decimal(12, 2)
+  fotoLoteUrl       String?           @map("foto_lote_url") // URL de foto del lote (CDN externo)
   requerimiento     String?           @map("requerimiento") // mensaje del cliente del form público
   notasInternas     String?           @map("notas_internas") // apuntes del admin
   creadoEn          DateTime          @default(now()) @map("creado_en")
@@ -111,7 +110,6 @@ model Cotizacion {
   contratos Contrato[]
 
   @@index([clienteId])
-  @@index([origen])
   @@index([estado])
   @@map("cotizaciones")
 }
@@ -133,10 +131,6 @@ model Cotizacion {
 - **Pendiente:** alinear el código a los valores de la especificación
   (`ganado`→`contratado`, `perdido`→`no_concretado`), con autorización.
   Ver `DATABASE.md` § "Estados de cotización".
-
-**Orígenes** (VARCHAR + Zod en `src/lib/constants.ts`): hoy `web`, `referido`.
-(La doc antigua mencionaba `whatsapp`, `tiktok`, `facebook`, `estimador`: esos
-valores **no están definidos hoy**.)
 
 ### contratos
 
@@ -175,18 +169,20 @@ model Proyecto {
   slug               String            @unique
   titulo             String
   tipoConstruccion   TipoConstruccion  @map("tipo_construccion")
-  m2Construidos      Int               @map("m2_construidos")
-  diasEjecucion      Int               @map("dias_ejecucion")
   ubicacion          String
-  problemaCliente    String            @map("problema_cliente")
-  solucion           String
-  destacado          Boolean           @default(false)
-  publicado          Boolean           @default(false)
-  creadoEn           DateTime          @default(now()) @map("creado_en")
-  actualizadoEn      DateTime          @updatedAt @map("actualizado_en")
+  videoUrl           String?         @map("video_url") // URL del video (hoy TikTok)
+  portadaUrl         String?         @map("portada_url") // portada del proyecto (click-to-play)
+  orden              Int             @default(0) // secuencia en el muro
+  m2Construidos      Int?            @map("m2_construidos")
+  diasEjecucion      Int?            @map("dias_ejecucion")
+  problemaCliente    String?         @map("problema_cliente")
+  solucion           String?
+  destacado          Boolean         @default(false)
+  publicado          Boolean         @default(false)
+  creadoEn           DateTime        @default(now()) @map("creado_en")
+  actualizadoEn      DateTime        @updatedAt @map("actualizado_en")
 
   cliente        Cliente?         @relation(fields: [clienteId], references: [id])
-  fotos          FotoProyecto[]
   testimonios    Testimonio[]
 
   @@map("proyectos")
@@ -196,24 +192,6 @@ model Proyecto {
 - `clienteId` NULLABLE: permite mostrar proyectos sin vínculo al lead
   (proyectos viejos, stock). Cuando hay vínculo, cierra el círculo
   analítico: lead → proyecto publicado.
-
-### fotos_proyecto
-
-Borrado CASCADE desde proyectos — una foto sin proyecto no significa nada.
-
-```prisma
-model FotoProyecto {
-  id          String    @id @default(cuid())
-  proyectoId  String    @map("proyecto_id")
-  proyecto    Proyecto  @relation(fields: [proyectoId], references: [id], onDelete: Cascade)
-  url         String
-  fase        FaseFoto
-  orden       Int
-
-  @@index([proyectoId])
-  @@map("fotos_proyecto")
-}
-```
 
 ### testimonios
 
@@ -226,7 +204,6 @@ model Testimonio {
   texto               String
   fotoUrl             String?   @map("foto_url")
   puntaje             Int?      // 1-5, para estrellas
-  autorizaPublicar    Boolean   @default(false) @map("autoriza_publicar")
   publicado           Boolean   @default(false)
   creadoEn            DateTime  @default(now()) @map("creado_en")
   actualizadoEn       DateTime  @updatedAt @map("actualizado_en")
@@ -276,6 +253,7 @@ model Certificacion {
   id          String  @id @default(cuid())
   titulo      String
   descripcion String
+  imageUrl    String? @map("image_url") // imagen del certificado (CDN externo). Solo la URL
   activo      Boolean @default(true)
 
   @@map("certificaciones")
@@ -355,8 +333,7 @@ model PagoObra {
 PostgreSQL **no** indexa automáticamente las columnas FK (a diferencia de
 MySQL). Todas las FKs en tablas con datos deben llevar `@@index`:
 
-`cotizaciones.clienteId` ✅ · `fotos_proyecto.proyectoId` ✅ ·
-`contratos.clienteId` ✅ · `proyectos.clienteId` ✅ ·
+`cotizaciones.clienteId` ✅ · `contratos.clienteId` ✅ · `proyectos.clienteId` ✅ ·
 `testimonios.proyectoId` ✅ · `obras_activas.clienteId/contratoId` ✅ ·
 `hitos_obra.obraId` ✅ · `pagos_obra.obraId` ✅
 
@@ -369,8 +346,7 @@ MySQL). Todas las FKs en tablas con datos deben llevar `@@index`:
 3. `cotizaciones` (depende de `clientes`)
 4. `contratos` (depende de `clientes`, `cotizaciones`)
 5. `proyectos` (depende de `clientes`)
-6. `fotos_proyecto` (depende de `proyectos`)
-7. `testimonios` (depende de `proyectos`)
+6. `testimonios` (depende de `proyectos`)
 8. `servicios`, `faqs`, `certificaciones` (sin dependencias)
 9. `precio_referencia` (sin dependencias)
 10. Fase 2: `obras_activas`, `hitos_obra`, `pagos_obra`
@@ -402,6 +378,8 @@ En `prisma/migrations/`:
 3. `20261019000000_fix_drift_and_modules_5_7` — corrige drift y agrega los
    módulos 5-7 (empleados, materiales, herramientas). El `schema.prisma` ya
    refleja las tres.
+4. Migraciones del plan v2 (12 migraciones, desde `20261029154229_certificacion_add_image_url`
+   hasta `20261029173000_herramienta_codigo_opcional`).
 
 ### Comandos
 
@@ -423,6 +401,6 @@ Inventario real que carga hoy:
 - 1 cliente demo (Juan Pérez)
 - **0 cotizaciones** (documentación antigua afirmaba ~12-15: incorrecto)
 - 1 contrato y 1 obra activa (con 4 hitos y 3 pagos)
-- 6 proyectos publicados (portafolio) y 12 fotos
+- 6 proyectos publicados (portafolio)
 - 5 testimonios, 6 servicios, 10 FAQs, 4 certificaciones
 - 8 registros de `precio_referencia`

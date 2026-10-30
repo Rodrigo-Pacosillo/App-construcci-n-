@@ -11,10 +11,8 @@ type Cotizacion = {
   tipoObra: string;
   tipoConstruccion: string;
   rangoM2: string;
-  origen: string;
   ubicacionObra: string | null;
   montoEstimado: number | null;
-  montoCerrado: number | null;
   notasInternas: string | null;
   creadoEn: Date;
   actualizadoEn: Date;
@@ -27,7 +25,6 @@ export function CotizacionDetalle({ cotizacion }: { cotizacion: Cotizacion }) {
   const [formData, setFormData] = useState({
     estado: cotizacion.estado,
     montoEstimado: cotizacion.montoEstimado?.toString() || "",
-    montoCerrado: cotizacion.montoCerrado?.toString() || "",
     notasInternas: cotizacion.notasInternas || "",
   });
   const [error, setError] = useState<Record<string, string[] | undefined>>({});
@@ -48,7 +45,6 @@ export function CotizacionDetalle({ cotizacion }: { cotizacion: Cotizacion }) {
           body: JSON.stringify({
             estado: formData.estado,
             montoEstimado: formData.montoEstimado ? parseFloat(formData.montoEstimado) : null,
-            montoCerrado: formData.montoCerrado ? parseFloat(formData.montoCerrado) : null,
             notasInternas: formData.notasInternas || null,
           }),
         });
@@ -85,7 +81,7 @@ export function CotizacionDetalle({ cotizacion }: { cotizacion: Cotizacion }) {
         {editMode ? (
           <div className="flex gap-2">
             <button
-              onClick={() => { setFormData({ estado: cotizacion.estado, montoEstimado: cotizacion.montoEstimado?.toString() || "", montoCerrado: cotizacion.montoCerrado?.toString() || "", notasInternas: cotizacion.notasInternas || "" }); setEditMode(false); setError({}); }}
+              onClick={() => { setFormData({ estado: cotizacion.estado, montoEstimado: cotizacion.montoEstimado?.toString() || "", notasInternas: cotizacion.notasInternas || "" }); setEditMode(false); setError({}); }}
               className="rounded border border-border bg-surface px-4 py-2 text-sm font-medium hover:bg-ink/5"
             >
               Cancelar
@@ -123,7 +119,6 @@ export function CotizacionDetalle({ cotizacion }: { cotizacion: Cotizacion }) {
             <p className="capitalize text-ink-muted">{cotizacion.tipoObra.replace("_", " ")}</p>
             <p className="capitalize text-ink-muted">{cotizacion.tipoConstruccion.replace("_", " ")}</p>
             <p className="text-ink-muted">{cotizacion.rangoM2.replace("m", "").replace("_", "-").replace("mas", "+")} m2</p>
-            <p className="capitalize text-ink-muted">{cotizacion.origen}</p>
           </div>
           <div>
             <p className="section-label text-ink-faint">FECHAS</p>
@@ -142,7 +137,7 @@ export function CotizacionDetalle({ cotizacion }: { cotizacion: Cotizacion }) {
       {/* Monto & Estado */}
       <div className="rounded border border-border bg-surface p-4">
         <p className="section-label mb-4 text-ink-faint">MONTOS Y ESTADO</p>
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2">
           <div>
             <label className="section-label block text-ink-faint mb-1">Estado</label>
             {editMode ? (
@@ -187,25 +182,6 @@ export function CotizacionDetalle({ cotizacion }: { cotizacion: Cotizacion }) {
               </p>
             )}
             {error.montoEstimado && <p className="text-xs text-red-500 mt-1">{error.montoEstimado[0]}</p>}
-          </div>
-          <div>
-            <label className="section-label block text-ink-faint mb-1">Monto cerrado</label>
-            {editMode ? (
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.montoCerrado}
-                onChange={(e) => handleChange("montoCerrado", e.target.value)}
-                className="rounded border border-border bg-surface w-full px-3 py-2 text-sm outline-none focus:border-accent"
-                placeholder="0"
-              />
-            ) : (
-              <p className="font-heading text-lg font-bold text-accent-strong">
-                {cotizacion.montoCerrado ? `$${cotizacion.montoCerrado.toLocaleString("es-AR")}` : "—"}
-              </p>
-            )}
-            {error.montoCerrado && <p className="text-xs text-red-500 mt-1">{error.montoCerrado[0]}</p>}
           </div>
         </div>
       </div>

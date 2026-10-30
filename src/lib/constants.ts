@@ -44,15 +44,6 @@ export const GRUPO_LABELS: Record<GrupoCotizacion, string> = {
   finalizadas: "Finalizadas",
 };
 
-// ─── Orígenes de las cotizaciones ──────────────────────────────────
-// VARCHAR + Zod: agregar un canal no requiere migración de BD
-export const ORIGENES_COTIZACION = [
-  "web",
-  "referido",
-] as const;
-
-export type OrigenCotizacion = (typeof ORIGENES_COTIZACION)[number];
-
 // ─── Navegación pública ────────────────────────────────────────────
 export const NAV_ITEMS = [
   { label: "Inicio", href: "/" },
@@ -151,11 +142,6 @@ export const ESTADO_LABELS: Record<EstadoCotizacion, string> = {
   contactado: "En seguimiento",
   contratado: "Concretado",
   no_concretado: "No concretado",
-};
-
-export const ORIGEN_LABELS: Record<OrigenCotizacion, string> = {
-  web: "Sitio web",
-  referido: "Referido",
 };
 
 // ─── Labels para formulario público de cotización ──────────────────

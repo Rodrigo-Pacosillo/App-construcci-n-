@@ -10,7 +10,6 @@ type ClienteSelect = { id: string; nombre: string; apellidos: string; email: str
 type CotizacionSelect = {
   id: string;
   tipoObra: string;
-  origen?: string;
   estado?: string;
   ubicacionObra?: string | null;
   rangoM2?: string;
@@ -248,7 +247,6 @@ export default function AdminNuevoContratoPage() {
                   )}
                   {cotizacionOrigen.ubicacionObra && <p>Ubicación: {cotizacionOrigen.ubicacionObra}</p>}
                   {cotizacionOrigen.rangoM2 && <p>M²: {rangoM2Label(cotizacionOrigen.rangoM2)}</p>}
-                  {cotizacionOrigen.origen && <p>Origen: {cotizacionOrigen.origen}</p>}
                 </div>
                 <Link href={`/admin/cotizaciones/${cotizacionOrigen.id}`} className="inline-flex items-center text-xs text-accent-strong hover:underline">
                   Ver cotización completa

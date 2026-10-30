@@ -10,7 +10,7 @@ type Cotizacion = {
   rangoM2: string;
   ubicacionObra: string | null;
   estado: string;
-  montoCerrado: number | null;
+  montoEstimado: number | null;
 };
 
 type Filtro = "todos" | EstadoCotizacion;
@@ -76,9 +76,9 @@ export function CotizacionesLista({ cotizaciones }: { cotizaciones: Cotizacion[]
                 </div>
                 <div className="text-right">
                   <p className="section-label text-accent-strong">{ESTADO_LABELS[c.estado as EstadoCotizacion]}</p>
-                  {c.montoCerrado && (
+                  {c.montoEstimado && (
                     <p className="mt-1 font-heading text-lg font-bold">
-                      ${c.montoCerrado.toLocaleString("es-AR")}
+                      ${c.montoEstimado.toLocaleString("es-AR")}
                     </p>
                   )}
                 </div>

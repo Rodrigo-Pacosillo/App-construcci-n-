@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { prisma } from "@/lib/db";
 import { FALLBACK_PROYECTOS } from "@/lib/fallback-data";
 import type { Metadata } from "next";
@@ -25,7 +26,10 @@ async function getProyectos() {
   try {
     const proyectos = await prisma.proyecto.findMany({
       where: { publicado: true },
-      include: { fotos: { orderBy: { orden: "asc" } } },
+      select: {
+        id: true, slug: true, titulo: true, tipoConstruccion: true,
+        m2Construidos: true, diasEjecucion: true, ubicacion: true, portadaUrl: true,
+      },
       orderBy: { creadoEn: "desc" },
     });
     return proyectos.length > 0 ? proyectos : FALLBACK_PROYECTOS;
@@ -56,7 +60,19 @@ export default async function ProyectosPage() {
               href={`/proyectos/${proyecto.slug}`}
               className="group relative overflow-hidden rounded border border-border bg-surface"
             >
-              <div className="aspect-[4/3] bg-white/5" />
+              <div className="aspect-[4/3] relative">
+                {proyecto.portadaUrl ? (
+                  <Image
+                    src={proyecto.portadaUrl}
+                    alt={proyecto.titulo}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="absolute inset-0 bg-white/5" />
+                )}
+              </div>
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
               <div className="absolute bottom-0 left-0 p-6">
                 <p className="section-label text-accent">
@@ -68,8 +84,8 @@ export default async function ProyectosPage() {
                   {proyecto.titulo}
                 </h2>
                 <div className="mt-2 flex gap-4 text-xs text-white/40">
-                  <span>{proyecto.m2Construidos}m2</span>
-                  <span>{proyecto.diasEjecucion} días</span>
+                  <span>{(proyecto.m2Construidos ?? "—")}m2</span>
+                  <span>{(proyecto.diasEjecucion ?? "—")} días</span>
                   <span>{proyecto.ubicacion}</span>
                 </div>
               </div>

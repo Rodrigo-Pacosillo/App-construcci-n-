@@ -25,7 +25,7 @@ export async function createCertificacion(formData: FormData) {
   const data = {
     titulo: formData.get("titulo") as string,
     descripcion: formData.get("descripcion") as string,
-    activo: formData.get("activo") === "true",
+    imageUrl: formData.get("imageUrl") as string,
   };
 
   const valid = certificacionSchema.safeParse(data);
@@ -59,7 +59,7 @@ export async function updateCertificacion(id: string, formData: FormData) {
   const data = {
     titulo: formData.get("titulo") as string,
     descripcion: formData.get("descripcion") as string,
-    activo: formData.get("activo") === "true",
+    imageUrl: formData.get("imageUrl") as string,
   };
 
   const valid = certificacionSchema.safeParse(data);
@@ -74,7 +74,8 @@ export async function updateCertificacion(id: string, formData: FormData) {
   try {
     await prisma.certificacion.update({
       where: { id },
-      data: { ...valid.data },
+      // `undefined` no toca el campo; `null` lo vacía (permite quitar la imagen).
+      data: { ...valid.data, imageUrl: valid.data.imageUrl ?? null },
     });
     revalidatePath("/admin/certificaciones");
     revalidatePath("/");

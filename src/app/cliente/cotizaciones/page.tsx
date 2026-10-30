@@ -25,10 +25,8 @@ async function getCotizaciones() {
       rangoM2: true,
       ubicacionObra: true,
       plazoInicio: true,
-      origen: true,
       estado: true,
       montoEstimado: true,
-      montoCerrado: true,
       requerimiento: true,
       creadoEn: true,
       actualizadoEn: true,
@@ -39,7 +37,6 @@ async function getCotizaciones() {
   return cotizaciones.map((c) => ({
     ...c,
     montoEstimado: c.montoEstimado ? Number(c.montoEstimado) : null,
-    montoCerrado: c.montoCerrado ? Number(c.montoCerrado) : null,
   }));
 }
 

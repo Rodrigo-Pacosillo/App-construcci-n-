@@ -43,7 +43,6 @@ export async function createCotizacion(formData: FormData) {
   // Resolver el cliente que respalda la cotización.
   // session.user.id es el id de `usuarios`; el id de negocio vive en `clientes`.
   let clienteIdFinal: string | null = null;
-  let origen = "web";
 
   if (session?.user?.role === "cliente") {
     const usuario = await prisma.usuario.findUnique({
@@ -59,7 +58,6 @@ export async function createCotizacion(formData: FormData) {
       };
     }
     clienteIdFinal = usuario.clienteId;
-    origen = "referido";
   } else {
     // Visitante: buscar el cliente existente por email o teléfono o crearlo (find-or-create).
     // La unicidad de clientes.email evita duplicar un lead que ya cotizó antes.
@@ -115,7 +113,6 @@ export async function createCotizacion(formData: FormData) {
         rangoM2,
         ubicacionObra,
         plazoInicio,
-        origen,
         estado: "nuevo",
         requerimiento: descripcion || null,
       },

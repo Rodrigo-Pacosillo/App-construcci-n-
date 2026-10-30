@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL") // pooled (-pooler): la app
+  directUrl = env("DIRECT_URL")   // directa: solo prisma migrate
 }
 
 // ─── Enums nativos de BD (valores estables) ──────────────────────────
@@ -40,12 +41,6 @@ enum PlazoInicio {
   en_3_meses
   en_6_meses
   no_sabe
-}
-
-enum FaseFoto {
-  antes
-  durante
-  despues
 }
 
 enum EstadoObra {
@@ -139,10 +134,9 @@ model Cotizacion {
   rangoM2          RangoM2        @map("rango_m2")
   ubicacionObra    String?        @map("ubicacion_obra")
   plazoInicio      PlazoInicio    @map("plazo_inicio")
-  origen           String
   estado           String         @default("nuevo")
   montoEstimado    Decimal?       @map("monto_estimado") @db.Decimal(12, 2)
-  montoCerrado     Decimal?       @map("monto_cerrado") @db.Decimal(12, 2)
+  fotoLoteUrl      String?        @map("foto_lote_url")
   requerimiento    String?        @map("requerimiento")
   notasInternas    String?        @map("notas_internas")
   creadoEn         DateTime       @default(now()) @map("creado_en")
@@ -151,7 +145,6 @@ model Cotizacion {
   contratos Contrato[]
 
   @@index([clienteId])
-  @@index([origen])
   @@index([estado])
   @@map("cotizaciones")
 }
@@ -180,34 +173,25 @@ model Proyecto {
   slug             String           @unique
   titulo           String
   tipoConstruccion TipoConstruccion @map("tipo_construccion")
-  m2Construidos    Int              @map("m2_construidos")
-  diasEjecucion    Int              @map("dias_ejecucion")
+  m2Construidos    Int?             @map("m2_construidos")      // era NOT NULL, ahora opcional
+  diasEjecucion    Int?             @map("dias_ejecucion")      // era NOT NULL, ahora opcional
   ubicacion        String
-  problemaCliente  String           @map("problema_cliente")
-  solucion         String
+  videoUrl         String?          @map("video_url")           // NUEVO: URL de TikTok
+  portadaUrl       String?          @map("portada_url")         // NUEVO: portada del proyecto
+  orden            Int              @default(0)                // NUEVO: orden de listado
+  problemaCliente  String?          @map("problema_cliente")    // era NOT NULL, ahora opcional
+  solucion         String?          // era NOT NULL, ahora opcional
   destacado        Boolean          @default(false)
   publicado        Boolean          @default(false)
   creadoEn         DateTime         @default(now()) @map("creado_en")
   actualizadoEn    DateTime         @updatedAt @map("actualizado_en")
 
   cliente    Cliente?        @relation(fields: [clienteId], references: [id])
-  fotos      FotoProyecto[]
   testimonios Testimonio[]
 
   @@index([clienteId])
+  @@index([publicado, orden])
   @@map("proyectos")
-}
-
-model FotoProyecto {
-  id         String    @id @default(cuid())
-  proyectoId String    @map("proyecto_id")
-  proyecto   Proyecto  @relation(fields: [proyectoId], references: [id], onDelete: Cascade)
-  url        String
-  fase       FaseFoto
-  orden      Int
-
-  @@index([proyectoId])
-  @@map("fotos_proyecto")
 }
 
 model Testimonio {
@@ -218,7 +202,6 @@ model Testimonio {
   texto            String
   fotoUrl          String?   @map("foto_url")
   puntaje          Int?
-  autorizaPublicar Boolean   @default(false) @map("autoriza_publicar")
   publicado        Boolean   @default(false)
   creadoEn         DateTime  @default(now()) @map("creado_en")
   actualizadoEn    DateTime  @updatedAt @map("actualizado_en")
@@ -252,6 +235,7 @@ model Certificacion {
   id          String  @id @default(cuid())
   titulo      String
   descripcion String
+  imageUrl    String? @map("image_url")
   activo      Boolean @default(true)
 
   @@map("certificaciones")
@@ -339,7 +323,6 @@ model Empleado {
   creadoEn     DateTime @default(now()) @map("creado_en")
 
   asignaciones AsignacionObra[]
-  prestamos    PrestamoHerramienta[]
 
   @@map("empleados")
 }
@@ -397,7 +380,7 @@ model MaterialObra {
 model Herramienta {
   id       String            @id @default(cuid())
   nombre   String
-  codigo   String            @unique
+  codigo   String?     @unique
   estado   EstadoHerramienta @default(disponible)
   activo   Boolean           @default(true)
 
@@ -409,18 +392,15 @@ model Herramienta {
 model PrestamoHerramienta {
   id               String   @id @default(cuid())
   herramientaId    String   @map("herramienta_id")
-  empleadoId       String   @map("empleado_id")
   obraId           String   @map("obra_id")
   fechaSalida      DateTime @map("fecha_salida")
   fechaDevolucion  DateTime? @map("fecha_devolucion")
   observaciones    String?
 
   herramienta Herramienta @relation(fields: [herramientaId], references: [id])
-  empleado    Empleado     @relation(fields: [empleadoId], references: [id])
   obra        ObraActiva   @relation(fields: [obraId], references: [id])
 
   @@index([herramientaId])
-  @@index([empleadoId])
   @@index([obraId])
   @@map("prestamos_herramienta")
 }

@@ -80,7 +80,7 @@ export async function getUsuarioById(id: string) {
                 estado: true,
                 tipoObra: true,
                 creadoEn: true,
-                montoCerrado: true,
+                montoEstimado: true,
               },
               orderBy: { creadoEn: "desc" },
             },
@@ -114,7 +114,7 @@ export async function getUsuarioById(id: string) {
             ...u.cliente,
             cotizaciones: u.cliente.cotizaciones.map((c) => ({
               ...c,
-              montoCerrado: c.montoCerrado ? Number(c.montoCerrado) : null,
+              montoEstimado: c.montoEstimado ? Number(c.montoEstimado) : null,
             })),
             contratos: u.cliente.contratos.map((c) => ({
               ...c,

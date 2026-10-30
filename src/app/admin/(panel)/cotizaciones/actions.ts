@@ -48,7 +48,6 @@ export async function getCotizaciones() {
     return cotizaciones.map((c) => ({
       ...c,
       montoEstimado: c.montoEstimado ? Number(c.montoEstimado) : null,
-      montoCerrado: c.montoCerrado ? Number(c.montoCerrado) : null,
     }));
   } catch (error) {
     console.error("Error en getCotizaciones:", error);
