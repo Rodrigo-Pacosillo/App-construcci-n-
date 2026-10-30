@@ -10,6 +10,7 @@ export const chatInicioSchema = z.object({
   cotizacionId: z.string().cuid({ message: "cotizacionId inválido" }),
   clienteNombre: z.string().min(1, "clienteNombre es requerido").max(100),
   whatsappNumero: z.string().optional(),
+  sitioBaseUrl: z.string().optional(),
   cotizacionData: z
     .object({
       tipoObra: z.string(),

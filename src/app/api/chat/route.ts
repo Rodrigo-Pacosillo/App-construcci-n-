@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
         return errorResponse("Datos de inicio de chat inválidos");
       }
 
-      const { clienteId, cotizacionId, clienteNombre, cotizacionData } =
+      const { clienteId, cotizacionId, clienteNombre, sitioBaseUrl, cotizacionData } =
         parsed.data;
 
       // Validar que la cotización pertenezca al cliente (seguridad)
@@ -69,6 +69,7 @@ export async function POST(req: NextRequest) {
         rangoM2: cotizacionData?.rangoM2 ?? "",
         plazoInicio: cotizacionData?.plazoInicio ?? "",
         whatsappNumero: WHATSAPP_NUMERO,
+        sitioBaseUrl,
       });
 
       // Llamar a NVIDIA para el mensaje inicial
@@ -187,6 +188,7 @@ export async function POST(req: NextRequest) {
       rangoM2: sesion.cotizacion?.rangoM2 ?? "",
       plazoInicio: sesion.cotizacion?.plazoInicio ?? "",
       whatsappNumero: WHATSAPP_NUMERO,
+      sitioBaseUrl: req.headers.get("origin") ?? undefined,
     });
 
     // Guardar mensaje del usuario

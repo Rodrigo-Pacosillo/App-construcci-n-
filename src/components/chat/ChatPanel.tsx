@@ -70,6 +70,7 @@ export function ChatPanel({
           cotizacionId,
           clienteNombre,
           whatsappNumero,
+          sitioBaseUrl: typeof window !== "undefined" ? window.location.origin : "",
           cotizacionData,
         }),
       });
@@ -155,22 +156,37 @@ export function ChatPanel({
 
       const data = await res.json();
 
-      setMensajes((prev) => {
-        const sinOptimista = prev.filter((m) => m.id !== mensajeOptimista.id);
-        return [
-          ...sinOptimista,
-          {
-            id: data.mensajeId ?? `temp-${Date.now()}`,
-            rol: "assistant",
-            contenido: data.respuesta ?? "Lo siento, no pude obtener una respuesta.",
-            creadoEn: new Date().toISOString(),
-          },
-        ];
-      });
+      setMensajes((prev) => [
+        ...prev.filter((m) => m.id !== mensajeOptimista.id), // quitar mensaje optimista temporal
+        {
+          id: `user-${Date.now()}`,
+          rol: "user",
+          contenido: texto,
+          creadoEn: new Date().toISOString(),
+        }, // conservar mensaje del usuario
+        {
+          id: data.mensajeId ?? `temp-${Date.now()}`,
+          rol: "assistant",
+          contenido: data.respuesta ?? "Lo siento, no pude obtener una respuesta.",
+          creadoEn: new Date().toISOString(),
+        },
+      ]);
     } catch {
-      setMensajes((prev) =>
-        prev.filter((m) => m.id !== mensajeOptimista.id)
-      );
+      setMensajes((prev) => [
+        ...prev.filter((m) => m.id !== mensajeOptimista.id),
+        {
+          id: `user-${Date.now()}`,
+          rol: "user",
+          contenido: texto,
+          creadoEn: new Date().toISOString(),
+        },
+        {
+          id: `temp-error-${Date.now()}`,
+          rol: "assistant",
+          contenido: "Lo siento, tuve un problema técnico. Intenta de nuevo en unos segundos.",
+          creadoEn: new Date().toISOString(),
+        },
+      ]);
       setError(
         "Lo siento, tuve un problema técnico. Intenta de nuevo en unos segundos."
       );

@@ -10,6 +10,7 @@ export interface SystemPromptData {
   rangoM2: string;
   plazoInicio: string;
   whatsappNumero?: string;
+  sitioBaseUrl?: string;
 }
 
 /**
@@ -28,8 +29,10 @@ export function buildSystemPrompt(data: SystemPromptData): string {
   } = data;
 
   const whatsapp = whatsappNumero
-    ? `Puedes escribirnos directamente por WhatsApp al ${whatsappNumero}.`
-    : "Puedes escribirnos por WhatsApp para acelerar el proceso.";
+    ? `https://wa.me/${whatsappNumero}`
+    : "https://wa.me/";
+
+  const sitioWeb = data.sitioBaseUrl || "";
 
   return `Eres el asistente virtual de Constr-art, una empresa de construcción en seco (Steel Frame) y tradicional. Atiendes a un cliente que acaba de enviar una cotización en el sitio web.
 
@@ -40,8 +43,9 @@ export function buildSystemPrompt(data: SystemPromptData): string {
 - Superficie estimada: ${rangoM2}
 - Plazo de inicio: ${plazoInicio}
 
-# CONTACTO
-${whatsapp}
+# CONTACTO (usar solo cuando el cliente lo pida o al final de la conversación)
+- WhatsApp: ${whatsapp} (enlace: https://wa.me/${whatsappNumero})
+- Sitio web: ${sitioWeb}
 
 # REGLAS DE COMPORTAMIENTO
 
@@ -99,9 +103,18 @@ No respondas sobre piscinas, jardines, decoración interior, precios de la compe
 ### D. Estado real de la cotización
 No tienes acceso al estado real de la cotización en tiempo real. No digas "tu cotización fue aprobada" ni similar.
 
+### E. WhatsApp
+NO menciones el número de WhatsApp en cada respuesta. Solo compártelo si el cliente lo pide explícitamente o al cerrar la conversación.
+
 ## 4. Flujo del sitio web (cuando pregunten por registro o acceso al portal)
 Explica: Cotización (ya enviada) → Contacto por WhatsApp → Visita técnica → Presupuesto → Contrato → Acceso al portal.
 NO digas "ya tenés acceso" ni "podés loguearte ahora". El acceso solo lo da el admin después del contrato.
+
+Cuando sea útil, puedes compartir links del sitio web:
+- Servicios: ${sitioWeb}/servicios
+- Cotización: ${sitioWeb}/cotizacion
+- FAQ: ${sitioWeb}/faq
+- Proyectos: ${sitioWeb}/proyectos
 
 ## 5. Tono y estilo
 - Tono: amigable pero profesional, como un asesor técnico que conoce el tema pero no es arrogante.
