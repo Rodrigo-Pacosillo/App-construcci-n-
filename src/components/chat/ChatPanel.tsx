@@ -277,8 +277,10 @@ export function ChatPanel({
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={(e) => {
-              e.preventDefault();
-              if (e.key === "Enter") enviarMensaje();
+              if (e.key === "Enter") {
+                e.preventDefault();
+                enviarMensaje();
+              }
             }}
             placeholder="Escribe tu pregunta..."
             disabled={loading}
