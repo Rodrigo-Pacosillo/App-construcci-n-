@@ -42,14 +42,15 @@ export function ChatPanel({
     if (typeof window === "undefined") return null;
     return sessionStorage.getItem(`chat_${cotizacionId}`);
   });
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const iniciadoRef = useRef(false);
 
   const sessionStorageKey = `chat_${cotizacionId}`;
 
-  // Auto-scroll al último mensaje
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
   }, [mensajes]);
 
   const iniciarChat = useCallback(async () => {
@@ -225,7 +226,10 @@ export function ChatPanel({
       )}
 
       {/* Área de mensajes */}
-      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 bg-neutral-50 dark:bg-neutral-900/50">
+      <div
+        ref={messagesContainerRef}
+        className="flex-1 overflow-y-auto px-6 py-4 space-y-4 bg-neutral-50 dark:bg-neutral-900/50"
+      >
         {mensajes.map((msg) => (
           <div
             key={msg.id}
@@ -263,7 +267,6 @@ export function ChatPanel({
             </div>
           </div>
         )}
-        <div ref={messagesEndRef} />
       </div>
 
       {/* Zona de input */}
@@ -273,7 +276,10 @@ export function ChatPanel({
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyPress={(e) => e.key === "Enter" && enviarMensaje()}
+            onKeyPress={(e) => {
+              e.preventDefault();
+              if (e.key === "Enter") enviarMensaje();
+            }}
             placeholder="Escribe tu pregunta..."
             disabled={loading}
             className="flex-1 px-4 py-3 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50"
