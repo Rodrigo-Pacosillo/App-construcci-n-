@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Send } from "lucide-react";
 
 import { WHATSAPP_NUMERO } from "@/lib/constants";
+import { AudioMensaje } from "./AudioMensaje";
 
 interface CotizacionData {
   tipoObra: string;
@@ -45,6 +46,16 @@ export function ChatPanel({
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const iniciadoRef = useRef(false);
 
+  // ─── Estado de TTS (Web Speech API) ─────────────────────────
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [ttsRate, setTtsRate] = useState<number>(1.0);
+  const [ttsVoiceName, setTtsVoiceName] = useState<string | null>(null);
+  const [reproduciendoId, setReproduciendoId] = useState<string | null>(null);
+  const [estaPausado, setEstaPausado] = useState<boolean>(false);
+  const [configPos, setConfigPos] = useState<{ x: number; y: number } | null>(null);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
+
   const sessionStorageKey = `chat_${cotizacionId}`;
 
   useEffect(() => {
@@ -52,6 +63,47 @@ export function ChatPanel({
       messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
     }
   }, [mensajes]);
+
+  // Cargar configuración de TTS desde localStorage
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const savedRate = localStorage.getItem("tts-rate");
+      if (savedRate) setTtsRate(parseFloat(savedRate));
+      const savedVoice = localStorage.getItem("tts-voice");
+      if (savedVoice) setTtsVoiceName(savedVoice);
+    } catch {
+      // ignorar si localStorage no está disponible
+    }
+  }, []);
+
+  // Cargar voces del navegador
+  useEffect(() => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+
+    const cargarVoces = () => {
+      setVoices(speechSynthesis.getVoices());
+    };
+
+    cargarVoces();
+    speechSynthesis.addEventListener("voiceschanged", cargarVoces);
+
+    return () => {
+      speechSynthesis.removeEventListener("voiceschanged", cargarVoces);
+    };
+  }, []);
+
+  // Cerrar popover de config al hacer clic fuera
+  useEffect(() => {
+    if (configPos === null) return;
+    const manejarClickFuera = (e: MouseEvent) => {
+      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
+        setConfigPos(null);
+      }
+    };
+    document.addEventListener("mousedown", manejarClickFuera);
+    return () => document.removeEventListener("mousedown", manejarClickFuera);
+  }, [configPos]);
 
   const iniciarChat = useCallback(async () => {
     setLoading(true);
@@ -182,6 +234,102 @@ export function ChatPanel({
     }
   }
 
+  // Voces ordenadas: español primero, dentro de ellas Neural/Natural primero
+  const vocesOrdenadas = useMemo(() => {
+    const es = voices.filter((v) => v.lang.startsWith("es"));
+    const otros = voices.filter((v) => !v.lang.startsWith("es"));
+    const ordenar = (arr: SpeechSynthesisVoice[]) =>
+      arr.sort((a, b) => {
+        const aNeural = /neural|natural/i.test(a.name) ? 0 : 1;
+        const bNeural = /neural|natural/i.test(b.name) ? 0 : 1;
+        if (aNeural !== bNeural) return aNeural - bNeural;
+        return a.name.localeCompare(b.name);
+      });
+    return [...ordenar(es), ...ordenar(otros)];
+  }, [voices]);
+
+  // Toggle play/pausa por mensaje (exclusividad: solo uno a la vez)
+  const togglePlay = useCallback(
+    (id: string, texto: string) => {
+      if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+
+      // Mismo mensaje y está sonando → pausar
+      if (reproduciendoId === id && !estaPausado) {
+        speechSynthesis.pause();
+        setEstaPausado(true);
+        return;
+      }
+
+      // Mismo mensaje y está pausado → reanudar
+      if (reproduciendoId === id && estaPausado) {
+        speechSynthesis.resume();
+        setEstaPausado(false);
+        return;
+      }
+
+      // Mensaje distinto: cancelar anterior y reproducir el nuevo
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(texto);
+      u.rate = ttsRate;
+      if (ttsVoiceName) {
+        const voice = voices.find((v) => v.name === ttsVoiceName);
+        if (voice) u.voice = voice;
+      }
+      u.onend = () => {
+        setReproduciendoId(null);
+        setEstaPausado(false);
+        utteranceRef.current = null;
+      };
+      u.onerror = () => {
+        setReproduciendoId(null);
+        setEstaPausado(false);
+        utteranceRef.current = null;
+      };
+      utteranceRef.current = u;
+      setReproduciendoId(id);
+      setEstaPausado(false);
+      speechSynthesis.speak(u);
+    },
+    [reproduciendoId, estaPausado, ttsRate, ttsVoiceName, voices]
+  );
+
+  const cambiarRate = useCallback(
+    (rate: number) => {
+      setTtsRate(rate);
+      try {
+        localStorage.setItem("tts-rate", String(rate));
+      } catch {
+        // ignorar
+      }
+      // Aplicar inmediatamente a la reproducción en curso
+      if (utteranceRef.current) {
+        utteranceRef.current.rate = rate;
+      }
+    },
+    []
+  );
+
+  const cambiarVoice = useCallback(
+    (voiceName: string | null) => {
+      setTtsVoiceName(voiceName);
+      try {
+        if (voiceName) {
+          localStorage.setItem("tts-voice", voiceName);
+        } else {
+          localStorage.removeItem("tts-voice");
+        }
+      } catch {
+        // ignorar
+      }
+      // Aplicar inmediatamente a la reproducción en curso
+      if (utteranceRef.current && voiceName) {
+        const voice = voices.find((v) => v.name === voiceName);
+        if (voice) utteranceRef.current.voice = voice;
+      }
+    },
+    [voices]
+  );
+
   const panelClasses =
     "bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-sm flex flex-col h-[600px]";
 
@@ -247,6 +395,22 @@ export function ChatPanel({
               <p className="text-sm leading-relaxed whitespace-pre-wrap">
                 {msg.contenido}
               </p>
+              {msg.rol === "assistant" && (
+                <AudioMensaje
+                  id={msg.id}
+                  texto={msg.contenido}
+                  estaActivo={reproduciendoId === msg.id}
+                  estaPausado={estaPausado}
+                  ttsRate={ttsRate}
+                  ttsVoiceName={ttsVoiceName}
+                  voices={vocesOrdenadas}
+                  onTogglePlay={() => togglePlay(msg.id, msg.contenido)}
+                  onCopiar={() => {}}
+                  onAbrirConfig={(e) => setConfigPos({ x: e.clientX, y: e.clientY })}
+                  onRateChange={cambiarRate}
+                  onVoiceChange={cambiarVoice}
+                />
+              )}
             </div>
           </div>
         ))}
@@ -298,6 +462,48 @@ export function ChatPanel({
         <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-2 text-center">
           Respondo en segundos · Basado en tu cotización
         </p>
+
+        {/* Popover de configuración de audio (posicionado donde se clickeó) */}
+        {configPos && (
+          <div
+            ref={popoverRef}
+            className="fixed bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg shadow-lg p-3 z-50"
+            style={{ left: configPos.x, top: configPos.y }}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <label className="text-xs font-medium text-neutral-600 dark:text-neutral-300 uppercase tracking-wider">
+                Velocidad
+              </label>
+              <span className="text-xs font-mono text-neutral-900 dark:text-white">
+                {ttsRate.toFixed(1)}x
+              </span>
+            </div>
+            <input
+              type="range"
+              min="0.5"
+              max="2.0"
+              step="0.1"
+              value={ttsRate}
+              onChange={(e) => cambiarRate(parseFloat(e.target.value))}
+              className="w-full accent-amber-500 cursor-pointer mb-4"
+            />
+            <label className="text-xs font-medium text-neutral-600 dark:text-neutral-300 uppercase tracking-wider block mb-2">
+              Voz
+            </label>
+            <select
+              value={ttsVoiceName ?? ""}
+              onChange={(e) => cambiarVoice(e.target.value || null)}
+              className="w-full bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded px-2 py-1.5 text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer"
+            >
+              <option value="">Sistema (predeterminada)</option>
+              {vocesOrdenadas.map((v) => (
+                <option key={v.voiceURI} value={v.name}>
+                  {v.name} - {v.lang}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
     </div>
   );
