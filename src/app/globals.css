@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "../components/servicios/servicio-art.css";
+@import "./chat-ui.css";
 
 @custom-variant dark (&:where(.dark, .dark *));
 

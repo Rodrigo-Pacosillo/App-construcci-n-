@@ -4,7 +4,6 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { Copy, Play, Pause, Settings, Check } from "lucide-react";
 
 interface AudioMensajeProps {
-  id: string;
   texto: string;
   estaActivo: boolean;
   estaPausado: boolean;
@@ -19,7 +18,6 @@ interface AudioMensajeProps {
 }
 
 export function AudioMensaje({
-  id,
   texto,
   estaActivo,
   estaPausado,

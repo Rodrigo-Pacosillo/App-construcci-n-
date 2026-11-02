@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { Send } from "lucide-react";
 
 import { WHATSAPP_NUMERO } from "@/lib/constants";
 import { AudioMensaje } from "./AudioMensaje";
+import AiAvatar from "./AiAvatar";
+import SendIcon from "./SendIcon";
+import BrickLoader from "./BrickLoader";
 
 interface CotizacionData {
   tipoObra: string;
@@ -48,8 +50,23 @@ export function ChatPanel({
 
   // ─── Estado de TTS (Web Speech API) ─────────────────────────
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
-  const [ttsRate, setTtsRate] = useState<number>(1.0);
-  const [ttsVoiceName, setTtsVoiceName] = useState<string | null>(null);
+  const [ttsRate, setTtsRate] = useState<number>(() => {
+    if (typeof window === "undefined") return 1.0;
+    try {
+      const saved = localStorage.getItem("tts-rate");
+      return saved ? parseFloat(saved) : 1.0;
+    } catch {
+      return 1.0;
+    }
+  });
+  const [ttsVoiceName, setTtsVoiceName] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      return localStorage.getItem("tts-voice") ?? null;
+    } catch {
+      return null;
+    }
+  });
   const [reproduciendoId, setReproduciendoId] = useState<string | null>(null);
   const [estaPausado, setEstaPausado] = useState<boolean>(false);
   const [configPos, setConfigPos] = useState<{ x: number; y: number } | null>(null);
@@ -63,19 +80,6 @@ export function ChatPanel({
       messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
     }
   }, [mensajes]);
-
-  // Cargar configuración de TTS desde localStorage
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    try {
-      const savedRate = localStorage.getItem("tts-rate");
-      if (savedRate) setTtsRate(parseFloat(savedRate));
-      const savedVoice = localStorage.getItem("tts-voice");
-      if (savedVoice) setTtsVoiceName(savedVoice);
-    } catch {
-      // ignorar si localStorage no está disponible
-    }
-  }, []);
 
   // Cargar voces del navegador
   useEffect(() => {
@@ -338,26 +342,12 @@ export function ChatPanel({
       {/* Header del chat */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shrink-0">
-            <svg
-              className="w-5 h-5 text-white"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
-              />
-            </svg>
-          </div>
+          <AiAvatar size={40} className="shrink-0" />
           <div>
             <h3 className="font-semibold text-neutral-900 dark:text-white">
               Asistente CONSTR-ART
             </h3>
-            <p className="text-sm text-neutral-500 dark:text-neutral-400">
+            <p className="text-sm text-[var(--chat-muted)]">
               Te ayuda con tu cotización, dudas sobre construcción y el proceso de obra
             </p>
           </div>
@@ -388,8 +378,8 @@ export function ChatPanel({
             <div
               className={`max-w-[85%] rounded-2xl px-3 py-3 ${
                 msg.rol === "user"
-                  ? "bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-md"
-                  : "bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 shadow-sm text-neutral-900 dark:text-white"
+                  ? "bg-[var(--chat-user-bg)] text-[var(--chat-user-fg)] shadow-md"
+                  : "bg-[var(--chat-bot-bg)] border border-[var(--chat-bot-border)] shadow-sm text-[var(--chat-bot-fg)]"
               }`}
             >
               <p className="text-sm leading-relaxed whitespace-pre-wrap">
@@ -397,7 +387,6 @@ export function ChatPanel({
               </p>
               {msg.rol === "assistant" && (
                 <AudioMensaje
-                  id={msg.id}
                   texto={msg.contenido}
                   estaActivo={reproduciendoId === msg.id}
                   estaPausado={estaPausado}
@@ -416,18 +405,8 @@ export function ChatPanel({
         ))}
         {loading && (
           <div className="flex justify-start">
-            <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-2xl shadow-sm px-3 py-3">
-              <div className="flex gap-1">
-                <div className="w-2 h-2 bg-amber-500 rounded-full animate-bounce" />
-                <div
-                  className="w-2 h-2 bg-amber-500 rounded-full animate-bounce"
-                  style={{ animationDelay: "0.1s" }}
-                />
-                <div
-                  className="w-2 h-2 bg-amber-500 rounded-full animate-bounce"
-                  style={{ animationDelay: "0.2s" }}
-                />
-              </div>
+            <div className="bg-[var(--chat-bot-bg)] border border-[var(--chat-bot-border)] rounded-2xl shadow-sm px-3 py-3 text-[var(--chat-bot-fg)]">
+              <BrickLoader />
             </div>
           </div>
         )}
@@ -456,10 +435,10 @@ export function ChatPanel({
             className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-600 text-white rounded-xl shadow-md hover:from-amber-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center"
             aria-label="Enviar mensaje"
           >
-            <Send className="w-5 h-5" />
+            <SendIcon size={20} />
           </button>
         </div>
-        <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-2 text-center">
+        <p className="text-xs text-[var(--chat-muted)] mt-2 text-center">
           Respondo en segundos · Basado en tu cotización
         </p>
 
