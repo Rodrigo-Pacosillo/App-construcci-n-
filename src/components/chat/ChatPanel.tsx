@@ -182,6 +182,7 @@ export function ChatPanel({
     };
 
     setMensajes((prev) => [...prev, mensajeOptimista]);
+    setLoading(true);
 
     try {
       const res = await fetch("/api/chat", {
