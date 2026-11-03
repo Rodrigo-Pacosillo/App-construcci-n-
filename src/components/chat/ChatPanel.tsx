@@ -46,9 +46,9 @@ export function ChatPanel({
     ? `chat_${cotizacionId}`
     : `chat_cliente_${clienteId}`;
 
-  const sessionId = useMemo(() => {
+  const [sessionId, setSessionId] = useState<string | null>(() => {
     return sessionStorage.getItem(sessionStorageKey);
-  }, [sessionStorageKey]);
+  });
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const ultimoInicioRef = useRef<string | null>(null);
 
@@ -139,6 +139,7 @@ export function ChatPanel({
 
       if (data.sessionId) {
         sessionStorage.setItem(sessionStorageKey, data.sessionId);
+        setSessionId(data.sessionId);
       }
 
       if (data.mensajes && data.mensajes.length > 0) {
