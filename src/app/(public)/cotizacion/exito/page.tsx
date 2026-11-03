@@ -92,7 +92,7 @@ export default async function ExitoPage({
           {/* Columna izquierda: mensaje de éxito y resumen */}
           <div className="lg:col-span-1">
             <div className="text-center lg:text-left mb-8">
-              <div className="inline-flex items-center justify-center lg:justify-start w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 mb-6">
+              <div className="mx-auto inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 mb-6">
                 <svg
                   className="w-8 h-8 text-green-600 dark:text-green-400"
                   fill="none"

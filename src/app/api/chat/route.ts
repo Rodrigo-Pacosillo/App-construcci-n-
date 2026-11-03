@@ -36,20 +36,22 @@ export async function POST(req: NextRequest) {
       const { clienteId, cotizacionId, clienteNombre, sitioBaseUrl, cotizacionData } =
         parsed.data;
 
-      // Validar que la cotización pertenezca al cliente (seguridad)
-      const cotizacion = await prisma.cotizacion.findUnique({
-        where: { id: cotizacionId },
-        select: { id: true, clienteId: true },
-      });
+      // Validar que la cotización pertenezca al cliente (solo si se provee cotizacionId)
+      if (cotizacionId) {
+        const cotizacion = await prisma.cotizacion.findUnique({
+          where: { id: cotizacionId },
+          select: { id: true, clienteId: true },
+        });
 
-      if (!cotizacion) {
-        return errorResponse("Cotización no encontrada", 404);
-      }
-      if (cotizacion.clienteId !== clienteId) {
-        return errorResponse(
-          "La cotización no pertenece al cliente indicado",
-          403
-        );
+        if (!cotizacion) {
+          return errorResponse("Cotización no encontrada", 404);
+        }
+        if (cotizacion.clienteId !== clienteId) {
+          return errorResponse(
+            "La cotización no pertenece al cliente indicado",
+            403
+          );
+        }
       }
 
       // Crear sesión de chat
@@ -57,7 +59,7 @@ export async function POST(req: NextRequest) {
         data: {
           sessionId: crypto.randomUUID(),
           clienteId,
-          cotizacionId,
+          cotizacionId: cotizacionId ?? undefined,
         },
       });
 

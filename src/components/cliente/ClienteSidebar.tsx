@@ -101,7 +101,7 @@ export function ClienteSidebar({
   email: string;
   clienteId: string;
   clienteNombre: string;
-  cotizacionId: string;
+  cotizacionId?: string;
   cotizacionData?: {
     tipoObra: string;
     tipoConstruccion: string;

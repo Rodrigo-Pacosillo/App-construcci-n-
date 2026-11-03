@@ -38,7 +38,7 @@ export default async function ClienteLayout({
         email={session.user?.email || ""}
         clienteId={cliente?.id ?? ""}
         clienteNombre={cliente?.nombre ?? ""}
-        cotizacionId={cotizacion?.id ?? ""}
+        cotizacionId={cotizacion?.id ?? undefined}
         cotizacionData={
           cotizacion
             ? {

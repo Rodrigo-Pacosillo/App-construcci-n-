@@ -41,13 +41,16 @@ export function ChatPanel({
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [sessionId, setSessionId] = useState<string | null>(() => {
-    if (typeof window === "undefined") return null;
-    const key = cotizacionId ? `chat_${cotizacionId}` : `chat_cliente_${clienteId}`;
-    return sessionStorage.getItem(key);
-  });
+
+  const sessionStorageKey = cotizacionId
+    ? `chat_${cotizacionId}`
+    : `chat_cliente_${clienteId}`;
+
+  const sessionId = useMemo(() => {
+    return sessionStorage.getItem(sessionStorageKey);
+  }, [sessionStorageKey]);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const iniciadoRef = useRef(false);
+  const ultimoInicioRef = useRef<string | null>(null);
 
   // ─── Estado de TTS (Web Speech API) ─────────────────────────
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
@@ -73,10 +76,6 @@ export function ChatPanel({
   const [configPos, setConfigPos] = useState<{ x: number; y: number } | null>(null);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
-
-  const sessionStorageKey = cotizacionId
-    ? `chat_${cotizacionId}`
-    : `chat_cliente_${clienteId}`;
 
   useEffect(() => {
     if (messagesContainerRef.current) {
@@ -139,7 +138,6 @@ export function ChatPanel({
       const data = await res.json();
 
       if (data.sessionId) {
-        setSessionId(data.sessionId);
         sessionStorage.setItem(sessionStorageKey, data.sessionId);
       }
 
@@ -162,13 +160,14 @@ export function ChatPanel({
     }
   }, [clienteId, cotizacionId, clienteNombre, whatsappNumero, cotizacionData, sessionStorageKey]);
 
-  // Iniciar chat al montar si no hay sesión guardada
+  // Iniciar chat al montar si no hay sesión guardada para esta cotización/cliente
   useEffect(() => {
     if (sessionId) return;
-    if (iniciadoRef.current) return;
-    iniciadoRef.current = true;
+    const claveActual = `${clienteId}|${cotizacionId ?? "sin-cotizacion"}`;
+    if (ultimoInicioRef.current === claveActual) return;
+    ultimoInicioRef.current = claveActual;
     iniciarChat();
-  }, [sessionId, iniciarChat]);
+  }, [sessionId, clienteId, cotizacionId, iniciarChat]);
 
   async function enviarMensaje() {
     if (!input.trim() || !sessionId) return;

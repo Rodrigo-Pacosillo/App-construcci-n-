@@ -7,7 +7,7 @@ import { z } from "zod";
 export const chatInicioSchema = z.object({
   mensaje: z.literal("__INICIO__"),
   clienteId: z.string().cuid({ message: "clienteId inválido" }),
-  cotizacionId: z.string().cuid({ message: "cotizacionId inválido" }),
+  cotizacionId: z.string().cuid({ message: "cotizacionId inválido" }).optional(),
   clienteNombre: z.string().min(1, "clienteNombre es requerido").max(100),
   whatsappNumero: z.string().optional(),
   sitioBaseUrl: z.string().optional(),
