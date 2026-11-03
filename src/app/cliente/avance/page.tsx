@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import Image from "next/image";
 import { prisma } from "@/lib/db";
 
 async function getObraActiva(obraId?: string) {
@@ -15,6 +16,10 @@ async function getObraActiva(obraId?: string) {
             include: {
               contrato: true,
               hitos: { where: { visibleCliente: true }, orderBy: { fecha: "asc" } },
+              actualizaciones: {
+                where: { visibleCliente: true },
+                orderBy: { fechaReferencia: "desc" },
+              },
             },
             orderBy: { fechaInicio: "desc" },
           },
@@ -59,6 +64,9 @@ export default async function ClienteAvancePage({
   }
 
   const hitos = obra.hitos;
+  const actualizaciones = obra.actualizaciones;
+  const fotos = actualizaciones.filter((a) => a.tipo === "foto");
+  const videos = actualizaciones.filter((a) => a.tipo === "video");
 
   return (
     <div className="space-y-8">
@@ -70,18 +78,61 @@ export default async function ClienteAvancePage({
         </p>
       </div>
 
-      {hitos.length > 0 ? (
+      {actualizaciones.length > 0 || fotos.length > 0 || videos.length > 0 ? (
         <div className="space-y-6">
           <div>
             <div className="flex items-center justify-between">
-              <p className="section-label text-ink-faint">ACTUALIZACIONES ({hitos.length})</p>
-              <p className="text-sm text-ink-muted">
-                Publicadas por el administrador
-              </p>
+              <p className="section-label text-ink-faint">ACTUALIZACIONES MULTIMEDIA ({actualizaciones.length})</p>
+              <p className="text-sm text-ink-muted">Publicadas por el administrador</p>
             </div>
-            {/* §8.4: la visibilidad no prueba que un hito esté completado.
-                Se muestran como actualizaciones publicadas con fecha y
-                descripción, sin inferir un estado de finalización. */}
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {actualizaciones.map((a) => (
+                <div
+                  key={a.id}
+                  className="rounded border border-border bg-surface p-4 flex flex-col"
+                >
+                  {a.tipo === "foto" && (
+                    <div className="aspect-video w-full rounded overflow-hidden bg-ink/5 mb-3 relative">
+                      <Image
+                        src={a.urlArchivo}
+                        alt={a.titulo}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                        style={{ objectFit: "cover" }}
+                      />
+                    </div>
+                  )}
+                  {a.tipo === "video" && (
+                    <div className="aspect-video w-full rounded overflow-hidden bg-ink/10 mb-3 flex items-center justify-center">
+                      <div className="text-center text-ink-muted">
+                        <p className="text-sm font-medium">Video</p>
+                        <p className="text-xs text-ink-faint">{a.titulo}</p>
+                      </div>
+                    </div>
+                  )}
+                  <h3 className="font-heading font-medium text-sm">{a.titulo}</h3>
+                  {a.descripcion && (
+                    <p className="mt-1 text-sm text-ink-muted line-clamp-2">{a.descripcion}</p>
+                  )}
+                  <p className="mt-2 text-xs text-ink-faint">{formatDate(a.fechaReferencia)}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="rounded border border-border bg-surface p-8 text-center">
+          <p className="section-label text-ink-faint">SIN ACTUALIZACIONES PUBLICADAS</p>
+          <p className="mt-2 text-ink-muted">
+            El administrador publicará fotos y videos del avance conforme avance la obra.
+          </p>
+        </div>
+      )}
+
+      {hitos.length > 0 ? (
+        <div className="space-y-6">
+          <div>
+            <p className="section-label text-ink-faint">HITOS ({hitos.length})</p>
             <div className="mt-6 relative">
               <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-ink/10" />
               <div className="space-y-8">
@@ -103,14 +154,7 @@ export default async function ClienteAvancePage({
             </div>
           </div>
         </div>
-      ) : (
-        <div className="rounded border border-border bg-surface p-8 text-center">
-          <p className="section-label text-ink-faint">SIN ACTUALIZACIONES PUBLICADAS</p>
-          <p className="mt-2 text-ink-muted">
-            El administrador publicará actualizaciones conforme avance la obra.
-          </p>
-        </div>
-      )}
+      ) : null}
     </div>
   );
 }

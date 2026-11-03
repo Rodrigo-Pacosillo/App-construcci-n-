@@ -7,17 +7,17 @@ import {
   LayoutDashboard,
   FileText,
   MessageSquare,
-  Wrench,
   LogOut,
   Menu,
   X,
   ChevronDown,
   ChevronRight,
   FileCheck,
-  DollarSign,
-  FileText as FileTextIcon,
+  Bot,
+  Calendar,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { ChatPanel } from "@/components/chat/ChatPanel";
 
 type NavItem = 
   | { id: string; label: string; href: string; icon: LucideIcon; children?: never }
@@ -27,11 +27,9 @@ const NAV_ITEMS: NavItem[] = [
   { id: "dashboard", label: "Resumen", href: "/cliente", icon: LayoutDashboard },
   { id: "obra", label: "Mi obra", icon: MessageSquare, children: [
     { id: "avance", label: "Avance", href: "/cliente/avance", icon: FileCheck },
-    { id: "pagos", label: "Pagos", href: "/cliente/pagos", icon: DollarSign },
-    { id: "documentos", label: "Documentos", href: "/cliente/documentos", icon: FileTextIcon },
   ]},
   { id: "cotizaciones", label: "Mis cotizaciones", href: "/cliente/cotizaciones", icon: FileText },
-  { id: "contratos", label: "Mis contratos", href: "/cliente/contratos", icon: Wrench },
+  { id: "calendario", label: "Calendario", href: "/cliente/calendario", icon: Calendar },
 ];
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
@@ -93,8 +91,26 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
-export function ClienteSidebar({ email }: { email: string }) {
+export function ClienteSidebar({
+  email,
+  clienteId,
+  clienteNombre,
+  cotizacionId,
+  cotizacionData,
+}: {
+  email: string;
+  clienteId: string;
+  clienteNombre: string;
+  cotizacionId: string;
+  cotizacionData?: {
+    tipoObra: string;
+    tipoConstruccion: string;
+    rangoM2: string;
+    plazoInicio: string;
+  };
+}) {
   const [open, setOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
 
   return (
     <>
@@ -120,6 +136,17 @@ export function ClienteSidebar({ email }: { email: string }) {
         <nav className="flex-1 overflow-y-auto p-4">
           <NavLinks />
         </nav>
+        {clienteId && cotizacionId && (
+          <div className="mt-4 p-4">
+            <button
+              onClick={() => setChatOpen(true)}
+              className="flex w-full items-center justify-center gap-2 rounded border border-border bg-surface px-3 py-2 text-sm text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink"
+            >
+              <Bot className="h-4 w-4 shrink-0" />
+              Asistente CONSTR-ART
+            </button>
+          </div>
+        )}
         <div className="shrink-0 border-t border-border p-4">
           <p className="truncate text-xs text-ink-faint">{email}</p>
           <button
@@ -131,6 +158,36 @@ export function ClienteSidebar({ email }: { email: string }) {
           </button>
         </div>
       </div>
+
+      {chatOpen && clienteId && cotizacionId && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"
+          onClick={() => setChatOpen(false)}
+        >
+          <div
+            className="absolute top-4 right-4 z-10"
+            onClick={(e) => {
+              e.stopPropagation();
+              setChatOpen(false);
+            }}
+          >
+            <button className="flex h-10 w-10 items-center justify-center rounded-full bg-ink text-background hover:bg-ink/90 transition-colors">
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          <div className="relative w-full max-w-5xl h-full bg-background rounded-xl border border-border shadow-2xl flex flex-col overflow-hidden">
+            <div className="h-[calc(100vh-2rem)] overflow-hidden flex flex-col">
+              <ChatPanel
+                clienteId={clienteId}
+                cotizacionId={cotizacionId}
+                clienteNombre={clienteNombre}
+                whatsappNumero=""
+                cotizacionData={cotizacionData!}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       <div
         className={`fixed inset-0 z-40 bg-black/50 lg:hidden transition-opacity ${
@@ -150,6 +207,20 @@ export function ClienteSidebar({ email }: { email: string }) {
           <div className="mt-4 space-y-1 overflow-y-auto">
             <NavLinks onNavigate={() => setOpen(false)} />
           </div>
+          {clienteId && cotizacionId && (
+            <div className="mt-4 p-4">
+              <button
+                onClick={() => {
+                  setChatOpen(true);
+                  setOpen(false);
+                }}
+                className="flex w-full items-center justify-center gap-2 rounded border border-border bg-surface px-3 py-2 text-sm text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink"
+              >
+                <Bot className="h-4 w-4 shrink-0" />
+                Asistente CONSTR-ART
+              </button>
+            </div>
+          )}
           <div className="shrink-0 border-t border-border p-4">
             <p className="truncate text-xs text-ink-faint">{email}</p>
             <button
