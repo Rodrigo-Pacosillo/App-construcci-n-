@@ -160,14 +160,35 @@ export function ChatPanel({
     }
   }, [clienteId, cotizacionId, clienteNombre, whatsappNumero, cotizacionData, sessionStorageKey]);
 
-  // Iniciar chat al montar si no hay sesión guardada para esta cotización/cliente
+  // Cuando cambian cliente o cotización, reiniciar el chat completamente
+  // para que no se mezclen datos de clientes anteriores
   useEffect(() => {
-    if (sessionId) return;
     const claveActual = `${clienteId}|${cotizacionId ?? "sin-cotizacion"}`;
     if (ultimoInicioRef.current === claveActual) return;
+
+    // Limpiar estado previo
+    setMensajes([]);
+    setError(null);
+    setInput("");
+
+    // Borrar sessionStorage de la clave anterior si existe
+    const claveAnterior = ultimoInicioRef.current;
+    if (claveAnterior && claveAnterior !== claveActual) {
+      const partes = claveAnterior.split("|");
+      const anteriorCotizacion = partes[1];
+      if (anteriorCotizacion && anteriorCotizacion !== "sin-cotizacion") {
+        sessionStorage.removeItem(`chat_${anteriorCotizacion}`);
+      }
+    }
+
     ultimoInicioRef.current = claveActual;
-    iniciarChat();
-  }, [sessionId, clienteId, cotizacionId, iniciarChat]);
+
+    // Si no hay sesión guardada para esta clave, iniciar una nueva
+    const saved = sessionStorage.getItem(sessionStorageKey);
+    if (!saved) {
+      setTimeout(() => iniciarChat(), 0);
+    }
+  }, [clienteId, cotizacionId, sessionStorageKey, iniciarChat]);
 
   async function enviarMensaje() {
     if (!input.trim() || !sessionId) return;
