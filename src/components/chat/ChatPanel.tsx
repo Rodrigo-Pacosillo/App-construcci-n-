@@ -24,10 +24,10 @@ interface Mensaje {
 
 interface ChatPanelProps {
   clienteId: string;
-  cotizacionId: string;
+  cotizacionId?: string;
   clienteNombre: string;
   whatsappNumero?: string;
-  cotizacionData: CotizacionData;
+  cotizacionData?: CotizacionData;
 }
 
 export function ChatPanel({
@@ -43,7 +43,8 @@ export function ChatPanel({
   const [error, setError] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(() => {
     if (typeof window === "undefined") return null;
-    return sessionStorage.getItem(`chat_${cotizacionId}`);
+    const key = cotizacionId ? `chat_${cotizacionId}` : `chat_cliente_${clienteId}`;
+    return sessionStorage.getItem(key);
   });
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const iniciadoRef = useRef(false);
@@ -73,7 +74,9 @@ export function ChatPanel({
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
 
-  const sessionStorageKey = `chat_${cotizacionId}`;
+  const sessionStorageKey = cotizacionId
+    ? `chat_${cotizacionId}`
+    : `chat_cliente_${clienteId}`;
 
   useEffect(() => {
     if (messagesContainerRef.current) {
@@ -120,12 +123,12 @@ export function ChatPanel({
         body: JSON.stringify({
           mensaje: "__INICIO__",
           clienteId,
-          cotizacionId,
+          cotizacionId: cotizacionId ?? undefined,
           clienteNombre,
           whatsappNumero,
           sitioBaseUrl:
             typeof window !== "undefined" ? window.location.origin : "",
-          cotizacionData,
+          cotizacionData: cotizacionData ?? undefined,
         }),
       });
 
@@ -349,7 +352,9 @@ export function ChatPanel({
               Asistente CONSTR-ART
             </h3>
             <p className="text-sm text-[var(--chat-muted)]">
-              Te ayuda con tu cotización, dudas sobre construcción y el proceso de obra
+              {cotizacionData
+                ? "Te ayuda con tu cotización, dudas sobre construcción y el proceso de obra"
+                : "Responde tus dudas sobre construcción y el proceso de obra. No hay una cotización activa vinculada todavía."}
             </p>
           </div>
         </div>
@@ -440,7 +445,9 @@ export function ChatPanel({
           </button>
         </div>
         <p className="text-xs text-[var(--chat-muted)] mt-2 text-center">
-          Respondo en segundos · Basado en tu cotización
+          {cotizacionData
+            ? "Respondo en segundos · Basado en tu cotización"
+            : "Respondo en segundos · Chat general del cliente"}
         </p>
 
         {/* Popover de configuración de audio (posicionado donde se clickeó) */}

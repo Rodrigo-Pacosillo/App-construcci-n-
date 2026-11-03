@@ -136,17 +136,15 @@ export function ClienteSidebar({
         <nav className="flex-1 overflow-y-auto p-4">
           <NavLinks />
         </nav>
-        {clienteId && cotizacionId && (
-          <div className="mt-4 p-4">
-            <button
-              onClick={() => setChatOpen(true)}
-              className="flex w-full items-center justify-center gap-2 rounded border border-border bg-surface px-3 py-2 text-sm text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink"
-            >
-              <Bot className="h-4 w-4 shrink-0" />
-              Asistente CONSTR-ART
-            </button>
-          </div>
-        )}
+        <div className="mt-4 p-4">
+          <button
+            onClick={() => setChatOpen(true)}
+            className="flex w-full items-center justify-center gap-2 rounded border border-border bg-surface px-3 py-2 text-sm text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink"
+          >
+            <Bot className="h-4 w-4 shrink-0" />
+            Asistente CONSTR-ART
+          </button>
+        </div>
         <div className="shrink-0 border-t border-border p-4">
           <p className="truncate text-xs text-ink-faint">{email}</p>
           <button
@@ -159,7 +157,7 @@ export function ClienteSidebar({
         </div>
       </div>
 
-      {chatOpen && clienteId && cotizacionId && (
+      {chatOpen && clienteId && (
         <div
           className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"
           onClick={() => setChatOpen(false)}
@@ -182,7 +180,7 @@ export function ClienteSidebar({
                 cotizacionId={cotizacionId}
                 clienteNombre={clienteNombre}
                 whatsappNumero=""
-                cotizacionData={cotizacionData!}
+                cotizacionData={cotizacionData}
               />
             </div>
           </div>
@@ -207,7 +205,7 @@ export function ClienteSidebar({
           <div className="mt-4 space-y-1 overflow-y-auto">
             <NavLinks onNavigate={() => setOpen(false)} />
           </div>
-          {clienteId && cotizacionId && (
+          {clienteId && (
             <div className="mt-4 p-4">
               <button
                 onClick={() => {
