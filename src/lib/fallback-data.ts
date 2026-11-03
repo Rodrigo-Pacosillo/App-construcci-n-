@@ -74,10 +74,7 @@ export const FALLBACK_PROYECTOS = [
     videoUrl: null,
     portadaUrl: "/img/proyectos/pilar-despues.jpg",
     orden: 1,
-    problemaCliente:
-      "La familia quería una casa moderna y sustentable, pero con presupuesto limitado y plazo ajustado para mudarse.",
-    solucion:
-      "Construcción en steel frame con aislación térmica de alta eficiencia. Reducción del 40% en tiempo de obra respecto a tradicional, con mejor aislación.",
+    galeriaUrls: [],
     destacado: true,
     publicado: true,
   },
@@ -92,10 +89,7 @@ export const FALLBACK_PROYECTOS = [
     videoUrl: null,
     portadaUrl: "/img/proyectos/vlopez-despues.jpg",
     orden: 2,
-    problemaCliente:
-      "Necesitaban un estudio y un dormitorio extra en el piso superior, sin perder el jardín.",
-    solucion:
-      "Ampliación en steel frame sobre estructura existente. Se logró el doble de espacio sin demoler, con acabados idénticos a la casa original.",
+    galeriaUrls: [],
     destacado: true,
     publicado: true,
   },
@@ -110,10 +104,7 @@ export const FALLBACK_PROYECTOS = [
     videoUrl: null,
     portadaUrl: "/img/proyectos/santelmo-despues.jpg",
     orden: 3,
-    problemaCliente:
-      "Un emprendedor quería habilitar un local gastronómico en un sótano, con plazo mínimo de demora.",
-    solucion:
-      "Acondicionamiento completo con tabiquería drywall, cielorrasos suspendidos y revestimientos resistentes a humedad. Listo en 15 días.",
+    galeriaUrls: [],
     destacado: false,
     publicado: true,
   },
@@ -128,10 +119,7 @@ export const FALLBACK_PROYECTOS = [
     videoUrl: null,
     portadaUrl: "/img/proyectos/sanpedro-despues.jpg",
     orden: 4,
-    problemaCliente:
-      "Una quinta familiar con décadas de abandono que querían convertir en casa de fin de semana.",
-    solucion:
-      "Rehabilitación integral: estructura reforzada, nuevos tabiques, aislación, instalaciones. Se preservó la fachada original.",
+    galeriaUrls: [],
     destacado: true,
     publicado: true,
   },
@@ -146,10 +134,7 @@ export const FALLBACK_PROYECTOS = [
     videoUrl: null,
     portadaUrl: "/img/proyectos/oficinas-despues.jpg",
     orden: 5,
-    problemaCliente:
-      "Una startup necesitaba oficinas modulares que pudieran reconfigurar según crezca el equipo.",
-    solucion:
-      "Sistema de tabiques desmontables en drywall con puertas corredizas. El espacio se adapta al equipo sin obras.",
+    galeriaUrls: [],
     destacado: false,
     publicado: true,
   },
@@ -164,10 +149,7 @@ export const FALLBACK_PROYECTOS = [
     videoUrl: null,
     portadaUrl: null,
     orden: 6,
-    problemaCliente:
-      "Un arquitecto quería demostrar que la construcción en seco puede ser tan estética como la tradicional.",
-    solucion:
-      "Casa de diseño con tabiques vistos, cielorrasos de chapa ondulada y amplios vanos de vidrio. Publicada en revista de arquitectura.",
+    galeriaUrls: [],
     destacado: false,
     publicado: true,
   },
@@ -259,7 +241,7 @@ export const FALLBACK_FAQS: Faq[] = [
 export const FALLBACK_TESTIMONIOS = [
   {
     id: "1",
-    clienteNombre: "Juan Pérez",
+    nombrePublico: "Juan Pérez",
     texto:
       "Increíble cómo en 45 días pasamos de terreno a casa habitable. La calidad de los acabados superó nuestras expectativas. El aislamiento térmico es notable.",
     puntaje: 5,
@@ -267,7 +249,7 @@ export const FALLBACK_TESTIMONIOS = [
   },
   {
     id: "2",
-    clienteNombre: "Laura Fernández",
+    nombrePublico: "Laura Fernández",
     texto:
       "Necesitábamos ampliar sin demoler y cumplieron exactamente lo prometido. La ampliación se ve como si siempre hubiera estado ahí.",
     puntaje: 5,
@@ -275,7 +257,7 @@ export const FALLBACK_TESTIMONIOS = [
   },
   {
     id: "3",
-    clienteNombre: "Diego Torres",
+    nombrePublico: "Diego Torres",
     texto:
       "El local quedó listo en 15 días, justo antes de la inauguración. Profesionales de primera.",
     puntaje: 5,
@@ -283,7 +265,7 @@ export const FALLBACK_TESTIMONIOS = [
   },
   {
     id: "4",
-    clienteNombre: "Roberto García",
+    nombrePublico: "Roberto García",
     texto:
       "Transformaron una quinta abandonada en una casa hermosa. Preservaron la fachada y modernizaron todo por dentro. Excelente trabajo.",
     puntaje: 4,
@@ -291,7 +273,7 @@ export const FALLBACK_TESTIMONIOS = [
   },
   {
     id: "5",
-    clienteNombre: "María López",
+    nombrePublico: "María López",
     texto:
       "Contraté solo la cotización pero me sorprendió la profesionalidad y claridad del presupuesto. Muy recomendable.",
     puntaje: 5,

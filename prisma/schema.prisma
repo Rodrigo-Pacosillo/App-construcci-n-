@@ -75,6 +75,32 @@ enum EstadoHerramienta {
   baja
 }
 
+enum TipoMultimedia {
+  foto
+  video
+  pdf
+  plano
+  documento
+  otro
+}
+
+enum EstadoTestimonio {
+  pendiente
+  aprobado
+  rechazado
+  oculto
+}
+
+enum TipoEventoCalendario {
+  nota
+  recordatorio
+  inicio_etapa
+  fin_etapa
+  entrega
+  reunion
+  otro
+}
+
 // ─── Entidades Fase 1 ───────────────────────────────────────────────
 
 model Usuario {
@@ -88,6 +114,10 @@ model Usuario {
   cliente      Cliente? @relation(fields: [clienteId], references: [id])
   activo       Boolean  @default(true)
   creadoEn     DateTime @default(now()) @map("creado_en")
+
+  eventosCreados        EventoCalendario[]
+  actualizacionesSubidas ActualizacionObra[]
+  testimoniosCreados    Testimonio[]
 
   @@map("usuarios")
 }
@@ -118,8 +148,8 @@ model Cliente {
   usuario      Usuario?
   cotizaciones Cotizacion[]
   contratos    Contrato[]
-  proyectos    Proyecto[]
   obras        ObraActiva[]
+  testimonios  Testimonio[]
   invitaciones InvitacionUsuario[]
   chatSesiones ChatSesion[]
 
@@ -169,46 +199,58 @@ model Contrato {
   @@map("contratos")
 }
 
-model Proyecto {
+model ProyectoPortafolio {
   id               String           @id @default(cuid())
-  clienteId        String?          @map("cliente_id")
   slug             String           @unique
   titulo           String
-  tipoConstruccion TipoConstruccion @map("tipo_construccion")
-  m2Construidos    Int?             @map("m2_construidos")      // era NOT NULL, ahora opcional
-  diasEjecucion    Int?             @map("dias_ejecucion")      // era NOT NULL, ahora opcional
-  ubicacion        String
-  videoUrl         String?          @map("video_url")           // NUEVO: URL de TikTok
-  portadaUrl       String?          @map("portada_url")         // NUEVO: portada del proyecto
-  orden            Int              @default(0)                // NUEVO: orden de listado
-  problemaCliente  String?          @map("problema_cliente")    // era NOT NULL, ahora opcional
-  solucion         String?          // era NOT NULL, ahora opcional
-  destacado        Boolean          @default(false)
-  publicado        Boolean          @default(false)
-  creadoEn         DateTime         @default(now()) @map("creado_en")
-  actualizadoEn    DateTime         @updatedAt @map("actualizado_en")
+  tipoConstruccion TipoConstruccion? @map("tipo_construccion")
+  m2Construidos    Int?             @map("m2_construidos")
+  diasEjecucion    Int?             @map("dias_ejecucion")
+  ubicacion        String?
 
-  cliente    Cliente?        @relation(fields: [clienteId], references: [id])
-  testimonios Testimonio[]
+  portadaUrl  String? @map("portada_url")
+  videoUrl    String? @map("video_url")
+  galeriaUrls String[] @default([]) @map("galeria_urls")
 
-  @@index([clienteId])
+  destacado Boolean @default(false)
+  publicado Boolean @default(false)
+  orden     Int     @default(0)
+
+  creadoEn      DateTime @default(now()) @map("creado_en")
+  actualizadoEn DateTime @updatedAt @map("actualizado_en")
+
   @@index([publicado, orden])
-  @@map("proyectos")
+  @@index([destacado])
+  @@index([slug])
+  @@map("proyectos_portafolio")
 }
 
 model Testimonio {
-  id               String    @id @default(cuid())
-  proyectoId       String?   @map("proyecto_id")
-  proyecto         Proyecto? @relation(fields: [proyectoId], references: [id])
-  clienteNombre    String    @map("cliente_nombre")
-  texto            String
-  fotoUrl          String?   @map("foto_url")
-  puntaje          Int?
-  publicado        Boolean   @default(false)
-  creadoEn         DateTime  @default(now()) @map("creado_en")
-  actualizadoEn    DateTime  @updatedAt @map("actualizado_en")
+  id               String   @id @default(cuid())
 
-  @@index([proyectoId])
+  obraId           String   @map("obra_id")
+  obra             ObraActiva @relation(fields: [obraId], references: [id], onDelete: Cascade)
+
+  clienteId        String?  @map("cliente_id")
+  cliente          Cliente? @relation(fields: [clienteId], references: [id])
+
+  creadoPorUsuarioId String? @map("creado_por_usuario_id")
+  creadoPor          Usuario? @relation(fields: [creadoPorUsuarioId], references: [id], onDelete: SetNull)
+
+  nombrePublico    String?  @map("nombre_publico")
+  texto            String   @db.Text
+  fotoUrl          String?  @map("foto_url")
+  puntaje          Int?
+
+  estado           EstadoTestimonio @default(pendiente)
+  publicado        Boolean  @default(false)
+
+  creadoEn         DateTime @default(now()) @map("creado_en")
+  actualizadoEn    DateTime @updatedAt @map("actualizado_en")
+
+  @@index([obraId])
+  @@index([estado])
+  @@index([publicado])
   @@map("testimonios")
 }
 
@@ -243,18 +285,6 @@ model Certificacion {
   @@map("certificaciones")
 }
 
-model PrecioReferencia {
-  id               String           @id @default(cuid())
-  tipoConstruccion TipoConstruccion @map("tipo_construccion")
-  rangoM2          RangoM2          @map("rango_m2")
-  precioMin        Decimal          @map("precio_min") @db.Decimal(12, 2)
-  precioMax        Decimal          @map("precio_max") @db.Decimal(12, 2)
-  vigenteDesde     DateTime         @default(now()) @map("vigente_desde")
-
-  @@unique([tipoConstruccion, rangoM2, vigenteDesde])
-  @@map("precio_referencia")
-}
-
 // ─── Entidades Fase 2 (implementadas) ──────────────────────────────
 
 model ObraActiva {
@@ -267,6 +297,9 @@ model ObraActiva {
   estado          EstadoObra @default(en_curso)
   progreso        Int        @default(0)
 
+  planoDistribucionUrl       String? @map("plano_distribucion_url")
+  planoDistribucionPublicId  String? @map("plano_distribucion_public_id")
+
   cliente       Cliente            @relation(fields: [clienteId], references: [id])
   contrato      Contrato?          @relation(fields: [contratoId], references: [id])
   hitos         HitosObra[]
@@ -274,6 +307,10 @@ model ObraActiva {
   asignaciones  AsignacionObra[]
   materiales    MaterialObra[]
   prestamos     PrestamoHerramienta[]
+
+  eventosCalendario EventoCalendario[]
+  actualizaciones   ActualizacionObra[]
+  testimonios       Testimonio[]
 
   @@index([clienteId])
   @@index([contratoId])
@@ -308,6 +345,76 @@ model PagoObra {
 
   @@index([obraId])
   @@map("pagos_obra")
+}
+
+// ─── Nuevos modelos privados del portal cliente ─────────────────────
+
+model EventoCalendario {
+  id        String @id @default(cuid())
+
+  obraId    String? @map("obra_id")
+  obra      ObraActiva? @relation(fields: [obraId], references: [id], onDelete: Cascade)
+
+  titulo    String
+  descripcion String? @db.Text
+
+  tipo      TipoEventoCalendario @default(nota)
+
+  fechaInicio DateTime @map("fecha_inicio")
+  fechaFin    DateTime? @map("fecha_fin")
+  todoElDia   Boolean @default(true) @map("todo_el_dia")
+
+  visibleCliente Boolean @default(true) @map("visible_cliente")
+
+  creadoPorUsuarioId String? @map("creado_por_usuario_id")
+  creadoPor          Usuario? @relation(fields: [creadoPorUsuarioId], references: [id], onDelete: SetNull)
+
+  creadoEn      DateTime @default(now()) @map("creado_en")
+  actualizadoEn DateTime @updatedAt @map("actualizado_en")
+
+  @@index([obraId])
+  @@index([fechaInicio])
+  @@index([visibleCliente, fechaInicio])
+  @@map("eventos_calendario")
+}
+
+model ActualizacionObra {
+  id      String @id @default(cuid())
+
+  obraId  String @map("obra_id")
+  obra    ObraActiva @relation(fields: [obraId], references: [id], onDelete: Cascade)
+
+  tipo    TipoMultimedia
+
+  titulo      String
+  descripcion String? @db.Text
+
+  urlArchivo String @map("url_archivo")
+
+  cloudinaryPublicId String? @map("cloudinary_public_id")
+  thumbnailUrl       String? @map("thumbnail_url")
+  mimeType           String? @map("mime_type")
+  formato            String?
+  bytes              Int?
+  duracionSegundos   Int? @map("duracion_segundos")
+
+  fechaReferencia DateTime? @map("fecha_referencia")
+
+  visibleCliente Boolean @default(true) @map("visible_cliente")
+  vistoPorCliente Boolean @default(false) @map("visto_por_cliente")
+
+  subidoPorUsuarioId String? @map("subido_por_usuario_id")
+  subidoPor          Usuario? @relation(fields: [subidoPorUsuarioId], references: [id], onDelete: SetNull)
+
+  creadoEn      DateTime @default(now()) @map("creado_en")
+  actualizadoEn DateTime @updatedAt @map("actualizado_en")
+
+  @@index([obraId])
+  @@index([tipo])
+  @@index([visibleCliente])
+  @@index([vistoPorCliente])
+  @@index([fechaReferencia])
+  @@map("actualizaciones_obra")
 }
 
 // ─── Entidades Módulo 5 — Empleados ────────────────────────────────

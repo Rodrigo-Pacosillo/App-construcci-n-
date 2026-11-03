@@ -24,7 +24,7 @@ export const dynamic = "force-dynamic";
 
 async function getProyectos() {
   try {
-    const proyectos = await prisma.proyecto.findMany({
+    const proyectos = await prisma.proyectoPortafolio.findMany({
       where: { publicado: true },
       select: {
         id: true, slug: true, titulo: true, tipoConstruccion: true,
@@ -76,9 +76,9 @@ export default async function ProyectosPage() {
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
               <div className="absolute bottom-0 left-0 p-6">
                 <p className="section-label text-accent">
-                  {proyecto.tipoConstruccion === "seco"
+                  {(proyecto.tipoConstruccion ?? "no_sabe") === "seco"
                     ? "STEEL FRAME"
-                    : proyecto.tipoConstruccion.toUpperCase()}
+                    : (proyecto.tipoConstruccion ?? "no_sabe").toUpperCase()}
                 </p>
                 <h2 className="mt-1 font-heading text-xl font-bold text-white">
                   {proyecto.titulo}

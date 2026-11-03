@@ -23,7 +23,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         where: { activo: true },
         select: { slug: true },
       });
-      proyectos = await prisma.proyecto.findMany({
+      proyectos = await prisma.proyectoPortafolio.findMany({
         where: { publicado: true },
         select: { slug: true },
       });

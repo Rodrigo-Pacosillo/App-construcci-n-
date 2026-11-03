@@ -1,4 +1,4 @@
-import { PrismaClient, Rol, TipoConstruccion, RangoM2, EstadoObra, EstadoPago } from "@prisma/client";
+import { PrismaClient, Rol, TipoConstruccion, RangoM2, EstadoObra, EstadoPago, EstadoTestimonio } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -15,15 +15,18 @@ async function main() {
   await prisma.hitosObra.deleteMany();
   await prisma.obraActiva.deleteMany();
   await prisma.testimonio.deleteMany();
+  await prisma.actualizacionObra.deleteMany();
+  await prisma.eventoCalendario.deleteMany();
+  await prisma.proyectoPortafolio.deleteMany();
   await prisma.contrato.deleteMany();
   await prisma.cotizacion.deleteMany();
-  await prisma.proyecto.deleteMany();
+  await prisma.chatMensaje.deleteMany();
+  await prisma.chatSesion.deleteMany();
   await prisma.usuario.deleteMany();
   await prisma.cliente.deleteMany();
   await prisma.servicio.deleteMany();
   await prisma.faq.deleteMany();
   await prisma.certificacion.deleteMany();
-  await prisma.precioReferencia.deleteMany();
 
   console.log("👤 Creando usuario admin...");
   const passwordHash = await bcrypt.hash("admin123", 10);
@@ -43,7 +46,7 @@ async function main() {
     data: {
       nombre: "Juan",
       apellidos: "Pérez",
-      telefono: "+591 7 123-4567",
+      telefono: "+591 71234567",
       email: "juan.perez@email.com",
       ciudad: "Santa Cruz",
     },
@@ -51,25 +54,21 @@ async function main() {
   console.log(`   ✅ Cliente creado: ${cliente.nombre} ${cliente.apellidos}`);
 
   console.log("📁 Creando proyectos de portafolio...");
-  const proyectos = await Promise.all([
-    prisma.proyecto.create({
+  const proyectosPortafolio = await Promise.all([
+    prisma.proyectoPortafolio.create({
       data: {
-        clienteId: cliente.id,
         slug: "casa-steel-frame-santa-cruz",
         titulo: "Casa Steel Frame en Santa Cruz",
         tipoConstruccion: TipoConstruccion.seco,
         m2Construidos: 220,
         diasEjecucion: 45,
         ubicacion: "Santa Cruz de la Sierra, Bolivia",
-        problemaCliente:
-          "La familia quería una casa moderna y sustentable, pero con presupuesto limitado y plazo ajustado para mudarse.",
-        solucion:
-          "Construcción en steel frame con aislación térmica de alta eficiencia. Reducción del 40% en tiempo de obra respecto a tradicional, con mejor aislación.",
+        galeriaUrls: [],
         destacado: true,
         publicado: true,
       },
     }),
-    prisma.proyecto.create({
+    prisma.proyectoPortafolio.create({
       data: {
         slug: "ampliacion-zona-sur-la-paz",
         titulo: "Ampliación en La Paz",
@@ -77,15 +76,12 @@ async function main() {
         m2Construidos: 65,
         diasEjecucion: 20,
         ubicacion: "Zona Sur, La Paz, Bolivia",
-        problemaCliente:
-          "Necesitaban un estudio y un dormitorio extra en el piso superior, sin perder el jardín.",
-        solucion:
-          "Ampliación en steel frame sobre estructura existente. Se logró el doble de espacio sin demoler, con acabados idénticos a la casa original.",
+        galeriaUrls: [],
         destacado: true,
         publicado: true,
       },
     }),
-    prisma.proyecto.create({
+    prisma.proyectoPortafolio.create({
       data: {
         slug: "local-comercial-santa-cruz",
         titulo: "Local Comercial en Santa Cruz",
@@ -93,14 +89,11 @@ async function main() {
         m2Construidos: 90,
         diasEjecucion: 15,
         ubicacion: "Equipetrol, Santa Cruz, Bolivia",
-        problemaCliente:
-          "Un emprendedor quería habilitar un local gastronómico en un sótano, con plazo mínimo de demora.",
-        solucion:
-          "Acondicionamiento completo con tabiquería drywall, cielorrasos suspendidos y revestimientos resistentes a humedad. Listo en 15 días.",
+        galeriaUrls: [],
         publicado: true,
       },
     }),
-    prisma.proyecto.create({
+    prisma.proyectoPortafolio.create({
       data: {
         slug: "quinta-rehabilitacion",
         titulo: "Quinta en Rehabilitación",
@@ -108,15 +101,12 @@ async function main() {
         m2Construidos: 350,
         diasEjecucion: 80,
         ubicacion: "Tarija, Bolivia",
-        problemaCliente:
-          "Una quinta familiar con décadas de abandono que querían convertir en casa de fin de semana.",
-        solucion:
-          "Rehabilitación integral: estructura reforzada, nuevos tabiques, aislación, instalaciones. Se preservó la fachada original.",
+        galeriaUrls: [],
         destacado: true,
         publicado: true,
       },
     }),
-    prisma.proyecto.create({
+    prisma.proyectoPortafolio.create({
       data: {
         slug: "oficinas-empresariales",
         titulo: "Oficinas Empresariales",
@@ -124,14 +114,11 @@ async function main() {
         m2Construidos: 180,
         diasEjecucion: 30,
         ubicacion: "La Paz, Bolivia",
-        problemaCliente:
-          "Una startup necesitaba oficinas modulares que pudieran reconfigurar según crezca el equipo.",
-        solucion:
-          "Sistema de tabiques desmontables en drywall con puertas corredizas. El espacio se adapta al equipo sin obras.",
+        galeriaUrls: [],
         publicado: true,
       },
     }),
-    prisma.proyecto.create({
+    prisma.proyectoPortafolio.create({
       data: {
         slug: "casa-ecologica-cochabamba",
         titulo: "Casa Ecológica en Cochabamba",
@@ -139,69 +126,14 @@ async function main() {
         m2Construidos: 160,
         diasEjecucion: 35,
         ubicacion: "Cochabamba, Bolivia",
-        problemaCliente:
-          "Un arquitecto quería demostrar que la construcción en seco puede ser tan estética como la tradicional.",
-        solucion:
-          "Casa de diseño con tabiques vistos, cielorrasos de chapa ondulada y amplios vanos de vidrio. Publicada en revista de arquitectura.",
+        galeriaUrls: [],
         publicado: true,
       },
     }),
   ]);
-  console.log(`   ✅ ${proyectos.length} proyectos creados`);
+  console.log(`   ✅ ${proyectosPortafolio.length} proyectos de portafolio creados`);
 
-  console.log("💬 Creando testimonios...");
-  const testimonios = await Promise.all([
-    prisma.testimonio.create({
-      data: {
-        proyectoId: proyectos[0].id,
-        clienteNombre: "Juan Pérez",
-        texto:
-          "Increíble cómo en 45 días pasamos de terreno a casa habitable. La calidad de los acabados superó nuestras expectativas. El aislamiento térmico es notable.",
-        puntaje: 5,
-        publicado: true,
-      },
-    }),
-    prisma.testimonio.create({
-      data: {
-        proyectoId: proyectos[1].id,
-        clienteNombre: "Laura Fernández",
-        texto:
-          "Necesitábamos ampliar sin demoler y cumplieron exactamente lo prometido. La ampliación se ve como si siempre hubiera estado ahí.",
-        puntaje: 5,
-        publicado: true,
-      },
-    }),
-    prisma.testimonio.create({
-      data: {
-        proyectoId: proyectos[2].id,
-        clienteNombre: "Diego Torres",
-        texto:
-          "El local quedó listo en 15 días, justo antes de la inauguración. Profesionales de primera.",
-        puntaje: 5,
-        publicado: true,
-      },
-    }),
-    prisma.testimonio.create({
-      data: {
-        proyectoId: proyectos[3].id,
-        clienteNombre: "Roberto García",
-        texto:
-          "Transformaron una quinta abandonada en una casa hermosa. Preservaron la fachada y modernizaron todo por dentro. Excelente trabajo.",
-        puntaje: 4,
-        publicado: true,
-      },
-    }),
-    prisma.testimonio.create({
-      data: {
-        clienteNombre: "María López",
-        texto:
-          "Contraté solo la cotización pero me sorprendió la profesionalidad y claridad del presupuesto. Muy recomendable.",
-        puntaje: 5,
-        publicado: true,
-      },
-    }),
-  ]);
-  console.log(`   ✅ ${testimonios.length} testimonios creados`);
+  // Los testimonios se crean después de la obra (vinculados a ObraActiva).
 
   console.log("🛠️ Creando servicios...");
   const servicios = await Promise.all([
@@ -324,7 +256,7 @@ async function main() {
       data: {
         pregunta: "¿Cómo pido un presupuesto?",
         respuesta:
-          "Puede usar nuestro estimador online para tener una referencia, o completar el formulario de cotización con los detalles de su obra. Nos comunicamos con usted en 24 horas.",
+          "Puede completar el formulario de cotización con los detalles de su obra. Nos comunicamos con usted en 24 horas.",
         orden: 8,
       },
     }),
@@ -340,7 +272,7 @@ async function main() {
       data: {
         pregunta: "¿Ofrecen garantía en sus obras?",
         respuesta:
-          "Sí, todas nuestras obras tienen garantía de 1 año por vicios de construcción y materiales. Respaldamos nuestro trabajo con certificaciones y seguros vigentes.",
+          "Sí, todas nuestras obras tienen garantía de 1 año por construcción y materiales. Respaldamos nuestro trabajo con certificaciones y seguros vigentes.",
         orden: 10,
       },
     }),
@@ -375,37 +307,6 @@ async function main() {
     }),
   ]);
   console.log(`   ✅ ${certificaciones.length} certificaciones creadas`);
-
-  console.log("💰 Creando precios de referencia...");
-  const precios = await Promise.all([
-    // Steel frame
-    prisma.precioReferencia.create({
-      data: { tipoConstruccion: TipoConstruccion.seco, rangoM2: RangoM2.hasta_50, precioMin: 350000, precioMax: 500000 },
-    }),
-    prisma.precioReferencia.create({
-      data: { tipoConstruccion: TipoConstruccion.seco, rangoM2: RangoM2.m50_100, precioMin: 300000, precioMax: 420000 },
-    }),
-    prisma.precioReferencia.create({
-      data: { tipoConstruccion: TipoConstruccion.seco, rangoM2: RangoM2.m100_200, precioMin: 280000, precioMax: 380000 },
-    }),
-    prisma.precioReferencia.create({
-      data: { tipoConstruccion: TipoConstruccion.seco, rangoM2: RangoM2.mas_200, precioMin: 250000, precioMax: 350000 },
-    }),
-    // Tradicional
-    prisma.precioReferencia.create({
-      data: { tipoConstruccion: TipoConstruccion.tradicional, rangoM2: RangoM2.hasta_50, precioMin: 400000, precioMax: 550000 },
-    }),
-    prisma.precioReferencia.create({
-      data: { tipoConstruccion: TipoConstruccion.tradicional, rangoM2: RangoM2.m50_100, precioMin: 350000, precioMax: 480000 },
-    }),
-    prisma.precioReferencia.create({
-      data: { tipoConstruccion: TipoConstruccion.tradicional, rangoM2: RangoM2.m100_200, precioMin: 320000, precioMax: 440000 },
-    }),
-    prisma.precioReferencia.create({
-      data: { tipoConstruccion: TipoConstruccion.tradicional, rangoM2: RangoM2.mas_200, precioMin: 300000, precioMax: 400000 },
-    }),
-  ]);
-  console.log(`   ✅ ${precios.length} precios de referencia creados`);
 
   console.log("🏗️  Creando usuario cliente + obra activa...");
   const clientePasswordHash = await bcrypt.hash("cliente123", 10);
@@ -443,6 +344,71 @@ async function main() {
       progreso: 45,
     },
   });
+
+  console.log("💬 Creando testimonios de obra...");
+  const testimonios = await Promise.all([
+    prisma.testimonio.create({
+      data: {
+        obraId: obra.id,
+        clienteId: cliente.id,
+        nombrePublico: "Juan P.",
+        texto:
+          "Increíble cómo en 45 días pasamos de terreno a casa habitable. La calidad de los acabados superó nuestras expectativas. El aislamiento térmico es notable.",
+        puntaje: 5,
+        estado: EstadoTestimonio.aprobado,
+        publicado: true,
+      },
+    }),
+    prisma.testimonio.create({
+      data: {
+        obraId: obra.id,
+        clienteId: cliente.id,
+        nombrePublico: "Laura F.",
+        texto:
+          "Necesitábamos ampliar sin demoler y cumplieron exactamente lo prometido. La ampliación se ve como si siempre hubiera estado ahí.",
+        puntaje: 5,
+        estado: EstadoTestimonio.aprobado,
+        publicado: true,
+      },
+    }),
+    prisma.testimonio.create({
+      data: {
+        obraId: obra.id,
+        clienteId: cliente.id,
+        nombrePublico: "Diego T.",
+        texto:
+          "El local quedó listo en 15 días, justo antes de la inauguración. Profesionales de primera.",
+        puntaje: 5,
+        estado: EstadoTestimonio.aprobado,
+        publicado: true,
+      },
+    }),
+    prisma.testimonio.create({
+      data: {
+        obraId: obra.id,
+        clienteId: cliente.id,
+        nombrePublico: "Roberto G.",
+        texto:
+          "Transformaron una quinta abandonada en una casa hermosa. Preservaron la fachada y modernizaron todo por dentro. Excelente trabajo.",
+        puntaje: 4,
+        estado: EstadoTestimonio.aprobado,
+        publicado: true,
+      },
+    }),
+    prisma.testimonio.create({
+      data: {
+        obraId: obra.id,
+        clienteId: cliente.id,
+        nombrePublico: "María L.",
+        texto:
+          "Contraté solo la cotización pero me sorprendió la profesionalidad y claridad del presupuesto. Muy recomendable.",
+        puntaje: 5,
+        estado: EstadoTestimonio.pendiente,
+        publicado: false,
+      },
+    }),
+  ]);
+  console.log(`   ✅ ${testimonios.length} testimonios de obra creados`);
 
   const hitos = await Promise.all([
     prisma.hitosObra.create({
@@ -523,12 +489,11 @@ async function main() {
   console.log(`   Usuarios: 2 (admin@gmail.com, cliente@gmail.com)`);
   console.log(`   Cliente: 1 (Juan Pérez)`);
   console.log(`   Cotizaciones: 0`);
-  console.log(`   Proyectos: ${proyectos.length}`);
+  console.log(`   Proyectos portafolio: ${proyectosPortafolio.length}`);
   console.log(`   Testimonios: ${testimonios.length}`);
   console.log(`   Servicios: ${servicios.length}`);
   console.log(`   FAQs: ${faqs.length}`);
   console.log(`   Certificaciones: ${certificaciones.length}`);
-  console.log(`   Precios de referencia: ${precios.length}`);
   console.log(`   Obras activas: 1 (cliente@gmail.com / cliente123)`);
   console.log(`   Hitos: ${hitos.length} (3 visibles + 1 oculto)`);
   console.log(`   Pagos: ${pagos.length}`);

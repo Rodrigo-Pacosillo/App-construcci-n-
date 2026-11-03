@@ -4,7 +4,7 @@ import { motion } from "motion/react";
 
 type Testimonio = {
   id: string;
-  clienteNombre: string;
+  nombrePublico: string | null;
   texto: string;
   puntaje: number | null;
 };
@@ -25,10 +25,10 @@ export function TestimoniosCarousel({ testimonios }: { testimonios: Testimonio[]
             <p className="text-sm text-ink-muted">&ldquo;{t.texto}&rdquo;</p>
             <footer className="mt-4 flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-ink/5 text-sm font-bold text-ink-faint">
-                {t.clienteNombre.charAt(0)}
+                {t.nombrePublico?.charAt(0) ?? "?"}
               </div>
               <div>
-                <p className="text-sm font-medium">{t.clienteNombre}</p>
+                <p className="text-sm font-medium">{t.nombrePublico ?? "—"}</p>
                 {t.puntaje && (
                   <p className="text-xs text-accent-strong">
                     {"★".repeat(t.puntaje)}

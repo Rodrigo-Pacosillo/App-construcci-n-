@@ -9,7 +9,7 @@ export async function getProyectos() {
   await requireAdmin();
 
   try {
-    return await prisma.proyecto.findMany({
+    return await prisma.proyectoPortafolio.findMany({
       orderBy: { creadoEn: "desc" },
       take: 50,
     });
@@ -24,15 +24,10 @@ export async function createProyecto(formData: FormData) {
 
   // Validar datos con Zod
   const data = {
-    clienteId: null as string | null,
     slug: formData.get("slug") as string,
     titulo: formData.get("titulo") as string,
     tipoConstruccion: formData.get("tipoConstruccion") as string,
-    m2Construidos: parseInt(formData.get("m2Construidos") as string, 10),
-    diasEjecucion: parseInt(formData.get("diasEjecucion") as string, 10),
     ubicacion: formData.get("ubicacion") as string,
-    problemaCliente: formData.get("problemaCliente") as string,
-    solucion: formData.get("solucion") as string,
     destacado: formData.get("destacado") === "true",
     publicado: false,
   };
@@ -47,7 +42,7 @@ export async function createProyecto(formData: FormData) {
   }
 
   try {
-    await prisma.proyecto.create({ data: { ...valid.data } });
+    await prisma.proyectoPortafolio.create({ data: { ...valid.data } });
     revalidatePath("/admin/proyectos");
     return { success: true };
   } catch (error) {
@@ -64,10 +59,8 @@ export async function createProyecto(formData: FormData) {
 export async function updateProyecto(id: string, formData: FormData) {
   await requireAdmin();
 
-  // Obtener proyecto actual para preservar clienteId
-  const existing = await prisma.proyecto.findUnique({
+  const existing = await prisma.proyectoPortafolio.findUnique({
     where: { id },
-    select: { clienteId: true },
   });
   if (!existing) {
     return { success: false, error: { _form: ["Proyecto no encontrado"] } };
@@ -75,15 +68,10 @@ export async function updateProyecto(id: string, formData: FormData) {
 
   // Validar datos con Zod
   const data = {
-    clienteId: existing.clienteId,
     slug: formData.get("slug") as string,
     titulo: formData.get("titulo") as string,
     tipoConstruccion: formData.get("tipoConstruccion") as string,
-    m2Construidos: parseInt(formData.get("m2Construidos") as string, 10),
-    diasEjecucion: parseInt(formData.get("diasEjecucion") as string, 10),
     ubicacion: formData.get("ubicacion") as string,
-    problemaCliente: formData.get("problemaCliente") as string,
-    solucion: formData.get("solucion") as string,
     destacado: formData.get("destacado") === "true",
     publicado: formData.get("publicado") === "true",
   };
@@ -98,7 +86,7 @@ export async function updateProyecto(id: string, formData: FormData) {
   }
 
   try {
-    await prisma.proyecto.update({ where: { id }, data: { ...valid.data } });
+    await prisma.proyectoPortafolio.update({ where: { id }, data: { ...valid.data } });
     revalidatePath("/admin/proyectos");
     revalidatePath("/proyectos");
     return { success: true };
@@ -117,7 +105,7 @@ export async function toggleProyectoPublicado(id: string) {
   await requireAdmin();
 
   try {
-    const proyecto = await prisma.proyecto.findUnique({
+    const proyecto = await prisma.proyectoPortafolio.findUnique({
       where: { id },
       select: { publicado: true },
     });
@@ -125,7 +113,7 @@ export async function toggleProyectoPublicado(id: string) {
       return { success: false, error: { _form: ["Proyecto no encontrado"] } };
     }
 
-    await prisma.proyecto.update({
+    await prisma.proyectoPortafolio.update({
       where: { id },
       data: { publicado: !proyecto.publicado },
     });
@@ -143,7 +131,7 @@ export async function toggleProyectoDestacado(id: string) {
   await requireAdmin();
 
   try {
-    const proyecto = await prisma.proyecto.findUnique({
+    const proyecto = await prisma.proyectoPortafolio.findUnique({
       where: { id },
       select: { destacado: true },
     });
@@ -151,7 +139,7 @@ export async function toggleProyectoDestacado(id: string) {
       return { success: false, error: { _form: ["Proyecto no encontrado"] } };
     }
 
-    await prisma.proyecto.update({
+    await prisma.proyectoPortafolio.update({
       where: { id },
       data: { destacado: !proyecto.destacado },
     });
@@ -169,7 +157,7 @@ export async function deleteProyecto(id: string) {
   await requireAdmin();
 
   try {
-    await prisma.proyecto.delete({ where: { id } });
+    await prisma.proyectoPortafolio.delete({ where: { id } });
     revalidatePath("/admin/proyectos");
     return { success: true };
   } catch (error) {

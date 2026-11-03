@@ -7,15 +7,8 @@ async function getProyectos() {
   const session = await auth();
   if (!session || session.user.role !== "cliente") redirect("/login");
 
-  const usuario = await prisma.usuario.findUnique({
-    where: { id: session.user.id },
-    include: { cliente: true },
-  });
-
-  if (!usuario?.cliente) return [];
-
-  return prisma.proyecto.findMany({
-    where: { clienteId: usuario.cliente.id },
+  return prisma.proyectoPortafolio.findMany({
+    where: { publicado: true },
     select: {
       id: true, slug: true, titulo: true, tipoConstruccion: true,
       m2Construidos: true, diasEjecucion: true, portadaUrl: true, creadoEn: true,
@@ -63,7 +56,7 @@ export default async function ClientProyectosPage() {
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-6">
                 <p className="section-label text-accent">
-                  {p.tipoConstruccion === "seco" ? "STEEL FRAME" : p.tipoConstruccion.toUpperCase()}
+                  {(p.tipoConstruccion ?? "no_sabe") === "seco" ? "STEEL FRAME" : (p.tipoConstruccion ?? "no_sabe").toUpperCase()}
                 </p>
                 <h2 className="mt-1 font-heading text-xl font-bold text-white">
                   {p.titulo}

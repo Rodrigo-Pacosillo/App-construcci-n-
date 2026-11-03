@@ -7,13 +7,13 @@ import type { Metadata } from "next";
 
 async function getProyecto(slug: string) {
   try {
-    const proyecto = await prisma.proyecto.findUnique({
+    const proyecto = await prisma.proyectoPortafolio.findUnique({
       where: { slug },
       select: {
         id: true, slug: true, titulo: true, tipoConstruccion: true,
         m2Construidos: true, diasEjecucion: true, ubicacion: true,
         videoUrl: true, portadaUrl: true, orden: true,
-        problemaCliente: true, solucion: true,
+        galeriaUrls: true,
         destacado: true, publicado: true,
         creadoEn: true, actualizadoEn: true,
       },
@@ -122,21 +122,6 @@ export default async function ProyectoPage({
             />
           </div>
         )}
-
-        <div className="mt-12 grid gap-8 md:grid-cols-2">
-          <div className="rounded border border-border bg-surface p-6">
-            <p className="section-label text-ink-faint">PROBLEMA DEL CLIENTE</p>
-            <p className="mt-3 text-sm text-ink-muted">
-              {proyecto.problemaCliente ?? "— Sin datos —"}
-            </p>
-          </div>
-          <div className="rounded border border-border bg-surface p-6">
-            <p className="section-label text-ink-faint">NUESTRA SOLUCION</p>
-            <p className="mt-3 text-sm text-ink-muted">
-              {proyecto.solucion ?? "— Sin datos —"}
-            </p>
-          </div>
-        </div>
 
         <div className="mt-12 text-center">
           <Link

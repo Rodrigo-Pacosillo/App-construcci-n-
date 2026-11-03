@@ -48,34 +48,34 @@ export type ClienteInput = z.infer<typeof clienteSchema>;
 
 // ─── Proyecto ──────────────────────────────────────────────────────
 export const proyectoSchema = z.object({
-  clienteId: z.string().cuid().optional(),
   slug: z
     .string()
     .min(1)
     .regex(/^[a-z0-9-]+$/, "Slug solo puede contener letras, números y guiones"),
   titulo: z.string().min(1, "El título es requerido"),
-  tipoConstruccion: z.enum(["tradicional", "seco", "no_sabe", "integral"]),
+  tipoConstruccion: z.enum(["tradicional", "seco", "no_sabe", "integral"]).optional(),
   ubicacion: z.string().min(1, "La ubicación es requerida"),
   videoUrl: emptyToUndefined(tiktokVideoUrl).optional(),
   portadaUrl: emptyToUndefined(portadaUrl).optional(),
+  galeriaUrls: z.array(z.string().url()).optional(),
   orden: z.coerce.number().int().min(0).default(0),
   destacado: boolFromForm.default(false),
   publicado: boolFromForm.default(false),
   m2Construidos: z.coerce.number().int().positive().nullable().optional(),
   diasEjecucion: z.coerce.number().int().positive().nullable().optional(),
-  problemaCliente: emptyToUndefined(z.string()).optional(),
-  solucion: emptyToUndefined(z.string()).optional(),
 });
 
 export type ProyectoInput = z.infer<typeof proyectoSchema>;
 
 // ─── Testimonio ────────────────────────────────────────────────────
 export const testimonioSchema = z.object({
-  proyectoId: z.string().cuid().optional(),
-  clienteNombre: z.string().min(1, "El nombre del cliente es requerido"),
+  obraId: z.string().cuid(),
+  clienteId: z.string().cuid().optional(),
+  nombrePublico: z.string().optional(),
   texto: z.string().min(1, "El texto es requerido"),
   fotoUrl: z.string().url().optional().or(z.literal("")),
   puntaje: z.number().int().min(1).max(5).nullable().optional(),
+  estado: z.enum(["pendiente", "aprobado", "rechazado", "oculto"]).default("pendiente"),
   publicado: z.boolean().default(false),
 });
 
@@ -115,17 +115,6 @@ export const certificacionSchema = z.object({
 });
 
 export type CertificacionInput = z.infer<typeof certificacionSchema>;
-
-// ─── Precio Referencia ─────────────────────────────────────────────
-export const precioReferenciaSchema = z.object({
-  tipoConstruccion: z.enum(["tradicional", "seco", "no_sabe", "integral"]),
-  rangoM2: z.enum(["hasta_50", "m50_100", "m100_200", "mas_200"]),
-  precioMin: z.number().positive(),
-  precioMax: z.number().positive(),
-  vigenteDesde: z.date().default(() => new Date()),
-});
-
-export type PrecioReferenciaInput = z.infer<typeof precioReferenciaSchema>;
 
 // ─── Login ─────────────────────────────────────────────────────────
 export const loginSchema = z.object({

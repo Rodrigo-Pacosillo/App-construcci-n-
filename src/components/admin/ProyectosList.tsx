@@ -11,10 +11,10 @@ type Proyecto = {
   id: string;
   titulo: string;
   slug: string;
-  tipoConstruccion: string;
+  tipoConstruccion: string | null;
   m2Construidos: number | null;
   diasEjecucion: number | null;
-  ubicacion: string;
+  ubicacion: string | null;
   publicado: boolean;
   destacado: boolean;
   creadoEn: Date;

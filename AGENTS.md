@@ -4,32 +4,6 @@
 > completo. Ante cualquier duda funcional, gana la fuente de verdad (abajo);
 > este archivo solo te dice dónde está y cómo trabajar.
 
-## Fuentes de verdad (en orden de precedencia)
-
-1. **`ESPECIFICACION_PANEL_ADMIN_CONTRART.md`** — flujo y reglas del panel
-   admin (Cotizaciones, Contratos, Usuarios, Obras). Autoridad funcional #1
-   para el panel.
-2. **`FLUJO DE PERSONAS.md`** — las 4 realidades de una persona (visitante,
-   prospecto, cliente-usuario, cliente histórico) y sus reglas duras.
-   Autoridad funcional #1 para el flujo de personas.
-3. **`DATABASE.md`** — descripción del modelo de datos. Debe reflejar el
-   esquema real.
-4. **`prisma/schema.prisma`** — **estructura real** de la base de datos.
-   Gana ante `DATABASE.md` si hay discrepancia.
-
-Jerarquía para resolver contradicciones:
-
-- Reglas funcionales del panel → `ESPECIFICACION_PANEL_ADMIN_CONTRART.md`.
-- Flujo de personas y etapas del negocio → `FLUJO DE PERSONAS.md`.
-- Campos y relaciones reales → `prisma/schema.prisma` (y `DATABASE.md` debe
-  reflejarlo).
-- `AGENTS.md` y `docs/*` son documentación secundaria: se actualizan para
-  concordar con lo anterior; **no inventan ni imponen reglas nuevas**.
-
-Si detectás una contradicción entre estos archivos y el código, **no elijas
-una versión en silencio**: registrala, determiná si es un error descriptivo
-o una decisión pendiente, y pedí confirmación antes de un cambio irreversible.
-
 ## Qué es este proyecto
 
 Sistema web para un contratista independiente de construcción en seco

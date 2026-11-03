@@ -9,11 +9,12 @@ import {
 
 type Testimonio = {
   id: string;
-  clienteNombre: string;
+  nombrePublico: string | null;
   texto: string;
   fotoUrl: string | null;
   puntaje: number | null;
   publicado: boolean;
+  estado?: string;
 };
 
 const PUNTAJES = [5, 4, 3, 2, 1];
@@ -32,7 +33,7 @@ export function TestimoniosList({ testimonios }: { testimonios: Testimonio[] }) 
       if (soloPublicados && !t.publicado) return false;
       if (!q) return true;
       return (
-        t.clienteNombre.toLowerCase().includes(q) ||
+        t.nombrePublico?.toLowerCase().includes(q) ||
         t.texto.toLowerCase().includes(q)
       );
     });
@@ -112,7 +113,7 @@ export function TestimoniosList({ testimonios }: { testimonios: Testimonio[] }) 
           <tbody>
             {filtrados.map((t) => (
               <tr key={t.id} className="border-b border-border last:border-0">
-                <td className="px-4 py-3 font-medium">{t.clienteNombre}</td>
+                <td className="px-4 py-3 font-medium">{t.nombrePublico ?? "—"}</td>
                 <td className="max-w-xs px-4 py-3 text-ink-muted line-clamp-2">{t.texto}</td>
                 <td className="px-4 py-3 text-accent-strong">
                   {t.puntaje ? "★".repeat(t.puntaje) : "—"}
