@@ -29,10 +29,10 @@ export default function AdminNuevoContratoPage() {
   const [formData, setFormData] = useState({
     clienteId: "",
     cotizacionId: "",
-    archivoPdfUrl: "",
     fechaFirma: "",
     montoTotal: "",
     observaciones: "",
+    archivoPdfFile: null as File | null,
   });
   const [clientes, setClientes] = useState<ClienteSelect[]>([]);
   const [cotizaciones, setCotizaciones] = useState<CotizacionSelect[]>([]);
@@ -77,7 +77,12 @@ export default function AdminNuevoContratoPage() {
     e.preventDefault();
     startTransition(async () => {
       const fd = new FormData();
-      Object.entries(formData).forEach(([k, v]) => fd.append(k, v));
+      Object.entries(formData).forEach(([k, v]) => {
+        if (k !== "archivoPdfFile") fd.append(k, String(v));
+      });
+      if (formData.archivoPdfFile) {
+        fd.append("archivoPdf", formData.archivoPdfFile);
+      }
       const res = await createContrato(fd);
       if (!res.success) {
         setError(res.error || { _form: ["Error al crear"] });
@@ -195,16 +200,19 @@ export default function AdminNuevoContratoPage() {
               </div>
 
               <div>
-                <label htmlFor="archivoPdfUrl" className="section-label block text-ink-faint mb-1">
-                  URL del PDF (opcional)
+                <label htmlFor="archivoPdf" className="section-label block text-ink-faint mb-1">
+                  PDF del contrato (opcional)
                 </label>
                 <input
-                  id="archivoPdfUrl"
-                  type="url"
-                  value={formData.archivoPdfUrl}
-                  onChange={(e) => handleChange("archivoPdfUrl", e.target.value)}
+                  id="archivoPdf"
+                  name="archivoPdf"
+                  type="file"
+                  accept=".pdf"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] ?? null;
+                    setFormData((prev) => ({ ...prev, archivoPdfFile: file }));
+                  }}
                   className="rounded border border-border bg-surface w-full px-3 py-2 text-sm outline-none focus:border-accent"
-                  placeholder="https://ejemplo.com/contrato.pdf"
                 />
               </div>
 

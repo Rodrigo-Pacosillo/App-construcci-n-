@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth-utils";
 import { obraSchema, hitoSchema, pagoSchema } from "@/lib/validators";
+import { uploadFile, deleteFile } from "@/lib/cloudinary";
 
 export async function getObras() {
   await requireAdmin();
@@ -268,6 +269,29 @@ export async function createHito(obraId: string, formData: FormData) {
     };
   }
 
+  // Subir foto a Cloudinary si se envía una.
+  let fotoUrl: string | null = null;
+  let fotoPublicId: string | null = null;
+  const fotoFile = formData.get("foto") as File | null;
+  if (fotoFile) {
+    try {
+      const bytes = await fotoFile.arrayBuffer();
+      const uploaded = await uploadFile(Buffer.from(bytes), {
+        folder: "constr-art/obras/hitos",
+        resourceType: "image",
+        filename: fotoFile.name,
+      });
+      fotoUrl = uploaded.secureUrl;
+      fotoPublicId = uploaded.publicId;
+    } catch (error) {
+      console.error("Error subiendo foto de hito:", error);
+      return {
+        success: false,
+        error: { _form: ["Error al subir la foto del hito. Intente nuevamente."] },
+      };
+    }
+  }
+
   try {
     const obra = await prisma.obraActiva.findUnique({
       where: { id: obraId },
@@ -278,11 +302,18 @@ export async function createHito(obraId: string, formData: FormData) {
     }
 
     await prisma.hitosObra.create({
-      data: { ...valid.data, obraId },
+      data: {
+        ...valid.data,
+        obraId,
+        fotoUrl,
+        fotoPublicId,
+      },
     });
     revalidatePath("/admin/obras");
     return { success: true };
   } catch (error) {
+    // Si falla la BD, borrar la foto ya subida a Cloudinary.
+    if (fotoPublicId) await deleteFile(fotoPublicId, "image");
     console.error("Error creando hito:", error);
     return {
       success: false,
@@ -325,14 +356,58 @@ export async function updateHito(id: string, formData: FormData) {
     return { success: false, error: valid.error.flatten().fieldErrors };
   }
 
+  const existente = await prisma.hitosObra.findUnique({
+    where: { id },
+    select: { fotoUrl: true, fotoPublicId: true },
+  });
+  if (!existente) {
+    return { success: false, error: { _form: ["Hito no encontrado"] } };
+  }
+
+  // Subir nueva foto si se envía una.
+  let fotoUrl = existente.fotoUrl ?? null;
+  let fotoPublicId = existente.fotoPublicId ?? null;
+  const fotoFile = formData.get("foto") as File | null;
+  if (fotoFile) {
+    try {
+      const bytes = await fotoFile.arrayBuffer();
+      const uploaded = await uploadFile(Buffer.from(bytes), {
+        folder: "constr-art/obras/hitos",
+        resourceType: "image",
+        filename: fotoFile.name,
+      });
+      // Borrar la anterior de Cloudinary si existe.
+      if (fotoPublicId) {
+        await deleteFile(fotoPublicId, "image");
+      }
+      fotoUrl = uploaded.secureUrl;
+      fotoPublicId = uploaded.publicId;
+    } catch (error) {
+      console.error("Error subiendo foto de hito:", error);
+      return {
+        success: false,
+        error: { _form: ["Error al subir la foto del hito. Intente nuevamente."] },
+      };
+    }
+  }
+
   try {
     await prisma.hitosObra.update({
       where: { id },
-      data: { ...valid.data, fecha: new Date(valid.data.fecha) },
+      data: {
+        ...valid.data,
+        fecha: new Date(valid.data.fecha),
+        fotoUrl,
+        fotoPublicId,
+      },
     });
     revalidatePath("/admin/obras");
     return { success: true };
   } catch (error) {
+    // Si falla la BD, borrar la foto nueva subida a Cloudinary.
+    if (fotoPublicId && fotoPublicId !== existente.fotoPublicId) {
+      await deleteFile(fotoPublicId, "image");
+    }
     console.error("Error actualizando hito:", error);
     return { success: false, error: { _form: ["Error al actualizar el hito."] } };
   }
@@ -346,6 +421,19 @@ export async function deleteHito(id: string) {
   await requireAdmin();
 
   try {
+    const existente = await prisma.hitosObra.findUnique({
+      where: { id },
+      select: { fotoPublicId: true },
+    });
+    if (!existente) {
+      return { success: false, error: { _form: ["Hito no encontrado"] } };
+    }
+
+    // Borrar foto de Cloudinary si existe.
+    if (existente.fotoPublicId) {
+      await deleteFile(existente.fotoPublicId, "image");
+    }
+
     await prisma.hitosObra.delete({ where: { id } });
     revalidatePath("/admin/obras");
     return { success: true };
@@ -374,6 +462,31 @@ export async function createPago(obraId: string, formData: FormData) {
     };
   }
 
+  // Subir comprobante a Cloudinary si se envía uno.
+  let comprobanteUrl: string | null = null;
+  let comprobantePublicId: string | null = null;
+  const comprobanteFile = formData.get("comprobante") as File | null;
+  if (comprobanteFile) {
+    try {
+      const bytes = await comprobanteFile.arrayBuffer();
+      const uploaded = await uploadFile(Buffer.from(bytes), {
+        folder: "constr-art/obras/pagos/comprobantes",
+        resourceType: "raw",
+        filename: comprobanteFile.name,
+      });
+      comprobanteUrl = uploaded.secureUrl;
+      comprobantePublicId = uploaded.publicId;
+    } catch (error) {
+      console.error("Error subiendo comprobante de pago:", error);
+      return {
+        success: false,
+        error: {
+          _form: ["Error al subir el comprobante. Intente nuevamente."],
+        },
+      };
+    }
+  }
+
   try {
     const obra = await prisma.obraActiva.findUnique({
       where: { id: obraId },
@@ -384,11 +497,18 @@ export async function createPago(obraId: string, formData: FormData) {
     }
 
     await prisma.pagoObra.create({
-      data: { ...valid.data, obraId },
+      data: {
+        ...valid.data,
+        obraId,
+        comprobanteUrl,
+        comprobantePublicId,
+      },
     });
     revalidatePath("/admin/obras");
     return { success: true };
   } catch (error) {
+    // Si falla la BD, borrar el comprobante ya subido a Cloudinary.
+    if (comprobantePublicId) await deleteFile(comprobantePublicId, "raw");
     console.error("Error creando pago:", error);
     return {
       success: false,
@@ -427,7 +547,6 @@ export async function updatePago(id: string, formData: FormData) {
     fecha: formData.get("fecha") as string,
     concepto: formData.get("concepto") as string,
     estado: formData.get("estado") as string,
-    comprobanteUrl: (formData.get("comprobanteUrl") as string) || null,
   };
 
   const valid = pagoSchema.safeParse(data);
@@ -436,14 +555,61 @@ export async function updatePago(id: string, formData: FormData) {
     return { success: false, error: valid.error.flatten().fieldErrors };
   }
 
+  const existente = await prisma.pagoObra.findUnique({
+    where: { id },
+    select: { comprobanteUrl: true, comprobantePublicId: true },
+  });
+  if (!existente) {
+    return { success: false, error: { _form: ["Pago no encontrado"] } };
+  }
+
+  // Subir nuevo comprobante si se envía uno.
+  let comprobanteUrl = existente.comprobanteUrl ?? null;
+  let comprobantePublicId = existente.comprobantePublicId ?? null;
+  const comprobanteFile = formData.get("comprobante") as File | null;
+  if (comprobanteFile) {
+    try {
+      const bytes = await comprobanteFile.arrayBuffer();
+      const uploaded = await uploadFile(Buffer.from(bytes), {
+        folder: "constr-art/obras/pagos/comprobantes",
+        resourceType: "raw",
+        filename: comprobanteFile.name,
+      });
+      // Borrar el anterior de Cloudinary si existe.
+      if (comprobantePublicId) {
+        await deleteFile(comprobantePublicId, "raw");
+      }
+      comprobanteUrl = uploaded.secureUrl;
+      comprobantePublicId = uploaded.publicId;
+    } catch (error) {
+      console.error("Error subiendo comprobante de pago:", error);
+      return {
+        success: false,
+        error: { _form: ["Error al subir el comprobante. Intente nuevamente."] },
+      };
+    }
+  }
+
   try {
     await prisma.pagoObra.update({
       where: { id },
-      data: { ...valid.data, fecha: new Date(valid.data.fecha) },
+      data: {
+        ...valid.data,
+        fecha: new Date(valid.data.fecha),
+        comprobanteUrl,
+        comprobantePublicId,
+      },
     });
     revalidatePath("/admin/obras");
     return { success: true };
   } catch (error) {
+    // Si falla la BD, borrar el comprobante nuevo subido a Cloudinary.
+    if (
+      comprobantePublicId &&
+      comprobantePublicId !== existente.comprobantePublicId
+    ) {
+      await deleteFile(comprobantePublicId, "raw");
+    }
     console.error("Error actualizando pago:", error);
     return { success: false, error: { _form: ["Error al actualizar el pago."] } };
   }
@@ -453,6 +619,19 @@ export async function deletePago(id: string) {
   await requireAdmin();
 
   try {
+    const existente = await prisma.pagoObra.findUnique({
+      where: { id },
+      select: { comprobantePublicId: true },
+    });
+    if (!existente) {
+      return { success: false, error: { _form: ["Pago no encontrado"] } };
+    }
+
+    // Borrar comprobante de Cloudinary si existe.
+    if (existente.comprobantePublicId) {
+      await deleteFile(existente.comprobantePublicId, "raw");
+    }
+
     await prisma.pagoObra.delete({ where: { id } });
     revalidatePath("/admin/obras");
     return { success: true };

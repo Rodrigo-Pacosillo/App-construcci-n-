@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth-utils";
 import { z } from "zod";
+import { uploadFile, deleteFile } from "@/lib/cloudinary";
 
 const emptyToUndefined = (v: unknown) => {
   if (v === "" || v === null || v === undefined) return undefined;
@@ -86,7 +87,6 @@ export async function createContrato(formData: FormData) {
   const data = {
     clienteId: formData.get("clienteId") as string,
     cotizacionId: formData.get("cotizacionId") as string | null,
-    archivoPdfUrl: formData.get("archivoPdfUrl") as string | null,
     fechaFirma: formData.get("fechaFirma") as string | null,
     montoTotal: formData.get("montoTotal") as string,
     observaciones: formData.get("observaciones") as string | null,
@@ -99,6 +99,29 @@ export async function createContrato(formData: FormData) {
       success: false,
       error: parsed.error.flatten().fieldErrors,
     };
+  }
+
+  // Subir PDF del contrato a Cloudinary si se envía uno.
+  let archivoPdfUrl: string | null = null;
+  let archivoPdfPublicId: string | null = null;
+  const pdfFile = formData.get("archivoPdf") as File | null;
+  if (pdfFile) {
+    try {
+      const bytes = await pdfFile.arrayBuffer();
+      const uploaded = await uploadFile(Buffer.from(bytes), {
+        folder: "constr-art/contratos",
+        resourceType: "raw",
+        filename: pdfFile.name,
+      });
+      archivoPdfUrl = uploaded.secureUrl;
+      archivoPdfPublicId = uploaded.publicId;
+    } catch (error) {
+      console.error("Error subiendo PDF de contrato:", error);
+      return {
+        success: false,
+        error: { _form: ["Error al subir el PDF del contrato. Intente nuevamente."] },
+      };
+    }
   }
 
   try {
@@ -144,6 +167,8 @@ export async function createContrato(formData: FormData) {
         data: {
           ...rest,
           cotizacionId: cotizacionId ?? null,
+          archivoPdfUrl,
+          archivoPdfPublicId,
           fechaFirma: parsed.data.fechaFirma ? new Date(parsed.data.fechaFirma) : null,
         },
       });
@@ -197,6 +222,8 @@ export async function createContrato(formData: FormData) {
     revalidatePath("/admin");
     return { success: true, data: contrato, clienteId: rest.clienteId, tieneUsuario: Boolean(clienteConUsuario?.usuario?.id) };
   } catch (error) {
+    // Si falla la BD, borrar el PDF ya subido a Cloudinary.
+    if (archivoPdfPublicId) await deleteFile(archivoPdfPublicId, "raw");
     console.error("Error creando contrato:", error);
     return {
       success: false,
@@ -211,7 +238,6 @@ export async function updateContrato(id: string, formData: FormData) {
   const data = {
     clienteId: formData.get("clienteId") as string,
     cotizacionId: (formData.get("cotizacionId") as string) || null,
-    archivoPdfUrl: (formData.get("archivoPdfUrl") as string) || null,
     fechaFirma: (formData.get("fechaFirma") as string) || null,
     montoTotal: parseFloat(formData.get("montoTotal") as string),
     observaciones: (formData.get("observaciones") as string) || null,
@@ -226,6 +252,41 @@ export async function updateContrato(id: string, formData: FormData) {
     };
   }
 
+  const existente = await prisma.contrato.findUnique({
+    where: { id },
+    select: { archivoPdfUrl: true, archivoPdfPublicId: true },
+  });
+  if (!existente) {
+    return { success: false, error: { _form: ["Contrato no encontrado"] } };
+  }
+
+  // Subir nuevo PDF si se envía uno.
+  let archivoPdfUrl = existente.archivoPdfUrl ?? null;
+  let archivoPdfPublicId = existente.archivoPdfPublicId ?? null;
+  const pdfFile = formData.get("archivoPdf") as File | null;
+  if (pdfFile) {
+    try {
+      const bytes = await pdfFile.arrayBuffer();
+      const uploaded = await uploadFile(Buffer.from(bytes), {
+        folder: "constr-art/contratos",
+        resourceType: "raw",
+        filename: pdfFile.name,
+      });
+      // Borrar el anterior de Cloudinary si existe.
+      if (archivoPdfPublicId) {
+        await deleteFile(archivoPdfPublicId, "raw");
+      }
+      archivoPdfUrl = uploaded.secureUrl;
+      archivoPdfPublicId = uploaded.publicId;
+    } catch (error) {
+      console.error("Error subiendo PDF de contrato:", error);
+      return {
+        success: false,
+        error: { _form: ["Error al subir el PDF del contrato. Intente nuevamente."] },
+      };
+    }
+  }
+
   try {
     const { cotizacionId, ...rest } = parsed.data;
     await prisma.contrato.update({
@@ -233,6 +294,8 @@ export async function updateContrato(id: string, formData: FormData) {
       data: {
         ...rest,
         cotizacionId: cotizacionId || null,
+        archivoPdfUrl,
+        archivoPdfPublicId,
         fechaFirma: parsed.data.fechaFirma ? new Date(parsed.data.fechaFirma) : null,
       },
     });
@@ -241,6 +304,13 @@ export async function updateContrato(id: string, formData: FormData) {
     revalidatePath(`/admin/contratos/${id}`);
     return { success: true };
   } catch (error) {
+    // Si falla la BD, borrar el PDF nuevo subido a Cloudinary.
+    if (
+      archivoPdfPublicId &&
+      archivoPdfPublicId !== existente.archivoPdfPublicId
+    ) {
+      await deleteFile(archivoPdfPublicId, "raw");
+    }
     console.error("Error actualizando contrato:", error);
     return {
       success: false,
@@ -253,6 +323,19 @@ export async function deleteContrato(id: string) {
   await requireAdmin();
 
   try {
+    const existente = await prisma.contrato.findUnique({
+      where: { id },
+      select: { archivoPdfPublicId: true },
+    });
+    if (!existente) {
+      return { success: false, error: { _form: ["Contrato no encontrado"] } };
+    }
+
+    // Borrar PDF de Cloudinary si existe.
+    if (existente.archivoPdfPublicId) {
+      await deleteFile(existente.archivoPdfPublicId, "raw");
+    }
+
     await prisma.contrato.delete({ where: { id } });
     revalidatePath("/admin/contratos");
     return { success: true };

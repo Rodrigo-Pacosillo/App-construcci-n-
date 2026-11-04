@@ -33,6 +33,7 @@ type Hito = {
   descripcion: string;
   fecha: string;
   fotoUrl: string | null;
+  fotoFile: File | null;
   visibleCliente: boolean;
 };
 
@@ -42,6 +43,7 @@ type Pago = {
   fecha: string;
   concepto: string;
   comprobanteUrl: string | null;
+  comprobanteFile: File | null;
   estado: string;
 };
 
@@ -71,6 +73,7 @@ export default function AdminObraDetallePage({
     descripcion: "",
     fecha: "",
     fotoUrl: "",
+    fotoFile: null as File | null,
     visibleCliente: false,
   });
   const [pagoForm, setPagoForm] = useState({
@@ -78,6 +81,7 @@ export default function AdminObraDetallePage({
     fecha: "",
     concepto: "",
     comprobanteUrl: "",
+    comprobanteFile: null as File | null,
     estado: "registrado",
   });
 
@@ -136,7 +140,11 @@ export default function AdminObraDetallePage({
     startTransition(async () => {
       try {
         const fd = new FormData();
-        Object.entries(hitoForm).forEach(([k, v]) => fd.append(k, String(v)));
+        fd.append("titulo", hitoForm.titulo);
+        fd.append("descripcion", hitoForm.descripcion);
+        fd.append("fecha", hitoForm.fecha);
+        fd.append("visibleCliente", String(hitoForm.visibleCliente));
+        if (hitoForm.fotoFile) fd.append("foto", hitoForm.fotoFile);
         fd.append("obraId", obra!.id);
         const res = editingHito
           ? await updateHito(editingHito.id, fd)
@@ -152,7 +160,13 @@ export default function AdminObraDetallePage({
     startTransition(async () => {
       try {
         const fd = new FormData();
-        Object.entries(pagoForm).forEach(([k, v]) => fd.append(k, v));
+        fd.append("monto", pagoForm.monto);
+        fd.append("fecha", pagoForm.fecha);
+        fd.append("concepto", pagoForm.concepto);
+        fd.append("estado", pagoForm.estado);
+        if (pagoForm.comprobanteFile) {
+          fd.append("comprobante", pagoForm.comprobanteFile);
+        }
         fd.append("obraId", obra!.id);
         const res = editingPago
           ? await updatePago(editingPago.id, fd)
@@ -164,28 +178,42 @@ export default function AdminObraDetallePage({
   }
 
   function startCreateHito() {
-    setHitoForm({ titulo: "", descripcion: "", fecha: new Date().toISOString().split("T")[0], fotoUrl: "", visibleCliente: false });
+    setHitoForm({ titulo: "", descripcion: "", fecha: new Date().toISOString().split("T")[0], fotoUrl: "", fotoFile: null, visibleCliente: false });
     setEditingHito(null);
     setError({});
     setShowHitoForm(true);
   }
 
   function startEditHito(h: Hito) {
-    setHitoForm({ titulo: h.titulo, descripcion: h.descripcion, fecha: new Date(h.fecha).toISOString().split("T")[0], fotoUrl: h.fotoUrl || "", visibleCliente: h.visibleCliente });
+    setHitoForm({ titulo: h.titulo, descripcion: h.descripcion, fecha: new Date(h.fecha).toISOString().split("T")[0], fotoUrl: h.fotoUrl || "", fotoFile: null, visibleCliente: h.visibleCliente });
     setEditingHito(h);
     setError({});
     setShowHitoForm(true);
   }
 
   function startCreatePago() {
-    setPagoForm({ monto: "", fecha: new Date().toISOString().split("T")[0], concepto: "", comprobanteUrl: "", estado: "registrado" });
+    setPagoForm({
+      monto: "",
+      fecha: new Date().toISOString().split("T")[0],
+      concepto: "",
+      comprobanteUrl: "",
+      comprobanteFile: null,
+      estado: "registrado",
+    });
     setEditingPago(null);
     setError({});
     setShowPagoForm(true);
   }
 
   function startEditPago(p: Pago) {
-    setPagoForm({ monto: p.monto.toString(), fecha: new Date(p.fecha).toISOString().split("T")[0], concepto: p.concepto, comprobanteUrl: p.comprobanteUrl || "", estado: p.estado });
+    setPagoForm({
+      monto: p.monto.toString(),
+      fecha: new Date(p.fecha).toISOString().split("T")[0],
+      concepto: p.concepto,
+      comprobanteUrl: p.comprobanteUrl || "",
+      comprobanteFile: null,
+      estado: p.estado,
+    });
     setEditingPago(p);
     setError({});
     setShowPagoForm(true);
@@ -340,8 +368,24 @@ export default function AdminObraDetallePage({
                     <input type="date" value={hitoForm.fecha} onChange={(e) => handleHitoChange("fecha", e.target.value)} className="rounded border border-border bg-surface w-full px-3 py-2 text-sm outline-none focus:border-accent" required />
                   </div>
                   <div>
-                    <label className="section-label block text-ink-faint mb-1">URL foto</label>
-                    <input type="url" value={hitoForm.fotoUrl} onChange={(e) => handleHitoChange("fotoUrl", e.target.value)} className="rounded border border-border bg-surface w-full px-3 py-2 text-sm outline-none focus:border-accent" />
+                    <label className="section-label block text-ink-faint mb-1">
+                      Foto del hito
+                    </label>
+                    <input
+                      type="file"
+                      name="foto"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0] ?? null;
+                        setHitoForm((prev) => ({ ...prev, fotoFile: file }));
+                      }}
+                      className="rounded border border-border bg-surface w-full px-3 py-2 text-sm outline-none focus:border-accent"
+                    />
+                    {hitoForm.fotoUrl && (
+                      <p className="text-xs text-ink-muted mt-1">
+                        Foto actual: {hitoForm.fotoUrl}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -419,8 +463,27 @@ export default function AdminObraDetallePage({
                     </select>
                   </div>
                   <div className="md:col-span-2">
-                    <label className="section-label block text-ink-faint mb-1">URL comprobante</label>
-                    <input type="url" value={pagoForm.comprobanteUrl} onChange={(e) => handlePagoChange("comprobanteUrl", e.target.value)} className="rounded border border-border bg-surface w-full px-3 py-2 text-sm outline-none focus:border-accent" />
+                    <label className="section-label block text-ink-faint mb-1">
+                      Comprobante de pago
+                    </label>
+                    <input
+                      type="file"
+                      name="comprobante"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0] ?? null;
+                        setPagoForm((prev) => ({
+                          ...prev,
+                          comprobanteFile: file,
+                        }));
+                      }}
+                      className="rounded border border-border bg-surface w-full px-3 py-2 text-sm outline-none focus:border-accent"
+                    />
+                    {pagoForm.comprobanteUrl && (
+                      <p className="text-xs text-ink-muted mt-1">
+                        Comprobante actual: {pagoForm.comprobanteUrl}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="flex gap-2 pt-4">

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { cotizacionFormSchema } from "@/lib/validators";
+import { uploadFile, deleteFile } from "@/lib/cloudinary";
 
 /**
  * Crea una nueva cotización desde el formulario público
@@ -35,6 +36,31 @@ export async function createCotizacion(formData: FormData) {
       success: false,
       error: valid.error.flatten().fieldErrors,
     };
+  }
+
+  // Subir foto del lote a Cloudinary si se envía una.
+  let fotoLoteUrl: string | null = null;
+  let fotoLotePublicId: string | null = null;
+  const fotoLoteFile = formData.get("fotoLote") as File | null;
+  if (fotoLoteFile) {
+    try {
+      const bytes = await fotoLoteFile.arrayBuffer();
+      const uploaded = await uploadFile(Buffer.from(bytes), {
+        folder: "constr-art/cotizaciones/fotos-lote",
+        resourceType: "image",
+        filename: fotoLoteFile.name,
+      });
+      fotoLoteUrl = uploaded.secureUrl;
+      fotoLotePublicId = uploaded.publicId;
+    } catch (error) {
+      console.error("Error subiendo foto de lote:", error);
+      return {
+        success: false,
+        error: {
+          _form: ["Error al subir la foto del lote. Intente nuevamente."],
+        },
+      };
+    }
   }
 
   const { nombre, apellidos, telefono, email, tipoObra, tipoConstruccion, rangoM2, ubicacionObra, descripcion, plazoInicio } =
@@ -115,6 +141,8 @@ export async function createCotizacion(formData: FormData) {
         plazoInicio,
         estado: "nuevo",
         requerimiento: descripcion || null,
+        fotoLoteUrl,
+        fotoLotePublicId,
       },
     });
 
@@ -131,6 +159,8 @@ export async function createCotizacion(formData: FormData) {
       },
     };
   } catch (error) {
+    // Si falla la BD, borrar la foto ya subida a Cloudinary.
+    if (fotoLotePublicId) await deleteFile(fotoLotePublicId, "image");
     console.error("Error creando cotización:", error);
     return {
       success: false,

@@ -168,6 +168,7 @@ model Cotizacion {
   estado           String         @default("nuevo")
   montoEstimado    Decimal?       @map("monto_estimado") @db.Decimal(12, 2)
   fotoLoteUrl      String?        @map("foto_lote_url")
+  fotoLotePublicId String?        @map("foto_lote_public_id")
   requerimiento    String?        @map("requerimiento")
   notasInternas    String?        @map("notas_internas")
   creadoEn         DateTime       @default(now()) @map("creado_en")
@@ -188,6 +189,7 @@ model Contrato {
   cotizacionId  String?     @map("cotizacion_id")
   cotizacion    Cotizacion? @relation(fields: [cotizacionId], references: [id])
   archivoPdfUrl String?     @map("archivo_pdf_url")
+  archivoPdfPublicId String? @map("archivo_pdf_public_id")
   fechaFirma    DateTime?   @map("fecha_firma")
   montoTotal    Decimal     @map("monto_total") @db.Decimal(12, 2)
   observaciones String?
@@ -209,8 +211,11 @@ model ProyectoPortafolio {
   ubicacion        String?
 
   portadaUrl  String? @map("portada_url")
+  portadaPublicId String? @map("portada_public_id")
   videoUrl    String? @map("video_url")
+  videoPublicId String? @map("video_public_id")
   galeriaUrls String[] @default([]) @map("galeria_urls")
+  galeriaPublicIds String[] @default([]) @map("galeria_public_ids")
 
   destacado Boolean @default(false)
   publicado Boolean @default(false)
@@ -240,6 +245,7 @@ model Testimonio {
   nombrePublico    String?  @map("nombre_publico")
   texto            String   @db.Text
   fotoUrl          String?  @map("foto_url")
+  fotoPublicId     String?  @map("foto_public_id")
   puntaje          Int?
 
   estado           EstadoTestimonio @default(pendiente)
@@ -280,6 +286,7 @@ model Certificacion {
   titulo      String
   descripcion String
   imageUrl    String? @map("image_url")
+  imagePublicId String? @map("image_public_id")
   activo      Boolean @default(true)
 
   @@map("certificaciones")
@@ -324,6 +331,7 @@ model HitosObra {
   descripcion    String
   fecha          DateTime
   fotoUrl        String?  @map("foto_url")
+  fotoPublicId   String?  @map("foto_public_id")
   visibleCliente Boolean  @default(false) @map("visible_cliente")
 
   obra ObraActiva @relation(fields: [obraId], references: [id])
@@ -339,6 +347,7 @@ model PagoObra {
   fecha          DateTime
   concepto       String
   comprobanteUrl String?    @map("comprobante_url")
+  comprobantePublicId String? @map("comprobante_public_id")
   estado         EstadoPago @default(registrado)
 
   obra ObraActiva @relation(fields: [obraId], references: [id])

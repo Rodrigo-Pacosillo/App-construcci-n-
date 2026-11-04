@@ -208,6 +208,19 @@ export default function CotizacionPage() {
             />
           </div>
 
+          <div>
+            <label htmlFor="fotoLote" className="section-label block text-ink-faint">
+              Foto del lote o terreno <span className="text-ink-faint">(opcional)</span>
+            </label>
+            <input
+              id="fotoLote"
+              name="fotoLote"
+              type="file"
+              accept="image/*"
+              className="mt-1 block w-full rounded border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent"
+            />
+          </div>
+
           <button
             type="submit"
             disabled={loading}

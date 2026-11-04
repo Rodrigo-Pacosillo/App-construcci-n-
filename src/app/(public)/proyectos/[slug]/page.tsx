@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { TikTokPlayer } from "@/components/proyecto/TikTokPlayer";
+import { CloudinaryVideoPlayer } from "@/components/proyecto/CloudinaryVideoPlayer";
 import { prisma } from "@/lib/db";
 import { FALLBACK_PROYECTOS } from "@/lib/fallback-data";
 import type { Metadata } from "next";
@@ -115,11 +116,19 @@ export default async function ProyectoPage({
         {proyecto.videoUrl && (
           <div className="mt-12">
             <p className="section-label mb-2 text-ink-faint">VIDEO DE OBRA</p>
-            <TikTokPlayer
-              videoUrl={proyecto.videoUrl}
-              portadaUrl={proyecto.portadaUrl}
-              titulo={proyecto.titulo}
-            />
+            {proyecto.videoUrl.includes("res.cloudinary.com") ? (
+              <CloudinaryVideoPlayer
+                videoUrl={proyecto.videoUrl}
+                portadaUrl={proyecto.portadaUrl}
+                titulo={proyecto.titulo}
+              />
+            ) : (
+              <TikTokPlayer
+                videoUrl={proyecto.videoUrl}
+                portadaUrl={proyecto.portadaUrl}
+                titulo={proyecto.titulo}
+              />
+            )}
           </div>
         )}
 

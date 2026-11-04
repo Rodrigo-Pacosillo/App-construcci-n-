@@ -288,6 +288,7 @@ export const FALLBACK_CERTIFICACIONES: Certificacion[] = [
     descripcion:
       "Matrícula habilitante para construcciones en todo el territorio boliviano.",
     imageUrl: null,
+    imagePublicId: null,
     activo: true,
   },
   {
@@ -296,6 +297,7 @@ export const FALLBACK_CERTIFICACIONES: Certificacion[] = [
     descripcion:
       "Certificación oficial en sistemas de construcción en seco con perfilería de acero galvanizado.",
     imageUrl: null,
+    imagePublicId: null,
     activo: true,
   },
   {
@@ -304,6 +306,7 @@ export const FALLBACK_CERTIFICACIONES: Certificacion[] = [
     descripcion:
       "Garantía escrita de 1 año en todas nuestras obras por vicios de construcción y materiales.",
     imageUrl: null,
+    imagePublicId: null,
     activo: true,
   },
   {
@@ -312,6 +315,7 @@ export const FALLBACK_CERTIFICACIONES: Certificacion[] = [
     descripcion:
       "Más de 14 años de experiencia y 200+ obras ejecutadas a nivel nacional en Bolivia.",
     imageUrl: null,
+    imagePublicId: null,
     activo: true,
   },
 ];

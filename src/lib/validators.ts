@@ -2,7 +2,7 @@ import { z } from "zod";
 import {
   ESTADOS_COTIZACION,
 } from "./constants";
-import { cloudinaryImageUrl, emptyToUndefined, boolFromForm, portadaUrl, tiktokVideoUrl } from "./validators/media";
+import { cloudinaryImageUrl, emptyToUndefined, boolFromForm, portadaUrl } from "./validators/media";
 
 // ─── Cotización (forms de admin) ───────────────────────────────────
 export const cotizacionAdminSchema = z.object({
@@ -55,7 +55,7 @@ export const proyectoSchema = z.object({
   titulo: z.string().min(1, "El título es requerido"),
   tipoConstruccion: z.enum(["tradicional", "seco", "no_sabe", "integral"]).optional(),
   ubicacion: z.string().min(1, "La ubicación es requerida"),
-  videoUrl: emptyToUndefined(tiktokVideoUrl).optional(),
+  videoUrl: emptyToUndefined(z.string().url()).optional(),
   portadaUrl: emptyToUndefined(portadaUrl).optional(),
   galeriaUrls: z.array(z.string().url()).optional(),
   orden: z.coerce.number().int().min(0).default(0),
