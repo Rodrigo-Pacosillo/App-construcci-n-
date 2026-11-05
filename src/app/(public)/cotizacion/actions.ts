@@ -43,7 +43,7 @@ export async function createCotizacion(formData: FormData) {
   let fotoLoteUrl: string | null = null;
   let fotoLotePublicId: string | null = null;
   const fotoLoteFile = formData.get("fotoLote") as File | null;
-  if (fotoLoteFile) {
+  if (fotoLoteFile && fotoLoteFile.size > 0) {
     try {
       const bytes = await fotoLoteFile.arrayBuffer();
       const uploaded = await uploadFile(Buffer.from(bytes), {
