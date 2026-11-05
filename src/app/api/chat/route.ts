@@ -63,6 +63,7 @@ const MENSAJES_CONTEXTO = 20;
 type Identidad = {
   agente: "publico" | "cliente" | "admin";
   usuarioId?: string;
+  clienteId?: string;
   cotizacionId?: string;
   clienteNombre?: string;
   sitioWeb?: string;
@@ -144,7 +145,8 @@ async function resolverIdentidad(
     const cotizacionReciente = usuario.cliente.cotizaciones[0];
     return {
       agente: "cliente",
-      usuarioId: usuario.cliente.id,
+      usuarioId: usuario.id,
+      clienteId: usuario.cliente.id,
       cotizacionId: cotizacionReciente?.id,
       clienteNombre: usuario.cliente.nombre,
       sitioWeb: req.headers.get("origin") ?? undefined,
@@ -233,9 +235,7 @@ export async function POST(req: NextRequest) {
               });
               return c?.clienteId ?? "";
             })()
-          : identidad.agente === "cliente"
-          ? (identidad.usuarioId ?? "")
-          : "";
+          : identidad.clienteId ?? "";
 
       // Usar sessionId del cliente si se provee, sino generar uno nuevo
       const clientSessionId = (body.sessionId as string) ?? crypto.randomUUID();
@@ -270,10 +270,10 @@ export async function POST(req: NextRequest) {
         }));
 
       const datosCliente =
-        identidad.agente === "cliente" && identidad.usuarioId
+        identidad.agente === "cliente" && identidad.clienteId
           ? await (async () => {
               const cl = await prisma.cliente.findUnique({
-                where: { id: identidad.usuarioId },
+                where: { id: identidad.clienteId },
                 include: {
                   cotizaciones: { orderBy: { creadoEn: "desc" }, take: 3 },
                   obras: { take: 3 },
