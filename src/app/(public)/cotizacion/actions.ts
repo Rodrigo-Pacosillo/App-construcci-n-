@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { cotizacionFormSchema } from "@/lib/validators";
 import { uploadFile, deleteFile } from "@/lib/cloudinary";
+import { generarChatToken } from "@/lib/tokens";
 
 /**
  * Crea una nueva cotización desde el formulario público
@@ -143,8 +144,11 @@ export async function createCotizacion(formData: FormData) {
         requerimiento: descripcion || null,
         fotoLoteUrl,
         fotoLotePublicId,
+        chatTokenIssuedEn: new Date(),
       },
     });
+
+    const chatToken = generarChatToken(cotizacion.id);
 
     // Invalidar caché para actualizar vistas
     revalidatePath("/cotizacion");
@@ -156,6 +160,7 @@ export async function createCotizacion(formData: FormData) {
       data: {
         clienteId: clienteIdFinal,
         cotizacionId: cotizacion.id,
+        chatToken,
       },
     };
   } catch (error) {

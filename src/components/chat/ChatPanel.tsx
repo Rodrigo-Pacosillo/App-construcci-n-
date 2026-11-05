@@ -28,6 +28,7 @@ interface ChatPanelProps {
   clienteNombre: string;
   whatsappNumero?: string;
   cotizacionData?: CotizacionData;
+  chatToken?: string;
 }
 
 export function ChatPanel({
@@ -36,19 +37,19 @@ export function ChatPanel({
   clienteNombre,
   whatsappNumero = WHATSAPP_NUMERO,
   cotizacionData,
+  chatToken,
 }: ChatPanelProps) {
   const [mensajes, setMensajes] = useState<Mensaje[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorEsFatal, setErrorEsFatal] = useState(false);
 
   const sessionStorageKey = cotizacionId
     ? `chat_${cotizacionId}`
     : `chat_cliente_${clienteId}`;
 
-  const [sessionId, setSessionId] = useState<string | null>(() => {
-    return sessionStorage.getItem(sessionStorageKey);
-  });
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const ultimoInicioRef = useRef<string | null>(null);
 
@@ -99,6 +100,14 @@ export function ChatPanel({
     };
   }, []);
 
+  // Leer sessionId de sessionStorage solo en cliente (evita crash SSR)
+  useEffect(() => {
+    const saved = sessionStorage.getItem(sessionStorageKey);
+    if (saved && !sessionId) {
+      setSessionId(saved);
+    }
+  }, [sessionStorageKey, sessionId]);
+
   // Cerrar popover de config al hacer clic fuera
   useEffect(() => {
     if (configPos === null) return;
@@ -125,6 +134,7 @@ export function ChatPanel({
           cotizacionId: cotizacionId ?? undefined,
           clienteNombre,
           whatsappNumero,
+          t: chatToken,
           sitioBaseUrl:
             typeof window !== "undefined" ? window.location.origin : "",
           cotizacionData: cotizacionData ?? undefined,
@@ -132,11 +142,28 @@ export function ChatPanel({
       });
 
       if (!res.ok) {
-        throw new Error("Error al iniciar el chat");
+        let mensaje = "Error al iniciar el chat";
+        try {
+          const body = await res.json();
+          if (body.error?.message) {
+            mensaje = body.error.message;
+          }
+        } catch {
+          // ignorar, usar mensaje por defecto
+        }
+        setError(mensaje);
+        setErrorEsFatal(res.status === 404 || res.status === 429);
+        if (res.status === 404 || res.status === 429) {
+          sessionStorage.removeItem(sessionStorageKey);
+          setSessionId(null);
+        }
+        setLoading(false);
+        return;
       }
 
       const data = await res.json();
 
+      setErrorEsFatal(false);
       if (data.sessionId) {
         sessionStorage.setItem(sessionStorageKey, data.sessionId);
         setSessionId(data.sessionId);
@@ -159,7 +186,48 @@ export function ChatPanel({
     } finally {
       setLoading(false);
     }
-  }, [clienteId, cotizacionId, clienteNombre, whatsappNumero, cotizacionData, sessionStorageKey]);
+  }, [clienteId, cotizacionId, clienteNombre, whatsappNumero, cotizacionData, chatToken, sessionStorageKey]);
+
+  // Cargar historial cuando se establece un sessionId existente
+  const cargarHistorial = useCallback(async () => {
+    if (!sessionId) return;
+    setLoading(true);
+    setError(null);
+    setErrorEsFatal(false);
+    try {
+      const res = await fetch(`/api/chat?sessionId=${encodeURIComponent(sessionId)}`);
+      if (!res.ok) {
+        if (res.status === 404) {
+          sessionStorage.removeItem(sessionStorageKey);
+          setSessionId(null);
+          setTimeout(() => iniciarChat(), 0);
+          return;
+        }
+        throw new Error("Error al cargar historial");
+      }
+      const data = await res.json();
+      if (data.mensajes && data.mensajes.length > 0) {
+        setMensajes(
+          data.mensajes.map((m: Mensaje) => ({
+            id: m.id,
+            rol: m.rol,
+            contenido: m.contenido,
+            creadoEn: m.creadoEn,
+          }))
+        );
+      }
+    } catch {
+      setError("No se pudo cargar el historial de la conversación.");
+    } finally {
+      setLoading(false);
+    }
+  }, [sessionId, sessionStorageKey, iniciarChat]);
+
+  useEffect(() => {
+    if (sessionId) {
+      cargarHistorial();
+    }
+  }, [sessionId, cargarHistorial]);
 
   // Cuando cambian cliente o cotización, reiniciar el chat completamente
   // para que no se mezclen datos de clientes anteriores
@@ -185,8 +253,7 @@ export function ChatPanel({
     ultimoInicioRef.current = claveActual;
 
     // Si no hay sesión guardada para esta clave, iniciar una nueva
-    const saved = sessionStorage.getItem(sessionStorageKey);
-    if (!saved) {
+    if (!sessionId) {
       setTimeout(() => iniciarChat(), 0);
     }
   }, [clienteId, cotizacionId, sessionStorageKey, iniciarChat]);
@@ -219,7 +286,30 @@ export function ChatPanel({
       });
 
       if (!res.ok) {
-        throw new Error("Error al enviar el mensaje");
+        let mensaje = "Error al enviar el mensaje";
+        let esFatal = false;
+        try {
+          const body = await res.json();
+          if (body.error?.message) {
+            mensaje = body.error.message;
+          }
+          if (
+            body.error?.code === "SESION_NO_ENCONTRADA" ||
+            body.error?.code === "SESION_LIMITE"
+          ) {
+            esFatal = true;
+          }
+        } catch {
+          // ignorar, usar mensaje por defecto
+        }
+        setError(mensaje);
+        setErrorEsFatal(esFatal);
+        if (esFatal) {
+          sessionStorage.removeItem(sessionStorageKey);
+          setSessionId(null);
+        }
+        setLoading(false);
+        return;
       }
 
       const data = await res.json();
@@ -262,6 +352,16 @@ export function ChatPanel({
       setLoading(false);
     }
   }
+
+  const nuevaConversacion = useCallback(() => {
+    sessionStorage.removeItem(sessionStorageKey);
+    setSessionId(null);
+    setMensajes([]);
+    setError(null);
+    setErrorEsFatal(false);
+    setInput("");
+    setTimeout(() => iniciarChat(), 0);
+  }, [sessionStorageKey, iniciarChat]);
 
   // Voces ordenadas: español primero, dentro de ellas Neural/Natural primero
   const vocesOrdenadas = useMemo(() => {
@@ -384,8 +484,16 @@ export function ChatPanel({
       {/* Banner de error (solo cuando hay error) */}
       {error && (
         <div className="px-6 py-3 shrink-0">
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-4 py-3 text-sm text-red-700 dark:text-red-400">
-            {error}
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-4 py-3">
+            <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
+            {errorEsFatal && (
+              <button
+                onClick={nuevaConversacion}
+                className="mt-3 text-xs text-amber-600 dark:text-amber-400 underline underline-offset-4 hover:text-amber-800 dark:hover:text-amber-300"
+              >
+                Nueva conversación
+              </button>
+            )}
           </div>
         </div>
       )}

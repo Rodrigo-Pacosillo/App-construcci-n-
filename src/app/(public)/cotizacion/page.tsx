@@ -26,9 +26,11 @@ export default function CotizacionPage() {
       const result = await createCotizacion(formData);
 
       if (result.success && result.data) {
-        router.replace(
-          `/cotizacion/exito?clienteId=${result.data.clienteId}&cotizacionId=${result.data.cotizacionId}`
-        );
+        const params = new URLSearchParams({
+          cotizacionId: result.data.cotizacionId,
+          t: result.data.chatToken,
+        });
+        router.replace(`/cotizacion/exito?${params.toString()}`);
       } else {
         setError("Error al enviar el formulario. Por favor inténtelo nuevamente.");
       }

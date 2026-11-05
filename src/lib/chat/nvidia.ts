@@ -25,6 +25,7 @@ export interface NvidiaChatOptions {
   maxTokens?: number;
   topP?: number;
   stream?: boolean;
+  enableThinking?: boolean;
 }
 
 /**
@@ -42,10 +43,11 @@ export async function nvidiaChat(opts: NvidiaChatOptions): Promise<string> {
     temperature: opts.temperature ?? 0.7,
     top_p: opts.topP ?? 1,
     stream: opts.stream ?? false,
+    max_tokens: opts.maxTokens ?? 1200,
   };
 
-  if (opts.maxTokens) {
-    payload.max_tokens = opts.maxTokens;
+  if (opts.enableThinking !== undefined) {
+    payload.chat_template_kwargs = { enable_thinking: opts.enableThinking };
   }
 
   const res = await fetch(`${NVIDIA_BASE_URL}/chat/completions`, {
@@ -66,10 +68,13 @@ export async function nvidiaChat(opts: NvidiaChatOptions): Promise<string> {
 
   const data = await res.json();
 
-  const content =
+  let content =
     data.choices?.[0]?.message?.content ??
     data.choices?.[0]?.text ??
     "";
+
+  // Strip defensivo de bloques de razonamiento si el modelo los devuelve
+  content = content.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
 
   if (!content) {
     throw new Error("NVIDIA API devolvió una respuesta vacía");

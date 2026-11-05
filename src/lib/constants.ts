@@ -88,6 +88,8 @@ export const ADMIN_NAV_SECTIONS: NavSection[] = [
       { id: "testimonios", label: "Testimonios", href: "/admin/testimonios", icon: "MessageSquare" },
       { id: "certificaciones", label: "Certificaciones", href: "/admin/certificaciones", icon: "Award" },
       { id: "faqs", label: "FAQs", href: "/admin/faqs", icon: "HelpCircle" },
+      { id: "conocimiento", label: "Conocimiento IA", href: "/admin/conocimiento", icon: "BookOpen" },
+      { id: "chat", label: "Chat IA", href: "/admin/chat", icon: "MessageCircle" },
     ],
   },
   {

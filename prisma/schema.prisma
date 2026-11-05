@@ -118,6 +118,9 @@ model Usuario {
   eventosCreados        EventoCalendario[]
   actualizacionesSubidas ActualizacionObra[]
   testimoniosCreados    Testimonio[]
+  chatSesiones          ChatSesion[]
+  chatAcciones          ChatAccion[]
+  chatAccionesConfirmadas ChatAccion[] @relation("ChatAccionConfirmadaPor")
 
   @@map("usuarios")
 }
@@ -171,6 +174,7 @@ model Cotizacion {
   fotoLotePublicId String?        @map("foto_lote_public_id")
   requerimiento    String?        @map("requerimiento")
   notasInternas    String?        @map("notas_internas")
+  chatTokenIssuedEn DateTime?    @map("chat_token_issued_en")
   creadoEn         DateTime       @default(now()) @map("creado_en")
   actualizadoEn    DateTime       @updatedAt @map("actualizado_en")
 
@@ -526,19 +530,28 @@ model PrestamoHerramienta {
 // ─── Chat (Punto 1 del chatbot) ──────────────────────────────────────
 
 model ChatSesion {
-  id           String   @id @default(cuid()) @map("id")
-  sessionId    String   @unique @map("session_id")
-  clienteId    String   @map("cliente_id")
-  cotizacionId String?  @map("cotizacion_id")
-  mensajeCount Int      @default(0) @map("mensaje_count")
-  creadoEn     DateTime @default(now()) @map("creado_en")
+  id              String   @id @default(cuid()) @map("id")
+  sessionId       String   @unique @map("session_id")
+  agente          String   @default("publico") @map("agente")
+  clienteId       String   @map("cliente_id")
+  usuarioId       String?  @unique @map("usuario_id")
+  cotizacionId    String?  @map("cotizacion_id")
+  mensajeCount    Int      @default(0) @map("mensaje_count")
+  estado          String   @default("activa") @map("estado")
+  titulo          String?  @map("titulo")
+  resumen         String?  @db.Text @map("resumen")
+  ultimoMensajeEn DateTime @default(now()) @map("ultimo_mensaje_en")
+  creadoEn        DateTime @default(now()) @map("creado_en")
 
-  cliente    Cliente?    @relation(fields: [clienteId], references: [id])
-  cotizacion Cotizacion? @relation(fields: [cotizacionId], references: [id])
+  cliente    Cliente?     @relation(fields: [clienteId], references: [id])
+  usuario    Usuario?     @relation(fields: [usuarioId], references: [id])
+  cotizacion Cotizacion?  @relation(fields: [cotizacionId], references: [id])
   mensajes   ChatMensaje[]
+  acciones   ChatAccion[]
 
   @@index([clienteId])
   @@index([cotizacionId])
+  @@index([usuarioId])
   @@map("chat_sesiones")
 }
 
@@ -547,10 +560,49 @@ model ChatMensaje {
   sesionId  String   @map("sesion_id")
   rol       String   // "user" o "assistant"
   contenido String   @db.Text
+  metadatos Json?
   creadoEn  DateTime @default(now()) @map("creado_en")
 
   sesion ChatSesion @relation(fields: [sesionId], references: [id], onDelete: Cascade)
 
   @@index([sesionId, creadoEn])
   @@map("chat_mensajes")
+}
+
+model ChatAccion {
+  id                 String   @id @default(cuid()) @map("id")
+  sesionId           String   @map("sesion_id")
+  usuarioId          String   @map("usuario_id")
+  herramienta        String   @map("herramienta")
+  argumentos         Json
+  resultado          Json?
+  estado             String   @default("pendiente") @map("estado")
+  error              String?  @map("error")
+  confirmadaPorUsuarioId String? @map("confirmada_por_usuario_id")
+  creadoEn           DateTime @default(now()) @map("creado_en")
+  ejecutadoEn        DateTime? @map("ejecutado_en")
+
+  sesion      ChatSesion   @relation(fields: [sesionId], references: [id], onDelete: Cascade)
+  usuario     Usuario      @relation(fields: [usuarioId], references: [id])
+  confirmadaPor Usuario?   @relation("ChatAccionConfirmadaPor", fields: [confirmadaPorUsuarioId], references: [id])
+
+  @@index([sesionId])
+  @@index([estado])
+  @@map("chat_acciones")
+}
+
+model Conocimiento {
+  id          String   @id @default(cuid()) @map("id")
+  titulo      String   @map("titulo")
+  categoria   String   @map("categoria")
+  audiencia   String   @default("publico") @map("audiencia")
+  contenido   String   @db.Text @map("contenido")
+  activo      Boolean  @default(true) @map("activo")
+  version     Int      @default(1) @map("version")
+  creadoEn    DateTime @default(now()) @map("creado_en")
+  actualizadoEn DateTime @updatedAt @map("actualizado_en")
+
+  @@index([categoria])
+  @@index([audiencia])
+  @@map("conocimiento")
 }

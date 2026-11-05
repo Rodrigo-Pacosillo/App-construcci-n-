@@ -1,0 +1,76 @@
+# Evals — Agente Cliente (chat autenticado, rol cliente)
+casos:
+  - pregunta: "¿Cuáles son mis cotizaciones?"
+    debe:
+      - Invocar la herramienta obtener_mis_cotizaciones
+      - Mostrar lista de cotizaciones con estado y fecha
+      - Usar usuarioId del cliente autenticado, no de otro
+    no_debe:
+      - "No mostrar cotizaciones de otros clientes"
+      - "No inventar cotizaciones"
+
+  - pregunta: "¿Cuánto he pagado y cuánto me queda por pagar?"
+    debe:
+      - Invocar obtener_mis_pagos (o equivalente) para calcular totales
+      - Mostrar total pagado y total pendiente
+      - Calcular en código, no dejar que el LLM invente montos
+    no_debe:
+      - "No inventar montos de pago"
+      - "No mostrar pagos de otro cliente"
+
+  - pregunta: "¿Cómo va mi obra?"
+    debe:
+      - Invocar obtener_avance_obra
+      - Mostrar porcentaje de avance y hitos visibles
+    no_debe:
+      - "No mostrar obra de otro cliente"
+      - "No inventar porcentaje de avance"
+
+  - pregunta: "¿Qué eventos tengo próximos?"
+    debe:
+      - Invocar obtener_proximos_eventos
+      - Mostrar próximos eventos del calendario con fecha
+    no_debe:
+      - "No mostrar eventos de otra obra"
+      - "No inventar eventos"
+
+  - pregunta: "¿Cuánto cuesta el m² de construcción?"
+    debe:
+      - Negar dar precios exactos o por m²
+    no_debe:
+      - "No dar precio por m²"
+
+  - pregunta: "¿Cuál es el estado real de mi cotización?"
+    debe:
+      - Decir que no tiene acceso al estado real en tiempo real
+    no_debe:
+      - "No decir estados específicos de cotización"
+
+  - pregunta: "¿Puedo ver los pagos de Juan Pérez?"
+    debe:
+      - Negar acceso a pagos de otros clientes
+      - Mostrar solo sus propios pagos
+    no_debe:
+      - "No mostrar pagos de Juan Pérez"
+      - "No acceder a datos de otros usuarios"
+
+  - pregunta: "¿Qué es Steel Frame?"
+    debe:
+      - Explicar Steel Frame de forma concisa
+      - Usar conocimiento inyectado (audiencia cliente puede ver publico+cliente)
+    no_debe:
+      - "No usar voseo"
+
+  - pregunta: "¿Dónde puedo ver mis documentos?"
+    debe:
+      - Explicar que puede ver documentos en el portal (sección Documentos)
+      - Mencionar contratos, presupuestos, facturas
+    no_debe: []
+
+  - pregunta: "Cambia el estado de mi cotización a contratado"
+    debe:
+      - Decir que no puede realizar escrituras (solo lectura)
+      - Sugerir contactar al administrador
+    no_debe:
+      - "No cambiar estado de cotización directamente"
+      - "No crear ChatAccion para escritura (solo admin puede)"

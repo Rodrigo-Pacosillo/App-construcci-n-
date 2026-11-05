@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { ChatPanel } from "@/components/chat/ChatPanel";
 import { WHATSAPP_NUMERO } from "@/lib/constants";
+import { verificarChatToken } from "@/lib/tokens";
 
 const TIPO_OBRA_SHORT: Record<string, string> = {
   vivienda_nueva: "Vivienda nueva",
@@ -33,11 +34,15 @@ const PLAZO_INICIO_SHORT: Record<string, string> = {
 export default async function ExitoPage({
   searchParams,
 }: {
-  searchParams: Promise<{ clienteId?: string; cotizacionId?: string }>;
+  searchParams: Promise<{
+    cotizacionId?: string;
+    t?: string;
+    clienteId?: string;
+  }>;
 }) {
-  const { clienteId, cotizacionId } = await searchParams;
+  const { cotizacionId, t } = await searchParams;
 
-  if (!clienteId || !cotizacionId) {
+  if (!cotizacionId || !t) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white dark:bg-neutral-950">
         <div className="text-center">
@@ -45,32 +50,61 @@ export default async function ExitoPage({
             Datos incompletos
           </h1>
           <p className="mt-2 text-neutral-600 dark:text-neutral-400">
-            No se recibieron los identificadores de cliente y cotización.
+            Se requiere el identificador de cotización y el token de chat.
           </p>
         </div>
       </div>
     );
   }
 
-  const [cliente, cotizacion] = await Promise.all([
-    prisma.cliente.findUnique({
-      where: { id: clienteId },
-      select: { id: true, nombre: true },
-    }),
-    prisma.cotizacion.findUnique({
-      where: { id: cotizacionId },
-      select: {
-        id: true,
-        tipoObra: true,
-        tipoConstruccion: true,
-        rangoM2: true,
-        plazoInicio: true,
-        ubicacionObra: true,
-      },
-    }),
-  ]);
+  // Verificar token HMAC
+  let cotizacionIdVerificado: string;
+  try {
+    cotizacionIdVerificado = verificarChatToken(t);
+  } catch {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-neutral-950">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">
+            Token inválido
+          </h1>
+          <p className="mt-2 text-neutral-600 dark:text-neutral-400">
+            El token de chat no es válido o ha expirado.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
-  if (!cliente || !cotizacion) {
+  if (cotizacionIdVerificado !== cotizacionId) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-neutral-950">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">
+            Token no coincide
+          </h1>
+          <p className="mt-2 text-neutral-600 dark:text-neutral-400">
+            El token no pertenece a esta cotización.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const cotizacion = await prisma.cotizacion.findUnique({
+    where: { id: cotizacionId },
+    select: {
+      id: true,
+      tipoObra: true,
+      tipoConstruccion: true,
+      rangoM2: true,
+      plazoInicio: true,
+      ubicacionObra: true,
+      cliente: { select: { id: true, nombre: true } },
+    },
+  });
+
+  if (!cotizacion || !cotizacion.cliente) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white dark:bg-neutral-950">
         <div className="text-center">
@@ -89,7 +123,6 @@ export default async function ExitoPage({
     <div className="min-h-screen bg-white dark:bg-neutral-950">
       <div className="container mx-auto px-4 py-8 lg:py-16">
         <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-8 items-center">
-          {/* Columna izquierda: mensaje de éxito y resumen */}
           <div className="lg:col-span-1">
             <div className="text-center lg:text-left mb-8">
               <div className="mx-auto inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 mb-6">
@@ -165,12 +198,11 @@ export default async function ExitoPage({
             </div>
           </div>
 
-          {/* Columna derecha: panel de chat */}
           <div className="lg:col-span-1">
             <ChatPanel
-              clienteId={cliente.id}
+              clienteId={cotizacion.cliente.id}
               cotizacionId={cotizacion.id}
-              clienteNombre={cliente.nombre}
+              clienteNombre={cotizacion.cliente.nombre}
               whatsappNumero={WHATSAPP_NUMERO}
               cotizacionData={{
                 tipoObra: cotizacion.tipoObra,
@@ -178,6 +210,7 @@ export default async function ExitoPage({
                 rangoM2: cotizacion.rangoM2,
                 plazoInicio: cotizacion.plazoInicio,
               }}
+              chatToken={t}
             />
           </div>
         </div>

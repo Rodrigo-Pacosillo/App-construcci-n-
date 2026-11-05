@@ -32,3 +32,14 @@ export const chatMensajeSchema = z.object({
 });
 
 export type ChatMensajeInput = z.infer<typeof chatMensajeSchema>;
+
+/**
+ * Esquema para crear/editar un documento de conocimiento (CRUD admin).
+ */
+export const conocimientoSchema = z.object({
+  titulo: z.string().min(1, "El título es requerido").max(200),
+  categoria: z.string().min(1, "La categoría es requerida"),
+  audiencia: z.enum(["publico", "cliente", "admin"]),
+  contenido: z.string().min(1, "El contenido es requerido"),
+  activo: z.boolean().default(true),
+});
