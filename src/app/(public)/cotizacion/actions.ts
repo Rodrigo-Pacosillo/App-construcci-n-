@@ -123,7 +123,7 @@ export async function createCotizacion(formData: FormData) {
           return {
             success: false,
             error: {
-              _form: ["No se pudo registrar su consulta. Inténtelo de nuevo."],
+              _form: ["No se pudo crear su registro de cliente. Verifique su teléfono o intente con un email válido."],
             },
           };
         }
@@ -166,11 +166,22 @@ export async function createCotizacion(formData: FormData) {
   } catch (error) {
     // Si falla la BD, borrar la foto ya subida a Cloudinary.
     if (fotoLotePublicId) await deleteFile(fotoLotePublicId, "image");
+    const errorMessage = error instanceof Error ? error.message : "";
     console.error("Error creando cotización:", error);
+
+    if (errorMessage.includes("CHAT_TOKEN_SECRET")) {
+      return {
+        success: false,
+        error: {
+          _form: ["Error de configuración del sistema. Intente nuevamente en unos minutos."],
+        },
+      };
+    }
+
     return {
       success: false,
       error: {
-        _form: ["Error al crear la cotización. Intente nuevamente."],
+        _form: ["No se pudo guardar la cotización. Intente nuevamente."],
       },
     };
   }

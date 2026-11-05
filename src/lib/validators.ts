@@ -23,7 +23,7 @@ export type CotizacionAdminInput = z.infer<typeof cotizacionAdminSchema>;
 export const cotizacionFormSchema = z.object({
   nombre: z.string().min(1, "El nombre es requerido").max(100, "Máximo 100 caracteres"),
   apellidos: z.string().min(1, "Los apellidos son requeridos").max(100, "Máximo 100 caracteres"),
-  telefono: z.string().min(1, "El teléfono es requerido").max(30, "Máximo 30 caracteres"),
+  telefono: z.string().min(1, "El teléfono es requerido").regex(/^\d{8}$/, "El teléfono debe tener exactamente 8 dígitos"),
   email: z.string().email("Email inválido").optional().or(z.literal("")),
   tipoObra: z.enum(["vivienda_nueva", "ampliacion", "otro"]),
   tipoConstruccion: z.enum(["seco", "tradicional", "no_sabe"]),

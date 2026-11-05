@@ -32,7 +32,13 @@ export default function CotizacionPage() {
         });
         router.replace(`/cotizacion/exito?${params.toString()}`);
       } else {
-        setError("Error al enviar el formulario. Por favor inténtelo nuevamente.");
+        const errorData = result.error as Record<string, string[] | undefined>;
+        if (errorData._form) {
+          setError(errorData._form.join(" "));
+        } else {
+          const firstError = Object.values(errorData).flat()[0];
+          setError(firstError ?? "Error al enviar el formulario.");
+        }
       }
     } catch {
       setError("Error inesperado. Por favor inténtelo nuevamente.");
