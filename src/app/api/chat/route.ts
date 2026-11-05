@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { streamText, createUIMessageStreamResponse } from "ai";
+import { streamText, createUIMessageStreamResponse, generateText } from "ai";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
@@ -275,13 +275,7 @@ export async function POST(req: NextRequest) {
         conocimiento,
       });
 
-      const herramientas = construirHerramientas(
-        agente.id,
-        identidad.usuarioId,
-        sesion.id
-      );
-
-      const result = streamText({
+      const respuesta = await generateText({
         model: nvidiaProvider(agente.model),
         system: systemPrompt,
         prompt: "__INICIO__",
@@ -292,10 +286,33 @@ export async function POST(req: NextRequest) {
             chat_template_kwargs: { enable_thinking: false },
           },
         },
-        tools: herramientas,
       });
 
-      return createUIMessageStreamResponse({ stream: result.toUIMessageStream() });
+      // Persistir respuesta del asistente
+      const mensajeGuardado = await prisma.chatMensaje.create({
+        data: {
+          sesionId: sesion.id,
+          rol: "assistant",
+          contenido: respuesta.text,
+        },
+      });
+
+      await prisma.chatSesion.update({
+        where: { id: sesion.id },
+        data: { mensajeCount: { increment: 1 } },
+      });
+
+      return NextResponse.json({
+        sessionId: sesion.sessionId,
+        mensajes: [
+          {
+            id: mensajeGuardado.id,
+            rol: "assistant",
+            contenido: mensajeGuardado.contenido,
+            creadoEn: mensajeGuardado.creadoEn.toISOString(),
+          },
+        ],
+      });
     }
 
     // ── Caso 2: mensaje normal ──
