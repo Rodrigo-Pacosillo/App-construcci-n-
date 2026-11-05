@@ -235,6 +235,10 @@ export function ChatPanel({
             creadoEn: new Date().toISOString(),
           },
         ]);
+      } else {
+        setError(
+          "El asistente no devolvió respuesta. Intenta de nuevo en unos segundos."
+        );
       }
     } catch {
       setError(
@@ -380,6 +384,24 @@ export function ChatPanel({
         if (data.id) mensajeId = data.id;
       }
 
+      // Si no hay texto del asistente, mostrar error específico en vez de respuesta vacía
+      if (!textoCompleto.trim()) {
+        setMensajes((prev) => [
+          ...prev.filter((m) => m.id !== mensajeOptimista.id),
+          {
+            id: `user-${Date.now()}`,
+            rol: "user",
+            contenido: texto,
+            creadoEn: new Date().toISOString(),
+          },
+        ]);
+        setError(
+          "El asistente no devolvió respuesta. Intenta de nuevo en unos segundos."
+        );
+        setLoading(false);
+        return;
+      }
+
       // Reemplazar mensaje optimista del usuario y agregar respuesta del asistente
       setMensajes((prev) => [
         ...prev.filter((m) => m.id !== mensajeOptimista.id),
@@ -392,7 +414,7 @@ export function ChatPanel({
         {
           id: mensajeId ?? `msg-${Date.now()}`,
           rol: "assistant",
-          contenido: textoCompleto || "Lo siento, no pude obtener una respuesta.",
+          contenido: textoCompleto,
           creadoEn: new Date().toISOString(),
         },
       ]);

@@ -42,6 +42,18 @@ function errorResponse(
   return NextResponse.json<ErrorBody>({ error: { code, message } }, { status });
 }
 
+/**
+ * Limpia bloques de razonamiento (�````think`�````) de la respuesta de NVIDIA
+ * y hace log para debuggear respuestas vacías.
+ */
+function limpiarRespuestaIA(texto: string, contexto: string): string {
+  const limpio = texto.replace(/�````think[\s\S]*?<\/think>�````/gi, "").trim();
+  console.error(
+    `[NVIDIA ${contexto}] Texto completo: "${texto.substring(0, 200)}" | Texto limpio: "${limpio.substring(0, 200)}"`
+  );
+  return limpio;
+}
+
 const MENSAJES_CONTEXTO = 20;
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -221,6 +233,8 @@ export async function POST(req: NextRequest) {
               });
               return c?.clienteId ?? "";
             })()
+          : identidad.agente === "cliente"
+          ? (identidad.usuarioId ?? "")
           : "";
 
       // Usar sessionId del cliente si se provee, sino generar uno nuevo
@@ -307,11 +321,12 @@ export async function POST(req: NextRequest) {
 
       // Persistir respuesta del asistente cuando el stream termine
       result.text.then(async (textoCompleto) => {
+        const textoLimpio = limpiarRespuestaIA(textoCompleto, "INICIO");
         const mensajeGuardado = await prisma.chatMensaje.create({
           data: {
             sesionId: sesion.id,
             rol: "assistant",
-            contenido: textoCompleto,
+            contenido: textoLimpio,
           },
         });
 
@@ -406,6 +421,23 @@ export async function POST(req: NextRequest) {
         },
       },
       tools: herramientas,
+    });
+
+    // Persistir respuesta del asistente cuando el stream termine
+    result.text.then(async (textoCompleto) => {
+      const textoLimpio = limpiarRespuestaIA(textoCompleto, "MENSAJE");
+      const mensajeGuardado = await prisma.chatMensaje.create({
+        data: {
+          sesionId: sesion.id,
+          rol: "assistant",
+          contenido: textoLimpio,
+        },
+      });
+
+      await prisma.chatSesion.update({
+        where: { id: sesion.id },
+        data: { mensajeCount: { increment: 2 } },
+      });
     });
 
     return createUIMessageStreamResponse({ stream: result.toUIMessageStream() });
