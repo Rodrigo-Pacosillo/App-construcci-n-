@@ -14,6 +14,7 @@ export default function CotizacionPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -44,6 +45,10 @@ export default function CotizacionPage() {
       setError("Error inesperado. Por favor inténtelo nuevamente.");
     } finally {
       setLoading(false);
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+        setPreviewUrl(null);
+      }
     }
   }
 
@@ -225,8 +230,26 @@ export default function CotizacionPage() {
               name="fotoLote"
               type="file"
               accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  const url = URL.createObjectURL(file);
+                  setPreviewUrl(url);
+                } else {
+                  setPreviewUrl(null);
+                }
+              }}
               className="mt-1 block w-full rounded border border-border bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-accent"
             />
+            {previewUrl && (
+              <div className="mt-2 rounded border border-border overflow-hidden">
+                <img
+                  src={previewUrl}
+                  alt="Vista previa"
+                  className="w-full h-48 object-cover"
+                />
+              </div>
+            )}
           </div>
 
           <button
