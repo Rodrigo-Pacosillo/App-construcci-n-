@@ -8,6 +8,52 @@ import AiAvatar from "./AiAvatar";
 import SendIcon from "./SendIcon";
 import BrickLoader from "./BrickLoader";
 
+// ─── Lectura de stream SSE (AI SDK UI Message Stream) ─────────────────────
+type SSEMessage = {
+  type: string;
+  text?: string;
+  id?: string;
+  role?: string;
+  toolCallId?: string;
+  toolName?: string;
+  args?: Record<string, unknown>;
+  result?: unknown;
+  createdAt?: string;
+  [key: string]: unknown;
+};
+
+async function* leerSSE(response: Response): AsyncGenerator<SSEMessage> {
+  const reader = response.body?.getReader();
+  if (!reader) return;
+
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop()!;
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (trimmed.startsWith("data: ")) {
+          try {
+            yield JSON.parse(trimmed.slice(6)) as SSEMessage;
+          } catch {
+            // Ignorar líneas de datos malformadas
+          }
+        }
+      }
+    }
+  } finally {
+    reader.releaseLock();
+  }
+}
+
 interface CotizacionData {
   tipoObra: string;
   tipoConstruccion: string;
@@ -124,12 +170,16 @@ export function ChatPanel({
     setLoading(true);
     setError(null);
 
+    // Generar sessionId del lado del cliente para que el backend lo use
+    const clientSessionId = crypto.randomUUID();
+
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           mensaje: "__INICIO__",
+          sessionId: clientSessionId,
           clienteId,
           cotizacionId: cotizacionId ?? undefined,
           clienteNombre,
@@ -161,23 +211,30 @@ export function ChatPanel({
         return;
       }
 
-      const data = await res.json();
+      // Leer stream SSE y acumular texto del asistente
+      let textoCompleto = "";
 
-      setErrorEsFatal(false);
-      if (data.sessionId) {
-        sessionStorage.setItem(sessionStorageKey, data.sessionId);
-        setSessionId(data.sessionId);
+      for await (const data of leerSSE(res)) {
+        if (data.type === "text" && data.text) {
+          textoCompleto += data.text;
+        }
       }
 
-      if (data.mensajes && data.mensajes.length > 0) {
-        setMensajes(
-          data.mensajes.map((m: Mensaje) => ({
-            id: m.id,
-            rol: m.rol,
-            contenido: m.contenido,
-            creadoEn: m.creadoEn,
-          }))
-        );
+      setErrorEsFatal(false);
+      sessionStorage.setItem(sessionStorageKey, clientSessionId);
+      setSessionId(clientSessionId);
+
+      // Crear mensaje del asistente con el texto completo
+      if (textoCompleto.trim()) {
+        setMensajes((prev) => [
+          ...prev,
+          {
+            id: `msg-${Date.now()}`,
+            rol: "assistant",
+            contenido: textoCompleto,
+            creadoEn: new Date().toISOString(),
+          },
+        ]);
       }
     } catch {
       setError(
@@ -312,8 +369,18 @@ export function ChatPanel({
         return;
       }
 
-      const data = await res.json();
+      // Leer stream SSE y acumular texto del asistente
+      let textoCompleto = "";
+      let mensajeId: string | null = null;
 
+      for await (const data of leerSSE(res)) {
+        if (data.type === "text" && data.text) {
+          textoCompleto += data.text;
+        }
+        if (data.id) mensajeId = data.id;
+      }
+
+      // Reemplazar mensaje optimista del usuario y agregar respuesta del asistente
       setMensajes((prev) => [
         ...prev.filter((m) => m.id !== mensajeOptimista.id),
         {
@@ -323,9 +390,9 @@ export function ChatPanel({
           creadoEn: new Date().toISOString(),
         },
         {
-          id: data.mensajeId ?? `temp-${Date.now()}`,
+          id: mensajeId ?? `msg-${Date.now()}`,
           rol: "assistant",
-          contenido: data.respuesta ?? "Lo siento, no pude obtener una respuesta.",
+          contenido: textoCompleto || "Lo siento, no pude obtener una respuesta.",
           creadoEn: new Date().toISOString(),
         },
       ]);

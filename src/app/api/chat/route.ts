@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { streamText, createUIMessageStreamResponse, generateText } from "ai";
+import { streamText, createUIMessageStreamResponse } from "ai";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
@@ -223,16 +223,26 @@ export async function POST(req: NextRequest) {
             })()
           : "";
 
-      const sesion = await prisma.chatSesion.create({
-        data: {
-          sessionId: crypto.randomUUID(),
-          agente: identidad.agente,
-          clienteId,
-          usuarioId: identidad.usuarioId ?? null,
-          cotizacionId: identidad.cotizacionId ?? null,
-          estado: "activa",
-        },
+      // Usar sessionId del cliente si se provee, sino generar uno nuevo
+      const clientSessionId = (body.sessionId as string) ?? crypto.randomUUID();
+
+      // Verificar si la sesión ya existe (reconexión)
+      let sesion = await prisma.chatSesion.findUnique({
+        where: { sessionId: clientSessionId },
       });
+
+      if (!sesion) {
+        sesion = await prisma.chatSesion.create({
+          data: {
+            sessionId: clientSessionId,
+            agente: identidad.agente,
+            clienteId,
+            usuarioId: identidad.usuarioId ?? null,
+            cotizacionId: identidad.cotizacionId ?? null,
+            estado: "activa",
+          },
+        });
+      }
 
       const conocimiento = await obtenerConocimiento({
         audiencia: agente.audienciaConocimiento,
@@ -275,7 +285,13 @@ export async function POST(req: NextRequest) {
         conocimiento,
       });
 
-      const respuesta = await generateText({
+      const herramientas = construirHerramientas(
+        agente.id,
+        identidad.usuarioId,
+        sesion.id
+      );
+
+      const result = streamText({
         model: nvidiaProvider(agente.model),
         system: systemPrompt,
         prompt: "__INICIO__",
@@ -286,33 +302,26 @@ export async function POST(req: NextRequest) {
             chat_template_kwargs: { enable_thinking: false },
           },
         },
+        tools: herramientas,
       });
 
-      // Persistir respuesta del asistente
-      const mensajeGuardado = await prisma.chatMensaje.create({
-        data: {
-          sesionId: sesion.id,
-          rol: "assistant",
-          contenido: respuesta.text,
-        },
-      });
-
-      await prisma.chatSesion.update({
-        where: { id: sesion.id },
-        data: { mensajeCount: { increment: 1 } },
-      });
-
-      return NextResponse.json({
-        sessionId: sesion.sessionId,
-        mensajes: [
-          {
-            id: mensajeGuardado.id,
+      // Persistir respuesta del asistente cuando el stream termine
+      result.text.then(async (textoCompleto) => {
+        const mensajeGuardado = await prisma.chatMensaje.create({
+          data: {
+            sesionId: sesion.id,
             rol: "assistant",
-            contenido: mensajeGuardado.contenido,
-            creadoEn: mensajeGuardado.creadoEn.toISOString(),
+            contenido: textoCompleto,
           },
-        ],
+        });
+
+        await prisma.chatSesion.update({
+          where: { id: sesion.id },
+          data: { mensajeCount: { increment: 1 } },
+        });
       });
+
+      return createUIMessageStreamResponse({ stream: result.toUIMessageStream() });
     }
 
     // ── Caso 2: mensaje normal ──
