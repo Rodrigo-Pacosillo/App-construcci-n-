@@ -5,7 +5,7 @@ import type { Certificacion, Faq, Servicio } from "@prisma/client";
 // MANTENER SINCRONIZADOS con prisma/seed.ts: mismo contenido, mismos slugs.
 // No borrar: son la red de seguridad de la demo si la BD no responde.
 
-export const FALLBACK_SERVICIOS: Servicio[] = [
+const _FALLBACK_SERVICIOS: Omit<Servicio, "actualizadoEn">[] = [
   {
     id: "1",
     slug: "steel-frame",
@@ -61,6 +61,11 @@ export const FALLBACK_SERVICIOS: Servicio[] = [
     activo: true,
   },
 ];
+
+export const FALLBACK_SERVICIOS: Servicio[] = _FALLBACK_SERVICIOS.map((s) => ({
+  ...s,
+  actualizadoEn: new Date(0),
+}));
 
 export const FALLBACK_PROYECTOS = [
   {
@@ -155,7 +160,7 @@ export const FALLBACK_PROYECTOS = [
   },
 ];
 
-export const FALLBACK_FAQS: Faq[] = [
+const _FALLBACK_FAQS: Omit<Faq, "actualizadoEn">[] = [
   {
     id: "1",
     pregunta: "¿Cuánto tarda una vivienda en construcción en seco?",
@@ -238,6 +243,11 @@ export const FALLBACK_FAQS: Faq[] = [
   },
 ];
 
+export const FALLBACK_FAQS: Faq[] = _FALLBACK_FAQS.map((f) => ({
+  ...f,
+  actualizadoEn: new Date(0),
+}));
+
 export const FALLBACK_TESTIMONIOS = [
   {
     id: "1",
@@ -281,7 +291,7 @@ export const FALLBACK_TESTIMONIOS = [
   },
 ];
 
-export const FALLBACK_CERTIFICACIONES: Certificacion[] = [
+const _FALLBACK_CERTIFICACIONES: Omit<Certificacion, "actualizadoEn">[] = [
   {
     id: "1",
     titulo: "Matrícula Constructora Nacional",
@@ -319,6 +329,10 @@ export const FALLBACK_CERTIFICACIONES: Certificacion[] = [
     activo: true,
   },
 ];
+
+export const FALLBACK_CERTIFICACIONES: Certificacion[] = _FALLBACK_CERTIFICACIONES.map(
+  (c) => ({ ...c, actualizadoEn: new Date(0) })
+);
 
 export const FALLBACK_NUMEROS = [
   { label: "Metros cuadrados", valor: 5000, sufijo: "m²" },

@@ -26,7 +26,7 @@ export async function updateCotizacionEstado(
 
   await prisma.cotizacion.update({
     where: { id },
-    data: { estado },
+    data: { estado: estado as EstadoCotizacion },
   });
   revalidatePath("/admin");
   revalidatePath("/admin/cotizaciones");
