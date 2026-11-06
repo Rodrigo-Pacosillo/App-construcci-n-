@@ -7,6 +7,10 @@ import { AudioMensaje } from "./AudioMensaje";
 import AiAvatar from "./AiAvatar";
 import SendIcon from "./SendIcon";
 import BrickLoader from "./BrickLoader";
+import {
+  TarjetaAccionCalendario,
+  type AccionCalendarioPendiente,
+} from "./TarjetaAccionCalendario";
 
 // ─── Lectura de stream SSE (AI SDK UI Message Stream) ─────────────────────
 type SSEMessage = {
@@ -58,6 +62,44 @@ interface StreamUIResultado {
   texto: string;
   mensajeId: string | null;
   error?: string;
+  acciones: AccionCalendarioPendiente[];
+}
+
+/**
+ * Extrae una propuesta de calendario del resultado de una herramienta.
+ * El servidor devuelve `{ pendiente, accionId, resumen }`; si la obra no se
+ * pudo resolver, devuelve `{ pendiente: false, mensaje }` y no hay tarjeta.
+ */
+function extraerAccionCalendario(
+  output: unknown
+): AccionCalendarioPendiente | null {
+  if (!output || typeof output !== "object") return null;
+  const o = output as Record<string, unknown>;
+  if (o.pendiente !== true) return null;
+  if (typeof o.accionId !== "string" || !o.accionId) return null;
+
+  const r = o.resumen;
+  if (!r || typeof r !== "object") return null;
+  const resumen = r as Record<string, unknown>;
+  if (resumen.tipo !== "nota" && resumen.tipo !== "visita") return null;
+  if (typeof resumen.clienteNombre !== "string") return null;
+  if (typeof resumen.fechaInicio !== "string") return null;
+
+  return {
+    accionId: o.accionId,
+    tipo: resumen.tipo,
+    titulo: typeof resumen.titulo === "string" ? resumen.titulo : "",
+    clienteNombre: resumen.clienteNombre,
+    obraEtiqueta:
+      typeof resumen.obraEtiqueta === "string" ? resumen.obraEtiqueta : null,
+    obraEstado:
+      typeof resumen.obraEstado === "string" ? resumen.obraEstado : null,
+    fechaInicio: resumen.fechaInicio,
+    fechaFin:
+      typeof resumen.fechaFin === "string" ? resumen.fechaFin : null,
+    todoElDia: Boolean(resumen.todoElDia),
+    visibleCliente: Boolean(resumen.visibleCliente),
+  };
 }
 
 /**
@@ -65,10 +107,13 @@ interface StreamUIResultado {
  * Eventos de texto: { type: "text-start", id } → { type: "text-delta", id, delta } → { type: "text-end", id }.
  * Mantiene compatibilidad con el formato legado { type: "text", text } y con el
  * streaming de razonamiento (reasoning-*) que se IGNORA a propósito.
+ * También captura las propuestas de calendario (`tool-output-available`) para
+ * renderizar la tarjeta de confirmación en el mismo turno.
  */
 async function leerStreamUI(response: Response): Promise<StreamUIResultado> {
   const partes = new Map<string, string>();
   const ordenPartes: string[] = [];
+  const acciones: AccionCalendarioPendiente[] = [];
   let texto = "";
   let mensajeId: string | null = null;
   let errorStream: string | undefined;
@@ -95,6 +140,16 @@ async function leerStreamUI(response: Response): Promise<StreamUIResultado> {
     } else if (data.type === "text") {
       // Formato legado (AI SDK v4): { type: "text", text }
       texto += (data as { text?: string }).text ?? "";
+    } else if (data.type === "tool-output-available") {
+      const accion = extraerAccionCalendario(
+        (data as { output?: unknown }).output
+      );
+      if (
+        accion &&
+        !acciones.some((a) => a.accionId === accion.accionId)
+      ) {
+        acciones.push(accion);
+      }
     } else if (data.type === "error") {
       const err = (data as { errorText?: string }).errorText;
       errorStream =
@@ -105,7 +160,12 @@ async function leerStreamUI(response: Response): Promise<StreamUIResultado> {
   }
 
   const textoPartes = ordenPartes.map((id) => partes.get(id) ?? "").join("");
-  return { texto: texto + textoPartes, mensajeId, error: errorStream };
+  return {
+    texto: texto + textoPartes,
+    mensajeId,
+    error: errorStream,
+    acciones,
+  };
 }
 
 /** Quita bloques de razonamiento <think>…</think> si el modelo los emite dentro del texto. */
@@ -128,6 +188,7 @@ interface Mensaje {
   rol: "user" | "assistant";
   contenido: string;
   creadoEn: string;
+  acciones?: AccionCalendarioPendiente[];
 }
 
 interface ChatPanelProps {
@@ -156,6 +217,9 @@ export function ChatPanel({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errorEsFatal, setErrorEsFatal] = useState(false);
+  const [resultadosAccion, setResultadosAccion] = useState<
+    Record<string, { exito: boolean; mensaje?: string }>
+  >({});
 
   const sessionStorageKey = initialSessionId
     ? `chat_admin_${initialSessionId}`
@@ -455,10 +519,16 @@ export function ChatPanel({
       }
 
       // Leer stream SSE (UI Message Stream) y acumular texto del asistente
-      const { texto: textoCompleto, mensajeId, error: errorStream } = await leerStreamUI(res);
+      const {
+        texto: textoCompleto,
+        mensajeId,
+        acciones,
+      } = await leerStreamUI(res);
 
-      // Si no hay texto del asistente, mostrar error específico en vez de respuesta vacía
-      if (!textoCompleto.trim()) {
+      // Si no hay texto ni propuestas, mostrar error específico en vez de
+      // respuesta vacía. Una propuesta de calendario sin texto SÍ es válida:
+      // el admin necesita la tarjeta para confirmar.
+      if (!textoCompleto.trim() && acciones.length === 0) {
         setMensajes((prev) => [
           ...prev.filter((m) => m.id !== mensajeOptimista.id),
           {
@@ -489,6 +559,7 @@ export function ChatPanel({
           rol: "assistant",
           contenido: limpiarThink(textoCompleto),
           creadoEn: new Date().toISOString(),
+          acciones: acciones.length > 0 ? acciones : undefined,
         },
       ]);
     } catch {
@@ -515,10 +586,21 @@ export function ChatPanel({
     }
   }
 
+  const alFinalizarAccion = useCallback(
+    (accionId: string, exito: boolean, mensaje?: string) => {
+      setResultadosAccion((prev) => ({
+        ...prev,
+        [accionId]: { exito, mensaje },
+      }));
+    },
+    []
+  );
+
   const nuevaConversacion = useCallback(() => {
     sessionStorage.removeItem(sessionStorageKey);
     setSessionId(null);
     setMensajes([]);
+    setResultadosAccion({});
     setError(null);
     setErrorEsFatal(false);
     setInput("");
@@ -675,7 +757,9 @@ export function ChatPanel({
             }`}
           >
             <div
-              className={`max-w-[85%] rounded-2xl px-3 py-3 ${
+              className={`${
+                msg.acciones?.length ? "max-w-[95%]" : "max-w-[85%]"
+              } rounded-2xl px-3 py-3 ${
                 msg.rol === "user"
                   ? "bg-[var(--chat-user-bg)] text-[var(--chat-user-fg)] shadow-md"
                   : "bg-[var(--chat-bot-bg)] border border-[var(--chat-bot-border)] shadow-sm text-[var(--chat-bot-fg)]"
@@ -684,7 +768,15 @@ export function ChatPanel({
               <p className="text-sm leading-relaxed whitespace-pre-wrap">
                 {msg.contenido}
               </p>
-              {msg.rol === "assistant" && (
+              {msg.acciones?.map((accion) => (
+                <TarjetaAccionCalendario
+                  key={accion.accionId}
+                  accion={accion}
+                  resuelto={resultadosAccion[accion.accionId]}
+                  onFinalizada={alFinalizarAccion}
+                />
+              ))}
+              {msg.rol === "assistant" && msg.contenido.trim() && (
                 <AudioMensaje
                   texto={msg.contenido}
                   estaActivo={reproduciendoId === msg.id}

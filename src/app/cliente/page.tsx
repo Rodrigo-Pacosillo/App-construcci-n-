@@ -2,6 +2,8 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import Link from "next/link";
+import { elegirObraPorDefecto } from "@/lib/obra-default";
+import ObraSelector from "@/components/cliente/ObraSelector";
 
 export default async function ClienteDashboard({
   searchParams,
@@ -33,9 +35,7 @@ export default async function ClienteDashboard({
 
   const cliente = usuario?.cliente;
   const obras = cliente?.obras ?? [];
-  const obraSeleccionada = obraId
-    ? obras.find((o) => o.id === obraId)
-    : obras[0];
+  const obraSeleccionada = elegirObraPorDefecto(obras, obraId);
   const cotizaciones = cliente?.cotizaciones ?? [];
   const totalCotizaciones = cotizaciones.length;
   const cotizacionesContratadas = cotizaciones.filter(
@@ -61,32 +61,14 @@ export default async function ClienteDashboard({
       </div>
 
       {obras.length > 1 && (
-        <div className="rounded border border-border bg-surface p-4">
-          <label htmlFor="obra-selector" className="section-label block text-ink-faint mb-2">
-            Seleccionar obra
-          </label>
-          <select
-            id="obra-selector"
-            value={obraSeleccionada?.id || ""}
-            onChange={(e) => {
-              const url = new URL(window.location.href);
-              if (e.target.value) {
-                url.searchParams.set("obraId", e.target.value);
-              } else {
-                url.searchParams.delete("obraId");
-              }
-              window.location.href = url.toString();
-            }}
-            className="block w-full max-w-xs rounded border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent"
-          >
-            <option value="">-- Seleccione una obra --</option>
-            {obras.map((o) => (
-              <option key={o.id} value={o.id}>
-                {o.direccionObra} ({o.estado.replace(/_/g, " ")})
-              </option>
-            ))}
-          </select>
-        </div>
+        <ObraSelector
+          obras={obras.map((o) => ({
+            id: o.id,
+            direccionObra: o.direccionObra,
+            estado: o.estado,
+          }))}
+          obraId={obraSeleccionada?.id}
+        />
       )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

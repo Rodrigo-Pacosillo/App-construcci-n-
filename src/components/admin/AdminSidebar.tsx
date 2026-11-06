@@ -23,6 +23,7 @@ import {
   Bot,
   BookOpen,
   MessageCircle,
+  Calendar,
   type LucideIcon,
 } from "lucide-react";
 import { ADMIN_NAV_SECTIONS, type NavSection, type NavItem } from "@/lib/constants";
@@ -43,6 +44,7 @@ const ICONS: Record<string, LucideIcon> = {
   Package,
   BookOpen,
   MessageCircle,
+  Calendar,
 };
 
 function isActive(pathname: string, href: string) {

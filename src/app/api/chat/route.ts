@@ -10,6 +10,7 @@ import { Prisma } from "@prisma/client";
 import { obtenerAgente } from "@/lib/ai/agents";
 import { obtenerConocimiento, buscarConocimiento } from "@/lib/ai/conocimiento";
 import { verificarChatToken } from "@/lib/tokens";
+import { resolverObraDeCliente } from "@/lib/ai/resolver-obra";
 import type { CategoriaConocimiento } from "@/lib/ai/conocimiento";
 import { chatInicioSchema, chatMensajeSchema } from "@/lib/validators/chat";
 import {
@@ -250,6 +251,11 @@ async function crearChatAccion(
   herramienta: string,
   argumentos: ToolArgs
 ) {
+  if (!usuarioId) {
+    throw new Error(
+      "La propuesta requiere un usuario administrador autenticado."
+    );
+  }
   return prisma.chatAccion.create({
     data: {
       sesionId,
@@ -259,6 +265,45 @@ async function crearChatAccion(
       estado: "pendiente",
     },
   });
+}
+
+type ResumenAccionCalendario = {
+  tipo: "nota" | "visita";
+  titulo: string;
+  clienteNombre: string;
+  obraEtiqueta: string | null;
+  obraEstado: string | null;
+  fechaInicio: string;
+  fechaFin?: string | null;
+  todoElDia: boolean;
+  visibleCliente: boolean;
+};
+
+async function nombreDeCliente(clienteId: string): Promise<string> {
+  const cliente = await prisma.cliente.findUnique({
+    where: { id: clienteId },
+    select: { nombre: true },
+  });
+  return cliente?.nombre ?? "Cliente sin nombre";
+}
+
+/** Mensaje legible para que el modelo pregunte cuál obra usar. */
+function mensajeObraNoResuelta(
+  resolucion: Awaited<ReturnType<typeof resolverObraDeCliente>>
+): string | null {
+  if (resolucion.estado === "ambigua") {
+    const lista = resolucion.candidatas
+      .map((c, i) => `${i + 1}) ${c.etiqueta}`)
+      .join("  ");
+    return `El cliente tiene varias obras activas. Pregúntale al admin a cuál corresponde: ${lista}`;
+  }
+  if (resolucion.estado === "sinActivas") {
+    const reciente = resolucion.recientes[0];
+    return `El cliente no tiene obras activas (solo finalizada/entregada). Pregunta si va con la obra más reciente${
+      reciente ? ` (${reciente.etiqueta})` : ""
+    }, o si es una nota interna sin obra. Si el admin elige sin obra, vuelve a invocar la herramienta con sinObra=true.`;
+  }
+  return null;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -710,27 +755,173 @@ function construirHerramientas(
 
     tools["proponer_agendar_visita"] = {
       description:
-        "Propone agendar una visita técnica. Requiere confirmación humana.",
+        "Propone agendar una visita técnica para un cliente. Requiere confirmación humana. " +
+        "Visibilidad: si el admin dice 'que el cliente la vea' o 'en su calendario' → visibleCliente=true; " +
+        "si dice 'recuérdame', 'nota interna' o 'para mí' → visibleCliente=false; " +
+        "si no queda claro, PREGUNTA antes de invocar la herramienta.",
       inputSchema: z.object({
         clienteId: z.string().cuid(),
+        obraId: z.string().cuid().optional(),
+        sinObra: z.boolean().default(false),
         fecha: z.string().datetime(),
-        notas: z.string().optional(),
+        notas: z.string().max(2000).optional(),
+        visibleCliente: z.boolean().default(false),
       }),
       execute: async (args: ToolArgs) => {
-        const { clienteId, fecha, notas } = args as {
+        const { clienteId, obraId, fecha, notas } = args as {
           clienteId: string;
+          obraId?: string;
           fecha: string;
           notas?: string;
+          visibleCliente: boolean;
         };
-        await crearChatAccion(
+        const visibleCliente = Boolean(args.visibleCliente);
+        const sinObra = Boolean(args.sinObra);
+
+        const resolucion = sinObra
+          ? ({ estado: "sinObras" } as const)
+          : await resolverObraDeCliente(clienteId, obraId);
+        const aviso = mensajeObraNoResuelta(resolucion);
+        if (aviso) {
+          return { pendiente: false, mensaje: aviso };
+        }
+
+        const obraFijada =
+          resolucion.estado === "unica" ? resolucion.obraId : undefined;
+        const obraEtiqueta =
+          resolucion.estado === "unica"
+            ? resolucion.etiqueta
+            : "Sin obra (solo la ve el admin)";
+        const obraEstado =
+          resolucion.estado === "unica" ? resolucion.estadoObra : null;
+        // Una nota/visita sin obra no puede mostrarse al cliente: el portal
+        // filtra por obraId. Si el admin pidió visible=true sin obra, se
+        // ajusta a false (y se le avisa en el mensaje).
+        const visibleClienteEfectiva = obraFijada ? visibleCliente : false;
+
+        const accion = await crearChatAccion(
           sesionId,
           usuarioId ?? "",
           "proponer_agendar_visita",
-          { clienteId, fecha, notas }
+          { clienteId, obraId: obraFijada, fecha, notas, visibleCliente: visibleClienteEfectiva }
         );
+
+        const resumen: ResumenAccionCalendario = {
+          tipo: "visita",
+          titulo: "Visita técnica",
+          clienteNombre: await nombreDeCliente(clienteId),
+          obraEtiqueta,
+          obraEstado,
+          fechaInicio: fecha,
+          todoElDia: false,
+          visibleCliente: visibleClienteEfectiva,
+        };
+
         return {
           pendiente: true,
-          mensaje: `Se ha creado una propuesta para agendar una visita para el cliente ${clienteId} el ${fecha}. Un administrador debe confirmar esta acción.`,
+          accionId: accion.id,
+          resumen,
+          mensaje: `Propuesta: visita técnica el ${fecha} — ${obraEtiqueta}. Visible para el cliente: ${
+            visibleClienteEfectiva ? "SÍ" : "NO"
+          }${!obraFijada && visibleCliente ? " (ajustado a NO: sin obra, el cliente no podría verla)" : ""}. Requiere confirmación.`,
+        };
+      },
+    };
+
+    tools["agregar_nota_calendario"] = {
+      description:
+        "Deja una NOTA en el calendario de un cliente (tipo fijo 'nota'). " +
+        "Visibilidad: 'en su calendario' o 'que el cliente la vea' → visibleCliente=true; " +
+        "'recuérdame', 'nota interna', 'apúntate tú' → visibleCliente=false; " +
+        "si no queda claro, PREGUNTA al admin ANTES de invocar esta herramienta. " +
+        "Requiere confirmación humana.",
+      inputSchema: z.object({
+        clienteId: z.string().cuid(),
+        obraId: z.string().cuid().optional(),
+        sinObra: z.boolean().default(false),
+        titulo: z.string().min(1).max(120),
+        descripcion: z.string().max(2000).optional(),
+        fechaInicio: z.string().datetime(),
+        fechaFin: z.string().datetime().optional(),
+        todoElDia: z.boolean().default(true),
+        visibleCliente: z.boolean().default(false),
+      }),
+      execute: async (args: ToolArgs) => {
+        const {
+          clienteId,
+          obraId,
+          titulo,
+          descripcion,
+          fechaInicio,
+          fechaFin,
+        } = args as {
+          clienteId: string;
+          obraId?: string;
+          titulo: string;
+          descripcion?: string;
+          fechaInicio: string;
+          fechaFin?: string;
+          todoElDia: boolean;
+          visibleCliente: boolean;
+        };
+        const todoElDia =
+          args.todoElDia === undefined ? true : Boolean(args.todoElDia);
+        const visibleCliente = Boolean(args.visibleCliente);
+        const sinObra = Boolean(args.sinObra);
+
+        const resolucion = sinObra
+          ? ({ estado: "sinObras" } as const)
+          : await resolverObraDeCliente(clienteId, obraId);
+        const aviso = mensajeObraNoResuelta(resolucion);
+        if (aviso) {
+          return { pendiente: false, mensaje: aviso };
+        }
+
+        const obraFijada =
+          resolucion.estado === "unica" ? resolucion.obraId : undefined;
+        const obraEtiqueta =
+          resolucion.estado === "unica"
+            ? resolucion.etiqueta
+            : "Sin obra (nota interna, solo la ve el admin)";
+        const obraEstado =
+          resolucion.estado === "unica" ? resolucion.estadoObra : null;
+        const visibleClienteEfectiva = obraFijada ? visibleCliente : false;
+
+        const accion = await crearChatAccion(
+          sesionId,
+          usuarioId ?? "",
+          "agregar_nota_calendario",
+          {
+            clienteId,
+            obraId: obraFijada,
+            titulo,
+            descripcion,
+            fechaInicio,
+            fechaFin,
+            todoElDia,
+            visibleCliente: visibleClienteEfectiva,
+          }
+        );
+
+        const resumen: ResumenAccionCalendario = {
+          tipo: "nota",
+          titulo,
+          clienteNombre: await nombreDeCliente(clienteId),
+          obraEtiqueta,
+          obraEstado,
+          fechaInicio,
+          fechaFin: fechaFin ?? null,
+          todoElDia,
+          visibleCliente: visibleClienteEfectiva,
+        };
+
+        return {
+          pendiente: true,
+          accionId: accion.id,
+          resumen,
+          mensaje: `Propuesta: nota "${titulo}" para el ${fechaInicio} — ${obraEtiqueta}. Visible para el cliente: ${
+            visibleClienteEfectiva ? "SÍ" : "NO"
+          }${!obraFijada && visibleCliente ? " (ajustado a NO: sin obra, el cliente no podría verla)" : ""}. Requiere confirmación.`,
         };
       },
     };

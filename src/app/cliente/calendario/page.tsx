@@ -1,9 +1,11 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
+import { elegirObraPorDefecto } from "@/lib/obra-default";
 import { CalendarioGrid } from "./CalendarioGrid";
+import ObraSelector from "@/components/cliente/ObraSelector";
 
-async function getObraActiva(obraId?: string) {
+async function getDatos(obraId?: string) {
   const session = await auth();
   if (!session || session.user.role !== "cliente") redirect("/login");
 
@@ -27,10 +29,8 @@ async function getObraActiva(obraId?: string) {
   });
 
   const obras = usuario?.cliente?.obras ?? [];
-  if (obraId) {
-    return obras.find((o) => o.id === obraId) || obras[0] || null;
-  }
-  return obras[0] || null;
+  const obra = elegirObraPorDefecto(obras, obraId);
+  return { obras, obra };
 }
 
 export default async function ClienteCalendarioPage({
@@ -39,7 +39,7 @@ export default async function ClienteCalendarioPage({
   searchParams: Promise<{ obraId?: string }>;
 }) {
   const { obraId } = await searchParams;
-  const obra = await getObraActiva(obraId);
+  const { obras, obra } = await getDatos(obraId);
 
   if (!obra) {
     return (
@@ -64,6 +64,14 @@ export default async function ClienteCalendarioPage({
 
   return (
     <div className="space-y-6">
+      <ObraSelector
+        obras={obras.map((o) => ({
+          id: o.id,
+          direccionObra: o.direccionObra,
+          estado: o.estado,
+        }))}
+        obraId={obra.id}
+      />
       <CalendarioGrid
         eventos={eventos}
         obra={{ id: obra.id, direccionObra: obra.direccionObra }}

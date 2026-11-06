@@ -2,8 +2,10 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Image from "next/image";
 import { prisma } from "@/lib/db";
+import { elegirObraPorDefecto } from "@/lib/obra-default";
+import ObraSelector from "@/components/cliente/ObraSelector";
 
-async function getObraActiva(obraId?: string) {
+async function getDatos(obraId?: string) {
   const session = await auth();
   if (!session || session.user.role !== "cliente") redirect("/login");
 
@@ -29,10 +31,8 @@ async function getObraActiva(obraId?: string) {
   });
 
   const obras = usuario?.cliente?.obras ?? [];
-  if (obraId) {
-    return obras.find((o) => o.id === obraId) || obras[0] || null;
-  }
-  return obras[0] || null;
+  const obra = elegirObraPorDefecto(obras, obraId);
+  return { obras, obra };
 }
 
 function formatDate(date: Date | null | undefined) {
@@ -50,7 +50,7 @@ export default async function ClienteAvancePage({
   searchParams: Promise<{ obraId?: string }>;
 }) {
   const { obraId } = await searchParams;
-  const obra = await getObraActiva(obraId);
+  const { obras, obra } = await getDatos(obraId);
 
   if (!obra) {
     return (
@@ -70,6 +70,14 @@ export default async function ClienteAvancePage({
 
   return (
     <div className="space-y-8">
+      <ObraSelector
+        obras={obras.map((o) => ({
+          id: o.id,
+          direccionObra: o.direccionObra,
+          estado: o.estado,
+        }))}
+        obraId={obra.id}
+      />
       <div>
         <p className="section-label mb-2 text-ink-faint">AVANCE DE OBRA</p>
         <h1 className="font-heading text-3xl font-bold">{obra.direccionObra}</h1>

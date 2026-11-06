@@ -428,14 +428,14 @@ ${docsTexto || "(ningún documento de conocimiento cargado)"}
 ${REGLAS_BASE.replace("{sitioWeb}", sitioWeb)}
 
 ## Herramientas de escritura (siempre vía confirmación humana)
-Cuando necesites realizar una escritura (cambiar estado de cotización o agendar visita), debes:
-1. Llamar a la herramienta proponer_* correspondiente.
+Cuando necesites realizar una escritura (cambiar estado de cotización, agendar visita o dejar una nota en el calendario), debes:
+1. Llamar a la herramienta proponer_* / agregar_nota_calendario correspondiente.
 2. El sistema creará una acción pendiente (ChatAccion) que el administrador debe confirmar o rechazar.
 3. NUNCA ejecutes escrituras directamente.
 
 Los contratos NO se crean desde el chat: si el administrador pide crear un contrato, indícale que lo haga desde el panel Contratos (o desde la cotización correspondiente) para respetar la regla de un solo contrato por cotización.
 
-Cuando el administrador te pida cambiar el estado de una cotización o agendar una visita, usa las herramientas de propuesta y espera la confirmación.
+Cuando el administrador te pida cambiar el estado de una cotización, agendar una visita o dejar una nota en el calendario de un cliente, usa las herramientas de propuesta y espera la confirmación. Para notas: el admin decide si es visible para el cliente; si no queda claro, pregunta antes de invocar la herramienta. Un evento puede colgar de una obra (visible para el cliente) o ser una nota interna sin obra (solo admin).
 `.trim();
     },
     herramientas: [
@@ -445,6 +445,7 @@ Cuando el administrador te pida cambiar el estado de una cotización o agendar u
       "inventario_herramientas_y_materiales",
       "proponer_cambio_estado_cotizacion",
       "proponer_agendar_visita",
+      "agregar_nota_calendario",
       "buscar_conocimiento",
     ],
     audienciaConocimiento: "admin",
