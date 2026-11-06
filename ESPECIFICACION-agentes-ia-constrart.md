@@ -223,7 +223,6 @@ Cada agente = objeto de configuración en un registro (p. ej. `src/lib/ai/agents
   - `inventario_herramientas_y_materiales(filtros)`
 - **Herramientas de ESCRITURA (siempre vía `ChatAccion`):**
   - `proponer_cambio_estado_cotizacion(cotizacionId, nuevoEstado)` — estados válidos de `ESTADOS_COTIZACION` en `src/lib/constants.ts`
-  - `proponer_crear_contrato_borrador(clienteId, datos...)`
   - `proponer_agendar_visita(clienteId, fecha, notas)`
 - **Flujo de escritura (D6):** el modelo llama a `proponer_*` → el backend crea fila `ChatAccion(estado="pendiente")` con argumentos validados por Zod → el asistente muestra un resumen legible ("Voy a cambiar el estado de la cotización X a 'contactado'. ¿Confirmas?") → el admin confirma en la UI → endpoint ejecuta la acción real, marca `ejecutada` y registra `confirmadaPorUsuarioId`. Rechazo → `rechazada`. **El LLM nunca escribe directo.**
 - **Modelo:** mismo (D1), `max_tokens` ~1200. Temperature 0.4 (más determinista para herramientas).
