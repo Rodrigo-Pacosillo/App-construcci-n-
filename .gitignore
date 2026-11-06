@@ -63,6 +63,6 @@ LOGO_GUIA.md
 ESPECIFICACION_PANEL_ADMIN_CONTRART.md
 
 # Markdown: ignorar todos excepto agents.md y README.md
-*.md
+
 !agents.md
 !README.md
