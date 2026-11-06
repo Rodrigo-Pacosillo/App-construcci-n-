@@ -54,6 +54,68 @@ async function* leerSSE(response: Response): AsyncGenerator<SSEMessage> {
   }
 }
 
+interface StreamUIResultado {
+  texto: string;
+  mensajeId: string | null;
+  error?: string;
+}
+
+/**
+ * Acumula el texto de un UI Message Stream del AI SDK (formato v5-v7).
+ * Eventos de texto: { type: "text-start", id } → { type: "text-delta", id, delta } → { type: "text-end", id }.
+ * Mantiene compatibilidad con el formato legado { type: "text", text } y con el
+ * streaming de razonamiento (reasoning-*) que se IGNORA a propósito.
+ */
+async function leerStreamUI(response: Response): Promise<StreamUIResultado> {
+  const partes = new Map<string, string>();
+  const ordenPartes: string[] = [];
+  let texto = "";
+  let mensajeId: string | null = null;
+  let errorStream: string | undefined;
+
+  for await (const data of leerSSE(response)) {
+    if (data.type === "start") {
+      const id = (data as { messageId?: string }).messageId;
+      if (typeof id === "string") mensajeId = id;
+    } else if (data.type === "text-start") {
+      if (data.id && !partes.has(data.id)) {
+        partes.set(data.id, "");
+        ordenPartes.push(data.id);
+      }
+    } else if (data.type === "text-delta") {
+      const delta =
+        (data as { delta?: string }).delta ??
+        (data as { text?: string }).text ??
+        "";
+      if (data.id && partes.has(data.id)) {
+        partes.set(data.id, (partes.get(data.id) ?? "") + delta);
+      } else {
+        texto += delta;
+      }
+    } else if (data.type === "text") {
+      // Formato legado (AI SDK v4): { type: "text", text }
+      texto += (data as { text?: string }).text ?? "";
+    } else if (data.type === "error") {
+      const err = (data as { errorText?: string }).errorText;
+      errorStream =
+        typeof err === "string" && err
+          ? "El asistente tuvo un problema durante la respuesta."
+          : "El asistente tuvo un problema durante la respuesta.";
+    }
+  }
+
+  const textoPartes = ordenPartes.map((id) => partes.get(id) ?? "").join("");
+  return { texto: texto + textoPartes, mensajeId, error: errorStream };
+}
+
+/** Quita bloques de razonamiento <think>…</think> si el modelo los emite dentro del texto. */
+function limpiarThink(texto: string): string {
+  return texto
+    .replace(/<think[\s\S]*?<\/think>/gi, "")
+    .replace(/<think[\s\S]*$/gi, "")
+    .trim();
+}
+
 interface CotizacionData {
   tipoObra: string;
   tipoConstruccion: string;
@@ -160,6 +222,7 @@ export function ChatPanel({
   useEffect(() => {
     const saved = sessionStorage.getItem(sessionStorageKey);
     if (saved && !sessionId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- rehidratación puntual desde sessionStorage (sistema externo)
       setSessionId(saved);
     }
   }, [sessionStorageKey, sessionId]);
@@ -226,16 +289,11 @@ export function ChatPanel({
         return;
       }
 
-      // Leer stream SSE y acumular texto del asistente
-      let textoCompleto = "";
-
-      for await (const data of leerSSE(res)) {
-        if (data.type === "text" && data.text) {
-          textoCompleto += data.text;
-        }
-      }
+      // Leer stream SSE (UI Message Stream) y acumular texto del asistente
+      const { texto: textoCompleto, error: errorStream } = await leerStreamUI(res);
 
       setErrorEsFatal(false);
+      if (errorStream) setError(errorStream);
       sessionStorage.setItem(sessionStorageKey, clientSessionId);
       setSessionId(clientSessionId);
 
@@ -246,7 +304,7 @@ export function ChatPanel({
           {
             id: `msg-${Date.now()}`,
             rol: "assistant",
-            contenido: textoCompleto,
+            contenido: limpiarThink(textoCompleto),
             creadoEn: new Date().toISOString(),
           },
         ]);
@@ -304,6 +362,7 @@ export function ChatPanel({
 
   useEffect(() => {
     if (sessionId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- carga asíncrona del historial al recuperar la sesión
       cargarHistorial();
     }
   }, [sessionId, cargarHistorial]);
@@ -364,6 +423,7 @@ export function ChatPanel({
         body: JSON.stringify({
           mensaje: texto,
           sessionId,
+          t: chatToken,
         }),
       });
 
@@ -394,16 +454,8 @@ export function ChatPanel({
         return;
       }
 
-      // Leer stream SSE y acumular texto del asistente
-      let textoCompleto = "";
-      let mensajeId: string | null = null;
-
-      for await (const data of leerSSE(res)) {
-        if (data.type === "text" && data.text) {
-          textoCompleto += data.text;
-        }
-        if (data.id) mensajeId = data.id;
-      }
+      // Leer stream SSE (UI Message Stream) y acumular texto del asistente
+      const { texto: textoCompleto, mensajeId, error: errorStream } = await leerStreamUI(res);
 
       // Si no hay texto del asistente, mostrar error específico en vez de respuesta vacía
       if (!textoCompleto.trim()) {
@@ -435,7 +487,7 @@ export function ChatPanel({
         {
           id: mensajeId ?? `msg-${Date.now()}`,
           rol: "assistant",
-          contenido: textoCompleto,
+          contenido: limpiarThink(textoCompleto),
           creadoEn: new Date().toISOString(),
         },
       ]);
