@@ -173,7 +173,10 @@ export function ClienteSidebar({
               <X className="h-5 w-5" />
             </button>
           </div>
-          <div className="relative w-full max-w-5xl h-full bg-background rounded-xl border border-border shadow-2xl flex flex-col overflow-hidden">
+          <div
+            className="relative w-full max-w-5xl h-full bg-background rounded-xl border border-border shadow-2xl flex flex-col overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="h-[calc(100vh-2rem)] overflow-hidden flex flex-col">
               <ChatPanel
                 clienteId={clienteId}
