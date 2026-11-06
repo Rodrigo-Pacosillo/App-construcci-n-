@@ -2,92 +2,108 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import {
-  LayoutDashboard,
-  FileText,
-  MessageSquare,
-  LogOut,
   Menu,
   X,
-  ChevronDown,
-  ChevronRight,
+  LogOut,
+  LayoutDashboard,
+  FileText,
   FileCheck,
-  Bot,
+  DollarSign,
   Calendar,
+  User,
+  Bot,
+  type LucideIcon,
 } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { CLIENTE_NAV_SECTIONS } from "@/lib/constants";
 import { ChatPanel } from "@/components/chat/ChatPanel";
 
-type NavItem = 
-  | { id: string; label: string; href: string; icon: LucideIcon; children?: never }
-  | { id: string; label: string; icon: LucideIcon; children: { id: string; label: string; href: string; icon: LucideIcon }[] };
+const ICONS: Record<string, LucideIcon> = {
+  LayoutDashboard,
+  FileText,
+  FileCheck,
+  DollarSign,
+  Calendar,
+  User,
+};
 
-const NAV_ITEMS: NavItem[] = [
-  { id: "dashboard", label: "Resumen", href: "/cliente", icon: LayoutDashboard },
-  { id: "obra", label: "Mi obra", icon: MessageSquare, children: [
-    { id: "avance", label: "Avance", href: "/cliente/avance", icon: FileCheck },
-  ]},
-  { id: "cotizaciones", label: "Mis cotizaciones", href: "/cliente/cotizaciones", icon: FileText },
-  { id: "calendario", label: "Calendario", href: "/cliente/calendario", icon: Calendar },
-];
+function isActive(pathname: string, href: string) {
+  if (href === "/cliente") return pathname === "/cliente";
+  return pathname === href || pathname.startsWith(href + "/");
+}
 
-function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
-  const [expanded, setExpanded] = useState<string | null>("obra");
+interface SectionState {
+  isExpanded: boolean;
+}
 
+function NavSections({
+  pathname,
+  onNavigate,
+  sectionStates,
+  toggleSection,
+}: {
+  pathname: string;
+  onNavigate?: () => void;
+  sectionStates?: Record<string, SectionState>;
+  toggleSection?: (sectionId: string) => void;
+}) {
   return (
-    <>
-      {NAV_ITEMS.map((item) => {
-        if (item.children) {
-          const isExpanded = expanded === item.id;
-          return (
-            <div key={item.id}>
-              <button
-                onClick={() => setExpanded(isExpanded ? null : item.id)}
-                className="flex items-center justify-between w-full rounded px-3 py-2 text-sm text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink"
-              >
-                <span className="flex items-center gap-3">
-                  <item.icon className="h-4 w-4 shrink-0" />
-                  {item.label}
-                </span>
-                {isExpanded ? (
-                  <ChevronDown className="h-4 w-4 shrink-0 text-ink-faint" />
-                ) : (
-                  <ChevronRight className="h-4 w-4 shrink-0 text-ink-faint" />
-                )}
-              </button>
-              {isExpanded && (
-                <div className="mt-1 ml-7 space-y-1 border-l border-border pl-3">
-                  {item.children.map((child) => (
-                    <Link
-                      key={child.id}
-                      href={child.href}
-                      onClick={onNavigate}
-                      className="flex items-center gap-2 rounded px-3 py-1.5 text-sm text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink"
-                    >
-                      <child.icon className="h-3.5 w-3.5 shrink-0" />
-                      {child.label}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        }
-        const Icon = item.icon;
+    <div className="space-y-6">
+      {CLIENTE_NAV_SECTIONS.map((section) => {
+        const state = sectionStates?.[section.id];
+        const isExpanded = state?.isExpanded ?? true;
         return (
-          <Link
-            key={item.id}
-            href={item.href}
-            onClick={onNavigate}
-            className="flex items-center gap-3 rounded px-3 py-2 text-sm text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink"
-          >
-            <Icon className="h-4 w-4 shrink-0" />
-            {item.label}
-          </Link>
+          <div key={section.id} className="accordion-item">
+            <button
+              type="button"
+              aria-expanded={isExpanded}
+              className={`flex w-full cursor-pointer items-center justify-between gap-2 rounded px-3 py-2 text-sm transition-colors hover:bg-ink/5 ${
+                isExpanded ? "text-ink font-medium" : "text-ink-muted"
+              }`}
+              onClick={() => toggleSection?.(section.id)}
+            >
+              <span className="font-mono text-[10px] uppercase tracking-widest text-ink-faint">
+                {section.label}
+              </span>
+              <svg
+                className={`h-3 w-3 shrink-0 text-ink-faint transition-transform ${
+                  isExpanded ? "rotate-90" : ""
+                }`}
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+            {isExpanded && (
+              <div className="space-y-1 pt-2">
+                {section.items.map((item) => {
+                  const Icon = ICONS[item.icon];
+                  const active = isActive(pathname, item.href);
+                  return (
+                    <Link
+                      key={item.id}
+                      href={item.href}
+                      onClick={onNavigate}
+                      className={`flex items-center gap-3 rounded px-3 py-2 text-sm transition-colors ${
+                        active
+                          ? "bg-ink/5 font-medium text-ink"
+                          : "text-ink-muted hover:bg-ink/5 hover:text-ink"
+                      }`}
+                    >
+                      {Icon && <Icon className="h-4 w-4 shrink-0" />}
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         );
       })}
-    </>
+    </div>
   );
 }
 
@@ -111,9 +127,32 @@ export function ClienteSidebar({
 }) {
   const [open, setOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const pathname = usePathname();
+
+  const [sectionStates, setSectionStates] = useState<Record<string, { isExpanded: boolean }>>(
+    Object.fromEntries(
+      CLIENTE_NAV_SECTIONS.map((section, index) => [
+        section.id,
+        { isExpanded: index === 0 },
+      ])
+    )
+  );
+
+  const navSectionsProps = {
+    pathname,
+    sectionStates,
+    toggleSection: (id: string) => {
+      setSectionStates((prev) => {
+        const next = { ...prev };
+        if (next[id]) next[id] = { isExpanded: !next[id].isExpanded };
+        return next;
+      });
+    },
+  };
 
   return (
     <>
+      {/* Mobile header */}
       <div className="flex items-center justify-between border-b border-border bg-surface px-4 py-3 lg:hidden">
         <Link href="/cliente" className="font-heading text-lg font-bold">
           MI CUENTA
@@ -127,6 +166,60 @@ export function ClienteSidebar({
         </button>
       </div>
 
+      {/* Mobile nav overlay */}
+      {open && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          onClick={() => setOpen(false)}
+        >
+          <nav
+            className="absolute left-0 top-0 flex h-full w-64 flex-col bg-surface"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex h-12 shrink-0 items-center border-b border-border px-4">
+              <Link
+                href="/cliente"
+                className="font-heading text-lg font-bold"
+                onClick={() => setOpen(false)}
+              >
+                MI CUENTA
+              </Link>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4">
+              <NavSections {...navSectionsProps} onNavigate={() => setOpen(false)} />
+            </div>
+            {clienteId && (
+              <div className="mt-4 p-4">
+                <button
+                  onClick={() => {
+                    setChatOpen(true);
+                    setOpen(false);
+                  }}
+                  className="flex w-full items-center justify-center gap-2 rounded border border-border bg-surface px-3 py-2 text-sm text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink"
+                >
+                  <Bot className="h-4 w-4 shrink-0" />
+                  Asistente CONSTR-ART
+                </button>
+              </div>
+            )}
+            <div className="shrink-0 border-t border-border p-4">
+              <p className="truncate text-xs text-ink-faint">{email}</p>
+              <button
+                onClick={() => {
+                  signOut({ callbackUrl: "/" });
+                  setOpen(false);
+                }}
+                className="mt-2 flex w-full items-center gap-3 rounded px-3 py-2 text-sm text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink"
+              >
+                <LogOut className="h-4 w-4 shrink-0" />
+                Salir
+              </button>
+            </div>
+          </nav>
+        </div>
+      )}
+
+      {/* Desktop sidebar */}
       <div className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-border bg-surface lg:flex">
         <div className="flex h-16 shrink-0 items-center border-b border-border px-6">
           <Link href="/cliente" className="font-heading text-lg font-bold">
@@ -134,17 +227,19 @@ export function ClienteSidebar({
           </Link>
         </div>
         <nav className="flex-1 overflow-y-auto p-4">
-          <NavLinks />
+          <NavSections {...navSectionsProps} />
         </nav>
-        <div className="mt-4 p-4">
-          <button
-            onClick={() => setChatOpen(true)}
-            className="flex w-full items-center justify-center gap-2 rounded border border-border bg-surface px-3 py-2 text-sm text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink"
-          >
-            <Bot className="h-4 w-4 shrink-0" />
-            Asistente CONSTR-ART
-          </button>
-        </div>
+        {clienteId && (
+          <div className="mt-4 p-4">
+            <button
+              onClick={() => setChatOpen(true)}
+              className="flex w-full items-center justify-center gap-2 rounded border border-border bg-surface px-3 py-2 text-sm text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink"
+            >
+              <Bot className="h-4 w-4 shrink-0" />
+              Asistente CONSTR-ART
+            </button>
+          </div>
+        )}
         <div className="shrink-0 border-t border-border p-4">
           <p className="truncate text-xs text-ink-faint">{email}</p>
           <button
@@ -189,54 +284,6 @@ export function ClienteSidebar({
           </div>
         </div>
       )}
-
-      <div
-        className={`fixed inset-0 z-40 bg-black/50 lg:hidden transition-opacity ${
-          open ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
-        onClick={() => setOpen(false)}
-      >
-        <nav
-          className="absolute left-0 top-0 h-full w-64 flex-col bg-surface p-4 transition-transform lg:hidden"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="flex h-12 shrink-0 items-center border-b border-border px-4">
-            <Link href="/cliente" className="font-heading text-lg font-bold">
-              MI CUENTA
-            </Link>
-          </div>
-          <div className="mt-4 space-y-1 overflow-y-auto">
-            <NavLinks onNavigate={() => setOpen(false)} />
-          </div>
-          {clienteId && (
-            <div className="mt-4 p-4">
-              <button
-                onClick={() => {
-                  setChatOpen(true);
-                  setOpen(false);
-                }}
-                className="flex w-full items-center justify-center gap-2 rounded border border-border bg-surface px-3 py-2 text-sm text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink"
-              >
-                <Bot className="h-4 w-4 shrink-0" />
-                Asistente CONSTR-ART
-              </button>
-            </div>
-          )}
-          <div className="shrink-0 border-t border-border p-4">
-            <p className="truncate text-xs text-ink-faint">{email}</p>
-            <button
-              onClick={() => {
-                signOut({ callbackUrl: "/" });
-                setOpen(false);
-              }}
-              className="mt-2 flex w-full items-center gap-3 rounded px-3 py-2 text-sm text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink"
-            >
-              <LogOut className="h-4 w-4 shrink-0" />
-              Salir
-            </button>
-          </div>
-        </nav>
-      </div>
     </>
   );
 }

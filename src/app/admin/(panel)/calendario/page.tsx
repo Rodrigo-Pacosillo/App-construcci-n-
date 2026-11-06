@@ -1,5 +1,5 @@
 import { getEventosCalendario, getObrasParaCalendario } from "./actions";
-import { AdminCalendario } from "@/components/admin/AdminCalendario";
+import { AdminCalendarioGrid } from "@/components/admin/AdminCalendario";
 
 export const dynamic = "force-dynamic";
 
@@ -9,5 +9,5 @@ export default async function AdminCalendarioPage() {
     getObrasParaCalendario(),
   ]);
 
-  return <AdminCalendario eventos={eventos} obras={obras} />;
+  return <AdminCalendarioGrid eventos={eventos} obras={obras} />;
 }

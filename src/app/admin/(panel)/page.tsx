@@ -75,6 +75,16 @@ export default async function AdminDashboard() {
             titulo="+ Obra"
             detalle="Crear o gestionar una nueva obra"
           />
+          <AccionRapida
+            href="/admin/calendario"
+            titulo="Calendario"
+            detalle="Ver y crear eventos de todas las obras"
+          />
+          <AccionRapida
+            href="/admin/chat"
+            titulo="Chat IA"
+            detalle="Asistente con herramientas de lectura y escritura"
+          />
         </div>
       </section>
 

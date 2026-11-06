@@ -77,7 +77,7 @@ export const ADMIN_NAV_SECTIONS: NavSection[] = [
       { id: "contratos", label: "Contratos", href: "/admin/contratos", icon: "FileCheck" },
       { id: "usuarios", label: "Usuarios", href: "/admin/usuarios", icon: "UserCog" },
       { id: "obras", label: "Obras", href: "/admin/obras", icon: "HardHat" },
-{ id: "calendario", label: "Calendario", href: "/admin/calendario", icon: "Calendar" },
+      { id: "calendario", label: "Calendario", href: "/admin/calendario", icon: "Calendar" },
     ],
   },
   {
@@ -119,6 +119,7 @@ export const CLIENTE_NAV_SECTIONS: NavSection[] = [
       { id: "avance", label: "Avance", href: "/cliente/avance", icon: "FileCheck" },
       { id: "pagos", label: "Pagos", href: "/cliente/pagos", icon: "DollarSign" },
       { id: "documentos", label: "Documentos", href: "/cliente/documentos", icon: "FileText" },
+      { id: "calendario", label: "Calendario", href: "/cliente/calendario", icon: "Calendar" },
     ],
   },
   {
