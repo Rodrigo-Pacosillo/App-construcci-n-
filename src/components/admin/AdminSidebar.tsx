@@ -21,6 +21,8 @@ import {
   UserCog,
   Package,
   Bot,
+  BookOpen,
+  MessageCircle,
   type LucideIcon,
 } from "lucide-react";
 import { ADMIN_NAV_SECTIONS, type NavSection, type NavItem } from "@/lib/constants";
@@ -39,6 +41,8 @@ const ICONS: Record<string, LucideIcon> = {
   HelpCircle,
   UserCog,
   Package,
+  BookOpen,
+  MessageCircle,
 };
 
 function isActive(pathname: string, href: string) {

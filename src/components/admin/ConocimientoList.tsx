@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import {
   createConocimiento,
   updateConocimiento,
+  alternarConocimiento,
   deleteConocimiento,
 } from "@/app/admin/(panel)/conocimiento/actions";
 
@@ -234,7 +235,11 @@ export function ConocimientoList({
                       type="button"
                       onClick={() =>
                         startTransition(async () => {
-                          const res = await updateConocimiento(c.id, new FormData());
+                          // Toggle con booleano explícito: no pasa por FormData
+                          const res = await alternarConocimiento(
+                            c.id,
+                            !c.activo
+                          );
                           if (res && !res.success)
                             setError("No se pudo actualizar el documento.");
                         })
