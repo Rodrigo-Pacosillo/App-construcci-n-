@@ -534,7 +534,7 @@ model ChatSesion {
   sessionId       String   @unique @map("session_id")
   agente          String   @default("publico") @map("agente")
   clienteId       String   @map("cliente_id")
-  usuarioId       String?  @unique @map("usuario_id")
+  usuarioId       String?  @map("usuario_id")
   cotizacionId    String?  @map("cotizacion_id")
   mensajeCount    Int      @default(0) @map("mensaje_count")
   estado          String   @default("activa") @map("estado")

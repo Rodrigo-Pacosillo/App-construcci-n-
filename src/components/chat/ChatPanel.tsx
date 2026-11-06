@@ -69,12 +69,14 @@ interface Mensaje {
 }
 
 interface ChatPanelProps {
-  clienteId: string;
+  clienteId?: string;
   cotizacionId?: string;
-  clienteNombre: string;
+  clienteNombre?: string;
   whatsappNumero?: string;
   cotizacionData?: CotizacionData;
   chatToken?: string;
+  esAdmin?: boolean;
+  initialSessionId?: string;
 }
 
 export function ChatPanel({
@@ -84,6 +86,8 @@ export function ChatPanel({
   whatsappNumero = WHATSAPP_NUMERO,
   cotizacionData,
   chatToken,
+  esAdmin = false,
+  initialSessionId,
 }: ChatPanelProps) {
   const [mensajes, setMensajes] = useState<Mensaje[]>([]);
   const [input, setInput] = useState("");
@@ -91,11 +95,17 @@ export function ChatPanel({
   const [error, setError] = useState<string | null>(null);
   const [errorEsFatal, setErrorEsFatal] = useState(false);
 
-  const sessionStorageKey = cotizacionId
-    ? `chat_${cotizacionId}`
-    : `chat_cliente_${clienteId}`;
+  const sessionStorageKey = initialSessionId
+    ? `chat_admin_${initialSessionId}`
+    : cotizacionId
+      ? `chat_${cotizacionId}`
+      : esAdmin
+        ? `chat_admin`
+        : clienteId
+          ? `chat_cliente_${clienteId}`
+          : `chat_admin`;
 
-  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(initialSessionId ?? null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const ultimoInicioRef = useRef<string | null>(null);
 
@@ -174,21 +184,26 @@ export function ChatPanel({
     const clientSessionId = crypto.randomUUID();
 
     try {
+      const bodyInicio: Record<string, unknown> = {
+        mensaje: "__INICIO__",
+        sessionId: clientSessionId,
+        whatsappNumero,
+        t: chatToken,
+        sitioBaseUrl:
+          typeof window !== "undefined" ? window.location.origin : "",
+      };
+
+      if (!esAdmin) {
+        if (clienteId) bodyInicio.clienteId = clienteId;
+        if (cotizacionId) bodyInicio.cotizacionId = cotizacionId;
+        if (clienteNombre) bodyInicio.clienteNombre = clienteNombre;
+        if (cotizacionData) bodyInicio.cotizacionData = cotizacionData;
+      }
+
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          mensaje: "__INICIO__",
-          sessionId: clientSessionId,
-          clienteId,
-          cotizacionId: cotizacionId ?? undefined,
-          clienteNombre,
-          whatsappNumero,
-          t: chatToken,
-          sitioBaseUrl:
-            typeof window !== "undefined" ? window.location.origin : "",
-          cotizacionData: cotizacionData ?? undefined,
-        }),
+        body: JSON.stringify(bodyInicio),
       });
 
       if (!res.ok) {
@@ -293,6 +308,9 @@ export function ChatPanel({
   // Cuando cambian cliente o cotización, reiniciar el chat completamente
   // para que no se mezclen datos de clientes anteriores
   useEffect(() => {
+    // En modo admin con sessionId explícito, no auto-iniciar sesión nueva
+    if (esAdmin && initialSessionId) return;
+
     const claveActual = `${clienteId}|${cotizacionId ?? "sin-cotizacion"}`;
     if (ultimoInicioRef.current === claveActual) return;
 
@@ -562,9 +580,11 @@ export function ChatPanel({
               Asistente CONSTR-ART
             </h3>
             <p className="text-sm text-[var(--chat-muted)]">
-              {cotizacionData
-                ? "Te ayuda con tu cotización, dudas sobre construcción y el proceso de obra"
-                : "Responde tus dudas sobre construcción y el proceso de obra. No hay una cotización activa vinculada todavía."}
+              {esAdmin
+                ? "Responde tus dudas sobre clientes, cotizaciones, contratos, obras e inventario del negocio."
+                : cotizacionData
+                  ? "Te ayuda con tu cotización, dudas sobre construcción y el proceso de obra"
+                  : "Responde tus dudas sobre construcción y el proceso de obra. No hay una cotización activa vinculada todavía."}
             </p>
           </div>
         </div>
@@ -663,9 +683,11 @@ export function ChatPanel({
           </button>
         </div>
         <p className="text-xs text-[var(--chat-muted)] mt-2 text-center">
-          {cotizacionData
-            ? "Respondo en segundos · Basado en tu cotización"
-            : "Respondo en segundos · Chat general del cliente"}
+          {esAdmin
+            ? "Respondo en segundos · Chat del administrador"
+            : cotizacionData
+              ? "Respondo en segundos · Basado en tu cotización"
+              : "Respondo en segundos · Chat general del cliente"}
         </p>
 
         {/* Popover de configuración de audio (posicionado donde se clickeó) */}

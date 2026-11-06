@@ -20,9 +20,11 @@ import {
   HelpCircle,
   UserCog,
   Package,
+  Bot,
   type LucideIcon,
 } from "lucide-react";
 import { ADMIN_NAV_SECTIONS, type NavSection, type NavItem } from "@/lib/constants";
+import { ChatPanel } from "@/components/chat/ChatPanel";
 
 const ICONS: Record<string, LucideIcon> = {
   LayoutDashboard,
@@ -155,6 +157,7 @@ function NavSections({
 
 export function AdminSidebar({ email }: { email: string }) {
   const [open, setOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
   const pathname = usePathname();
 
   // Solo la primera sección arranca expandida para mejorar la visibilidad
@@ -218,6 +221,18 @@ export function AdminSidebar({ email }: { email: string }) {
                 }}
               />
             </div>
+            <div className="mt-4 p-4">
+              <button
+                onClick={() => {
+                  setChatOpen(true);
+                  setOpen(false);
+                }}
+                className="flex w-full items-center justify-center gap-2 rounded border border-border bg-surface px-3 py-2 text-sm text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink"
+              >
+                <Bot className="h-4 w-4 shrink-0" />
+                Asistente CONSTR-ART
+              </button>
+            </div>
             <div className="shrink-0">
               <SidebarFooter email={email} />
             </div>
@@ -247,10 +262,42 @@ export function AdminSidebar({ email }: { email: string }) {
             }}
           />
         </nav>
+        <div className="mt-4 p-4">
+          <button
+            onClick={() => setChatOpen(true)}
+            className="flex w-full items-center justify-center gap-2 rounded border border-border bg-surface px-3 py-2 text-sm text-ink-muted transition-colors hover:bg-ink/5 hover:text-ink"
+          >
+            <Bot className="h-4 w-4 shrink-0" />
+            Asistente CONSTR-ART
+          </button>
+        </div>
         <div className="shrink-0">
           <SidebarFooter email={email} />
         </div>
       </aside>
+      {chatOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"
+          onClick={() => setChatOpen(false)}
+        >
+          <div
+            className="absolute top-4 right-4 z-10"
+            onClick={(e) => {
+              e.stopPropagation();
+              setChatOpen(false);
+            }}
+          >
+            <button className="flex h-10 w-10 items-center justify-center rounded-full bg-ink text-background hover:bg-ink/90 transition-colors">
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          <div className="relative w-full max-w-5xl h-full bg-background rounded-xl border border-border shadow-2xl flex flex-col overflow-hidden">
+            <div className="h-[calc(100vh-2rem)] overflow-hidden flex flex-col">
+              <ChatPanel esAdmin={true} />
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

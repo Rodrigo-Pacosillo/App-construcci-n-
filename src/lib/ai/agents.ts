@@ -78,8 +78,13 @@ const TOOL_OBTENER_MIS_COTIZACIONES = {
   description: "Devuelve las cotizaciones del cliente autenticado.",
   parameters: z.object({}),
   execute: async ({ usuarioId }: { usuarioId: string }) => {
+    const usuario = await prisma.usuario.findUnique({
+      where: { id: usuarioId },
+      select: { clienteId: true },
+    });
+    if (!usuario?.clienteId) return [];
     const cotizaciones = await prisma.cotizacion.findMany({
-      where: { clienteId: usuarioId },
+      where: { clienteId: usuario.clienteId },
       orderBy: { creadoEn: "desc" },
       take: 10,
       select: {
@@ -102,8 +107,13 @@ const TOOL_OBTENER_AVANCE_OBRA = {
   description: "Devuelve el avance de obra y hitos visibles del cliente autenticado.",
   parameters: z.object({}),
   execute: async ({ usuarioId }: { usuarioId: string }) => {
+    const usuario = await prisma.usuario.findUnique({
+      where: { id: usuarioId },
+      select: { clienteId: true },
+    });
+    if (!usuario?.clienteId) return { obra: null, avance: 0, hitos: [] };
     const obras = await prisma.obraActiva.findMany({
-      where: { clienteId: usuarioId },
+      where: { clienteId: usuario.clienteId },
       take: 5,
       select: {
         id: true,
@@ -149,8 +159,13 @@ const TOOL_OBTENER_PROXIMOS_EVENTOS = {
   description: "Devuelve los próximos eventos del calendario vinculados a las obras del cliente.",
   parameters: z.object({}),
   execute: async ({ usuarioId }: { usuarioId: string }) => {
+    const usuario = await prisma.usuario.findUnique({
+      where: { id: usuarioId },
+      select: { clienteId: true },
+    });
+    if (!usuario?.clienteId) return { eventos: [] };
     const obras = await prisma.obraActiva.findMany({
-      where: { clienteId: usuarioId },
+      where: { clienteId: usuario.clienteId },
       select: { id: true },
     });
     const obraIds = obras.map((o) => o.id);

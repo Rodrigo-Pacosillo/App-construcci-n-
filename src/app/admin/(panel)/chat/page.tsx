@@ -6,6 +6,7 @@ import {
   confirmarChatAccion,
   rechazarChatAccion,
 } from "./actions";
+import { SesionesTabla } from "@/components/admin/SesionesTabla";
 
 export default async function ChatAdminPage() {
   const session = await auth();
@@ -120,73 +121,12 @@ export default async function ChatAdminPage() {
       </section>
 
       {/* Conversaciones recientes */}
-      <section>
-        <h2 className="text-xl font-semibold mb-4">
-          Conversaciones recientes
-        </h2>
-        {sesiones.length === 0 ? (
-          <p className="text-ink-muted">No hay conversaciones.</p>
-        ) : (
-          <div className="rounded border border-border bg-surface">
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="px-4 py-3 section-label text-ink-faint">
-                    Agente
-                  </th>
-                  <th className="px-4 py-3 section-label text-ink-faint">
-                    Estado
-                  </th>
-                  <th className="px-4 py-3 section-label text-ink-faint">
-                    Mensajes
-                  </th>
-                  <th className="px-4 py-3 section-label text-ink-faint">
-                    Último mensaje
-                  </th>
-                  <th className="px-4 py-3 section-label text-ink-faint">
-                    Cliente / Usuario
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {sesiones.map((s) => (
-                  <tr key={s.id} className="border-b border-border last:border-0">
-                    <td className="px-4 py-3 font-medium">
-                      {s.agente}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`text-xs rounded px-2 py-0.5 ${
-                          s.estado === "activa"
-                            ? "bg-green-100 text-green-800"
-                            : s.estado === "cerrada"
-                            ? "bg-gray-100 text-gray-800"
-                            : "bg-yellow-100 text-yellow-800"
-                        }`}
-                      >
-                        {s.estado}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-ink-muted">
-                      {s.mensajes.length}
-                    </td>
-                    <td className="px-4 py-3 text-ink-muted">
-                      {s.ultimoMensajeEn ? new Date(s.ultimoMensajeEn).toLocaleString("es-BO", {
-                        day: "2-digit",
-                        month: "2-digit",
-                        year: "numeric",
-                      }) : "—"}
-                    </td>
-                    <td className="px-4 py-3 text-ink-muted">
-                      {s.usuario?.nombre ?? s.cotizacion?.cliente?.nombre ?? "—"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
+      <SesionesTabla
+        sesiones={sesiones.map((s) => ({
+          ...s,
+          mensajes: s.mensajes.length,
+        }))}
+      />
     </div>
   );
 }

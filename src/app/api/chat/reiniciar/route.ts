@@ -33,6 +33,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Validar propiedad: admin puede reiniciar cualquier sesión; cliente solo la suya
+    const userRole = session.user.role as string;
+    const userId = session.user.id as string;
+    if (userRole !== "admin" && sesion.usuarioId !== userId) {
+      return NextResponse.json(
+        { error: { code: "NO_AUTORIZADO", message: "No autorizado para reiniciar esta sesión" } },
+        { status: 403 }
+      );
+    }
+
     // Cerrar sesión actual
     await prisma.chatSesion.update({
       where: { id: sesion.id },

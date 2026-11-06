@@ -47,7 +47,7 @@ function errorResponse(
  * y hace log para debuggear respuestas vacías.
  */
 function limpiarRespuestaIA(texto: string, contexto: string): string {
-  const limpio = texto.replace(/�````think[\s\S]*?<\/think>�````/gi, "").trim();
+  const limpio = texto.replace(/<think[\s\S]*?<\/think>/gi, "").trim();
   console.error(
     `[NVIDIA ${contexto}] Texto completo: "${texto.substring(0, 200)}" | Texto limpio: "${limpio.substring(0, 200)}"`
   );
@@ -305,10 +305,12 @@ export async function POST(req: NextRequest) {
         sesion.id
       );
 
-      const result = streamText({
+      const resultado = streamText({
         model: nvidiaProvider(agente.model),
-        system: systemPrompt,
-        prompt: "__INICIO__",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: "__INICIO__" },
+        ],
         temperature: agente.temperature,
         maxOutputTokens: agente.maxTokens,
         providerOptions: {
@@ -320,23 +322,27 @@ export async function POST(req: NextRequest) {
       });
 
       // Persistir respuesta del asistente cuando el stream termine
-      result.text.then(async (textoCompleto) => {
-        const textoLimpio = limpiarRespuestaIA(textoCompleto, "INICIO");
-        const mensajeGuardado = await prisma.chatMensaje.create({
-          data: {
-            sesionId: sesion.id,
-            rol: "assistant",
-            contenido: textoLimpio,
-          },
-        });
+      resultado.text.then(async (textoCompleto) => {
+        try {
+          const textoLimpio = limpiarRespuestaIA(textoCompleto, "INICIO");
+          await prisma.chatMensaje.create({
+            data: {
+              sesionId: sesion.id,
+              rol: "assistant",
+              contenido: textoLimpio,
+            },
+          });
 
-        await prisma.chatSesion.update({
-          where: { id: sesion.id },
-          data: { mensajeCount: { increment: 1 } },
-        });
+          await prisma.chatSesion.update({
+            where: { id: sesion.id },
+            data: { mensajeCount: { increment: 1 } },
+          });
+        } catch (persistError) {
+          console.error("[CHAT INICIO] Error persisting assistant message:", persistError);
+        }
       });
 
-      return createUIMessageStreamResponse({ stream: result.toUIMessageStream() });
+      return createUIMessageStreamResponse({ stream: resultado.toUIMessageStream() });
     }
 
     // ── Caso 2: mensaje normal ──
@@ -361,7 +367,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (sesion.mensajeCount >= 20 && sesion.agente === "publico") {
+    const agente = obtenerAgente(sesion.agente as AgenteId);
+
+    if (agente.limiteMensajesSesion !== null && sesion.mensajeCount >= agente.limiteMensajesSesion) {
       return errorResponse(
         "Has alcanzado el límite de mensajes para esta sesión.",
         "SESION_LIMITE",
@@ -379,7 +387,6 @@ export async function POST(req: NextRequest) {
       take: MENSAJES_CONTEXTO,
     });
 
-    const agente = obtenerAgente(sesion.agente as AgenteId);
     const conocimiento = await obtenerConocimiento({
       audiencia: agente.audienciaConocimiento,
       categorias: agente.categoriasConocimiento as CategoriaConocimiento[],
@@ -425,19 +432,23 @@ export async function POST(req: NextRequest) {
 
     // Persistir respuesta del asistente cuando el stream termine
     result.text.then(async (textoCompleto) => {
-      const textoLimpio = limpiarRespuestaIA(textoCompleto, "MENSAJE");
-      const mensajeGuardado = await prisma.chatMensaje.create({
-        data: {
-          sesionId: sesion.id,
-          rol: "assistant",
-          contenido: textoLimpio,
-        },
-      });
+      try {
+        const textoLimpio = limpiarRespuestaIA(textoCompleto, "MENSAJE");
+        await prisma.chatMensaje.create({
+          data: {
+            sesionId: sesion.id,
+            rol: "assistant",
+            contenido: textoLimpio,
+          },
+        });
 
-      await prisma.chatSesion.update({
-        where: { id: sesion.id },
-        data: { mensajeCount: { increment: 2 } },
-      });
+        await prisma.chatSesion.update({
+          where: { id: sesion.id },
+          data: { mensajeCount: { increment: 1 } },
+        });
+      } catch (persistError) {
+        console.error("[CHAT MENSAJE] Error persisting assistant message:", persistError);
+      }
     });
 
     return createUIMessageStreamResponse({ stream: result.toUIMessageStream() });
@@ -466,6 +477,7 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const sessionId = searchParams.get("sessionId");
+    const tokenPublico = searchParams.get("t");
 
     if (!sessionId) {
       return errorResponse("sessionId es requerido", "VALIDACION", 400);
@@ -484,6 +496,35 @@ export async function GET(req: NextRequest) {
         "SESION_NO_ENCONTRADA",
         404
       );
+    }
+
+    // Validar propiedad de la sesión
+    const session = await auth();
+    const userRole = session?.user?.role;
+    const userId = session?.user?.id;
+
+    if (sesion.usuarioId) {
+      // Sesión de cliente o admin: solo el propietario o un admin puede leer
+      if (userRole === "admin") {
+        // admin puede leer todo
+      } else if (userId && userId === sesion.usuarioId) {
+        // propietario de la sesión
+      } else {
+        return errorResponse("No autorizado para ver esta sesión", "NO_AUTORIZADO", 403);
+      }
+    } else if (sesion.cotizacionId && tokenPublico) {
+      // Sesión pública: validar token
+      try {
+        const cotizacionIdValido = verificarChatToken(tokenPublico);
+        if (cotizacionIdValido !== sesion.cotizacionId) {
+          return errorResponse("Token no coincide con la sesión", "TOKEN_INVALIDO", 401);
+        }
+      } catch {
+        return errorResponse("Token inválido o expirado", "TOKEN_INVALIDO", 401);
+      }
+    } else {
+      // Sesión sin propietario identificable
+      return errorResponse("No autorizado para ver esta sesión", "NO_AUTORIZADO", 403);
     }
 
     return NextResponse.json({
@@ -546,10 +587,10 @@ function construirHerramientas(
       categoria: z.string().optional(),
     }),
     execute: async (args: ToolArgs) => {
-      const identidad = await resolverIdentidadDummy();
+      const configAgente = obtenerAgente(agente);
       return buscarConocimiento({
         termino: args.termino as string,
-        audiencia: (identidad.audiencia as AudienciaConocimiento) ?? "publico",
+        audiencia: (configAgente.audienciaConocimiento as AudienciaConocimiento) ?? "publico",
         categoria: args.categoria as CategoriaConocimiento | undefined,
       });
     },
@@ -638,10 +679,4 @@ function construirHerramientas(
   }
 
   return tools;
-}
-
-async function resolverIdentidadDummy(): Promise<{
-  audiencia: string;
-}> {
-  return { audiencia: "publico" };
 }
