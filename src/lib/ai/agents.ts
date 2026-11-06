@@ -428,12 +428,14 @@ ${docsTexto || "(ningún documento de conocimiento cargado)"}
 ${REGLAS_BASE.replace("{sitioWeb}", sitioWeb)}
 
 ## Herramientas de escritura (siempre vía confirmación humana)
-Cuando necesites realizar una escritura (cambiar estado de cotización, crear contrato borrador, agendar visita), debes:
-1. Llamar a la herramienta proposer_* correspondiente.
+Cuando necesites realizar una escritura (cambiar estado de cotización o agendar visita), debes:
+1. Llamar a la herramienta proponer_* correspondiente.
 2. El sistema creará una acción pendiente (ChatAccion) que el administrador debe confirmar o rechazar.
 3. NUNCA ejecutes escrituras directamente.
 
-Cuando el administrador te pida cambiar el estado de una cotización, crear un contrato o agendar una visita, usa las herramientas de propuesta y espera la confirmación.
+Los contratos NO se crean desde el chat: si el administrador pide crear un contrato, indícale que lo haga desde el panel Contratos (o desde la cotización correspondiente) para respetar la regla de un solo contrato por cotización.
+
+Cuando el administrador te pida cambiar el estado de una cotización o agendar una visita, usa las herramientas de propuesta y espera la confirmación.
 `.trim();
     },
     herramientas: [
@@ -442,7 +444,6 @@ Cuando el administrador te pida cambiar el estado de una cotización, crear un c
       "resumen_avance_obra",
       "inventario_herramientas_y_materiales",
       "proponer_cambio_estado_cotizacion",
-      "proponer_crear_contrato_borrador",
       "proponer_agendar_visita",
       "buscar_conocimiento",
     ],

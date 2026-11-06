@@ -18,7 +18,6 @@ export interface DocConocimiento {
   audiencia: AudienciaConocimiento;
   contenido: string;
   activo: boolean;
-  version: number;
 }
 
 export async function obtenerConocimiento(opts: {
@@ -55,7 +54,6 @@ export async function obtenerConocimiento(opts: {
     audiencia: d.audiencia as AudienciaConocimiento,
     contenido: d.contenido,
     activo: d.activo,
-    version: d.version,
   }));
 }
 
@@ -94,6 +92,5 @@ export async function buscarConocimiento(opts: {
     audiencia: d.audiencia as AudienciaConocimiento,
     contenido: d.contenido,
     activo: d.activo,
-    version: d.version,
   }));
 }

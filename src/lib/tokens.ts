@@ -60,11 +60,13 @@ export function verificarChatToken(token: string): string {
     .update(payload)
     .digest("base64url");
 
+  const firmaBuffer = Buffer.from(firma, "base64url");
+  const firmaEsperadaBuffer = Buffer.from(firmaEsperada, "base64url");
+
+  // timingSafeEqual lanza si las longitudes difieren: comparar largo antes
   if (
-    !timingSafeEqual(
-      Buffer.from(firma, "base64url"),
-      Buffer.from(firmaEsperada, "base64url")
-    )
+    firmaBuffer.length !== firmaEsperadaBuffer.length ||
+    !timingSafeEqual(firmaBuffer, firmaEsperadaBuffer)
   ) {
     throw new Error("TOKEN_INVALIDO");
   }
