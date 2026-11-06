@@ -271,7 +271,10 @@ export function ChatPanel({
     setError(null);
     setErrorEsFatal(false);
     try {
-      const res = await fetch(`/api/chat?sessionId=${encodeURIComponent(sessionId)}`);
+      const url = chatToken
+        ? `/api/chat?sessionId=${encodeURIComponent(sessionId)}&t=${encodeURIComponent(chatToken)}`
+        : `/api/chat?sessionId=${encodeURIComponent(sessionId)}`;
+      const res = await fetch(url);
       if (!res.ok) {
         if (res.status === 404) {
           sessionStorage.removeItem(sessionStorageKey);
@@ -297,7 +300,7 @@ export function ChatPanel({
     } finally {
       setLoading(false);
     }
-  }, [sessionId, sessionStorageKey, iniciarChat]);
+  }, [sessionId, sessionStorageKey, iniciarChat, chatToken]);
 
   useEffect(() => {
     if (sessionId) {
