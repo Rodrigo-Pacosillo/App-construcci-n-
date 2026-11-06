@@ -62,7 +62,11 @@ INTRO_B_GUIA.md
 LOGO_GUIA.md
 ESPECIFICACION_PANEL_ADMIN_CONTRART.md
 
-# Markdown: ignorar todos excepto agents.md y README.md
+# Paquetes de documentación de trabajo (no forman parte de la app)
+/actual/
+/leerCambios/
+/sistema_de_audio.md
 
+# Markdown: ya no se ignora globalmente
 !agents.md
 !README.md
