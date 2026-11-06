@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { streamText, createUIMessageStreamResponse } from "ai";
+import { streamText, createUIMessageStreamResponse, stepCountIs } from "ai";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
@@ -20,6 +20,8 @@ import {
   TOOL_BUSCAR_CLIENTES,
   TOOL_RESUMEN_COTIZACION,
   TOOL_RESUMEN_AVANCE_OBRA,
+  TOOL_RESUMEN_PANEL,
+  TOOL_RESUMEN_CLIENTE,
   TOOL_INVENTARIO_HERRAMIENTAS_MATERIALES,
 } from "@/lib/ai/agents";
 
@@ -67,10 +69,13 @@ function limpiarRespuestaIA(texto: string, contexto: string): string {
  * onFinish corre dentro del ciclo de vida de la respuesta, así que el
  * mensaje del asistente no se pierde en entornos serverless.
  */
+type HerramientaUsada = { herramienta: string; resultado: string };
+
 async function persistirRespuestaAsistente(
   sesionId: string,
   textoCrudo: string,
-  contexto: string
+  contexto: string,
+  herramientasUsadas: HerramientaUsada[] = []
 ): Promise<void> {
   try {
     const textoLimpio = limpiarRespuestaIA(textoCrudo, contexto);
@@ -83,6 +88,9 @@ async function persistirRespuestaAsistente(
         sesionId,
         rol: "assistant",
         contenido: textoLimpio,
+        ...(herramientasUsadas.length > 0
+          ? { metadatos: { herramientasUsadas } }
+          : {}),
       },
     });
     await prisma.chatSesion.update({
@@ -428,11 +436,16 @@ export async function POST(req: NextRequest) {
           },
         },
         tools: herramientas,
+        stopWhen: stepCountIs(8),
         // Persistir respuesta del asistente cuando el stream termine
         // (onFinish corre dentro del ciclo de vida de la respuesta: no se
         // pierde el mensaje en serverless, a diferencia de una promesa flotante).
-        onFinish: async ({ text }) => {
-          await persistirRespuestaAsistente(sesion.id, text, "INICIO");
+        onFinish: async ({ text, toolResults }) => {
+          const usadas = (toolResults ?? []).map((r) => ({
+            herramienta: r.toolName,
+            resultado: JSON.stringify(r.output ?? {}).slice(0, 600),
+          }));
+          await persistirRespuestaAsistente(sesion.id, text, "INICIO", usadas);
         },
       });
 
@@ -541,7 +554,18 @@ export async function POST(req: NextRequest) {
     const mensajesHistorial = historialPrevio
       .slice()
       .reverse()
-      .map((m) => ({ role: m.rol as "user" | "assistant", content: m.contenido }));
+      .map((m) => {
+        const meta = m.metadatos as
+          | { herramientasUsadas?: { herramienta: string; resultado: string }[] }
+          | null;
+        const bloque = meta?.herramientasUsadas?.length
+          ? " " +
+            meta.herramientasUsadas
+              .map((h) => `⟦tool⟧ ${h.herramienta} → ${h.resultado}⟦/tool⟧`)
+              .join(" ")
+          : "";
+        return { role: m.rol as "user" | "assistant", content: m.contenido + bloque };
+      });
 
     const herramientas = construirHerramientas(
       agente.id,
@@ -561,11 +585,16 @@ export async function POST(req: NextRequest) {
         },
       },
       tools: herramientas,
+      stopWhen: stepCountIs(8),
       // Persistir respuesta del asistente cuando el stream termine
       // (onFinish corre dentro del ciclo de vida de la respuesta: no se
       // pierde el mensaje en serverless, a diferencia de una promesa flotante).
-      onFinish: async ({ text }) => {
-        await persistirRespuestaAsistente(sesion.id, text, "MENSAJE");
+      onFinish: async ({ text, toolResults }) => {
+        const usadas = (toolResults ?? []).map((r) => ({
+          herramienta: r.toolName,
+          resultado: JSON.stringify(r.output ?? {}).slice(0, 600),
+        }));
+        await persistirRespuestaAsistente(sesion.id, text, "MENSAJE", usadas);
       },
     });
 
@@ -706,6 +735,8 @@ function construirHerramientas(
       TOOL_INVENTARIO_HERRAMIENTAS_MATERIALES,
       ctx
     );
+    tools["resumen_panel"] = aiTool(TOOL_RESUMEN_PANEL, ctx);
+    tools["resumen_cliente"] = aiTool(TOOL_RESUMEN_CLIENTE, ctx);
   }
 
   // búsqueda de conocimiento para todos

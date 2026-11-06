@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition } from "react";
 import { crearEventoCalendario, eliminarEventoCalendario } from "@/app/admin/(panel)/calendario/actions";
 
 const TIPO_LABEL: Record<string, string> = {
@@ -79,10 +79,6 @@ export function AdminCalendario({
   const [todoElDia, setTodoElDia] = useState(true);
   const [visibleCliente, setVisibleCliente] = useState(false);
   const [obraId, setObraId] = useState("");
-
-  useEffect(() => {
-    if (!obraId) setVisibleCliente(false);
-  }, [obraId]);
 
   const resetForm = () => {
     setTitulo("");
@@ -189,7 +185,10 @@ export function AdminCalendario({
             <label className="block text-sm font-medium mb-1">Obra</label>
             <select
               value={obraId}
-              onChange={(e) => setObraId(e.target.value)}
+              onChange={(e) => {
+                setObraId(e.target.value);
+                if (!e.target.value) setVisibleCliente(false);
+              }}
               className="w-full rounded border border-border bg-background px-3 py-2 text-sm"
             >
               <option value="">Sin obra (nota interna)</option>

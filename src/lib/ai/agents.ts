@@ -197,7 +197,11 @@ const TOOL_OBTENER_PROXIMOS_EVENTOS = {
 
 const TOOL_BUSCAR_CLIENTES = {
   name: "buscar_clientes",
-  description: "Busca clientes por nombre, email o teléfono.",
+  description:
+    "Busca clientes por nombre (aunque sea parcial), email o teléfono. " +
+    "PROTOCOLO: (1) resuelve tú al cliente con el dato que dé el admin, sin pedir más; " +
+    "(2) 1 resultado → úsalo y preséntalo; (3) varios → lista numerada y pregunta; " +
+    "(4) ninguno → dilo y sugiere otro dato. No repitas la misma búsqueda en el mismo turno.",
   parameters: z.object({ termino: z.string().min(1) }),
   execute: async ({ termino }: { termino: string }) => {
     const clientes = await prisma.cliente.findMany({
@@ -209,9 +213,15 @@ const TOOL_BUSCAR_CLIENTES = {
         ],
       },
       take: 10,
-      select: { id: true, nombre: true, email: true, telefono: true },
+      select: {
+        id: true,
+        nombre: true,
+        email: true,
+        telefono: true,
+        _count: { select: { cotizaciones: true, obras: true } },
+      },
     });
-    return clientes;
+    return { total: clientes.length, clientes };
   },
 };
 
@@ -231,11 +241,13 @@ const TOOL_RESUMEN_COTIZACION = {
 
 const TOOL_RESUMEN_AVANCE_OBRA = {
   name: "resumen_avance_obra",
-  description: "Devuelve el resumen de avance de una obra.",
-  parameters: z.object({ proyectoId: z.string().cuid() }),
-  execute: async ({ proyectoId }: { proyectoId: string }) => {
+  description:
+    "Devuelve el resumen de avance de una obra por su ID (obraId). Úsala cuando ya tengas " +
+    "el ID de la obra (por ejemplo, desde resumen_cliente).",
+  parameters: z.object({ obraId: z.string().cuid() }),
+  execute: async ({ obraId }: { obraId: string }) => {
     const obra = await prisma.obraActiva.findUnique({
-      where: { id: proyectoId },
+      where: { id: obraId },
       select: {
         id: true,
         direccionObra: true,
@@ -244,7 +256,7 @@ const TOOL_RESUMEN_AVANCE_OBRA = {
     });
     if (!obra) return { encontrado: false };
     const totalHitos = await prisma.hitosObra.count({
-      where: { obraId: proyectoId },
+      where: { obraId },
     });
     return {
       encontrado: true,
@@ -290,6 +302,118 @@ const TOOL_INVENTARIO_HERRAMIENTAS_MATERIALES = {
       }),
     ]);
     return { herramientas, materiales };
+  },
+};
+
+const TOOL_RESUMEN_PANEL = {
+  name: "resumen_panel",
+  description:
+    "Devuelve CONTEOS del negocio: clientes totales, clientes con obra activa, " +
+    "obras por estado (en_curso, pausada, finalizada, entregada), cotizaciones por estado " +
+    "(nuevo, contactado, contratado, no_concretado) y eventos de calendario de los próximos 7 días. " +
+    "Úsala SIEMPRE ante preguntas tipo '¿cuántos…?', '¿cuántas…?', '¿cómo va el panel?'.",
+  parameters: z.object({}),
+  execute: async () => {
+    const [
+      clientesTotal,
+      clientesConObra,
+      obrasEnCurso,
+      obrasPausadas,
+      obrasFinalizadas,
+      obrasEntregadas,
+      cotNuevas,
+      cotContactadas,
+      cotContratadas,
+      cotNoConcretadas,
+      eventos7Dias,
+    ] = await Promise.all([
+      prisma.cliente.count(),
+      prisma.obraActiva.findMany({
+        where: { estado: { in: ["en_curso", "pausada"] } },
+        select: { clienteId: true },
+        distinct: ["clienteId"],
+      }),
+      prisma.obraActiva.count({ where: { estado: "en_curso" } }),
+      prisma.obraActiva.count({ where: { estado: "pausada" } }),
+      prisma.obraActiva.count({ where: { estado: "finalizada" } }),
+      prisma.obraActiva.count({ where: { estado: "entregada" } }),
+      prisma.cotizacion.count({ where: { estado: "nuevo" } }),
+      prisma.cotizacion.count({ where: { estado: "contactado" } }),
+      prisma.cotizacion.count({ where: { estado: "contratado" } }),
+      prisma.cotizacion.count({ where: { estado: "no_concretado" } }),
+      prisma.eventoCalendario.count({
+        where: {
+          fechaInicio: {
+            gte: new Date(),
+            lte: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          },
+        },
+      }),
+    ]);
+    return {
+      clientes: { total: clientesTotal, conObraActiva: clientesConObra.length },
+      obras: {
+        en_curso: obrasEnCurso,
+        pausada: obrasPausadas,
+        finalizada: obrasFinalizadas,
+        entregada: obrasEntregadas,
+      },
+      cotizaciones: {
+        nuevo: cotNuevas,
+        contactado: cotContactadas,
+        contratado: cotContratadas,
+        no_concretado: cotNoConcretadas,
+      },
+      eventosCalendario7Dias: eventos7Dias,
+    };
+  },
+};
+
+const TOOL_RESUMEN_CLIENTE = {
+  name: "resumen_cliente",
+  description:
+    "Resumen 360° de UN cliente por su ID: contacto, cotizaciones (últimas 5, con estado), " +
+    "obras (con id, dirección y estado), próximo evento de calendario y contrato más reciente. " +
+    "Resuelve primero el ID con buscar_clientes; NUNCA le pidas este ID al administrador.",
+  parameters: z.object({ clienteId: z.string().cuid() }),
+  execute: async ({ clienteId }: { clienteId: string }) => {
+    const cliente = await prisma.cliente.findUnique({
+      where: { id: clienteId },
+      select: { id: true, nombre: true, email: true, telefono: true },
+    });
+    if (!cliente) return { encontrado: false };
+
+    const [cotizaciones, obras, proximoEvento, contratoReciente] = await Promise.all([
+      prisma.cotizacion.findMany({
+        where: { clienteId },
+        orderBy: { creadoEn: "desc" },
+        take: 5,
+        select: { id: true, tipoObra: true, estado: true, creadoEn: true },
+      }),
+      prisma.obraActiva.findMany({
+        where: { clienteId },
+        orderBy: { fechaInicio: "desc" },
+        select: {
+          id: true,
+          nombreComercial: true,
+          direccionObra: true,
+          estado: true,
+          fechaInicio: true,
+        },
+      }),
+      prisma.eventoCalendario.findFirst({
+        where: { obra: { clienteId }, fechaInicio: { gte: new Date() } },
+        orderBy: { fechaInicio: "asc" },
+        select: { titulo: true, fechaInicio: true, visibleCliente: true },
+      }),
+      prisma.contrato.findFirst({
+        where: { clienteId },
+        orderBy: { creadoEn: "desc" },
+        select: { id: true, montoTotal: true },
+      }),
+    ]);
+
+    return { encontrado: true, cliente, cotizaciones, obras, proximoEvento, contratoReciente };
   },
 };
 
@@ -436,10 +560,33 @@ Cuando necesites realizar una escritura (cambiar estado de cotización, agendar 
 Los contratos NO se crean desde el chat: si el administrador pide crear un contrato, indícale que lo haga desde el panel Contratos (o desde la cotización correspondiente) para respetar la regla de un solo contrato por cotización.
 
 Cuando el administrador te pida cambiar el estado de una cotización, agendar una visita o dejar una nota en el calendario de un cliente, usa las herramientas de propuesta y espera la confirmación. Para notas: el admin decide si es visible para el cliente; si no queda claro, pregunta antes de invocar la herramienta. Un evento puede colgar de una obra (visible para el cliente) o ser una nota interna sin obra (solo admin).
+
+## Herramientas de lectura (ÚSALAS ANTES de pedir datos al administrador)
+
+1. NUNCA le pidas al administrador IDs ni datos que puedas buscar tú con buscar_clientes
+   (un nombre parcial, un email o un teléfono son suficientes).
+2. 1 solo resultado → úsalo directamente y preséntalo: "Encontré a Juan Pérez (juan@…)".
+3. Varios resultados → muéstralos numerados (nombre — email — teléfono) y pregunta cuál.
+4. Ningún resultado → dilo y sugiere buscar con otro dato. No insistas con el mismo término.
+5. Los resultados de herramientas ya obtenidos en esta conversación SIGUEN VÁLIDOS:
+   no vuelvas a ejecutar la misma búsqueda.
+6. Preguntas de conteo ("¿cuántos…?") → resumen_panel.
+   Panorama completo de un cliente → resumen_cliente (una vez que tengas su ID).
+   Después puedes profundizar con resumen_cotizacion, resumen_avance_obra o proponer
+   acciones de escritura con los IDs que ya tienes.
+
+# EJEMPLO DE FLUJO CORRECTO
+Admin: "dame el resumen de cotizaciones de juan y deja una nota en su calendario para mañana"
+Tú: buscar_clientes("juan") → 1 resultado → resumen_cliente(id) → presentas cotizaciones
+    y obras → agregar_nota_calendario(con el obraId correcto y visibleCliente explícito)
+    → esperas confirmación. Todo en el mismo turno, sin preguntarle nada que ya pudiste
+    resolver tú.
 `.trim();
     },
     herramientas: [
       "buscar_clientes",
+      "resumen_panel",
+      "resumen_cliente",
       "resumen_cotizacion",
       "resumen_avance_obra",
       "inventario_herramientas_y_materiales",
@@ -476,6 +623,8 @@ export {
   TOOL_BUSCAR_CLIENTES,
   TOOL_RESUMEN_COTIZACION,
   TOOL_RESUMEN_AVANCE_OBRA,
+  TOOL_RESUMEN_PANEL,
+  TOOL_RESUMEN_CLIENTE,
   TOOL_INVENTARIO_HERRAMIENTAS_MATERIALES,
   obtenerUsuarioIdDeSesion,
 };
