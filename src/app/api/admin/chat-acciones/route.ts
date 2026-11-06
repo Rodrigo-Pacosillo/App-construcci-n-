@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { EstadoChatAccion } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 
@@ -16,7 +17,7 @@ export async function GET(req: NextRequest) {
     const estado = searchParams.get("estado") ?? "pendiente";
 
     const acciones = await prisma.chatAccion.findMany({
-      where: { estado },
+      where: { estado: estado as EstadoChatAccion },
       include: {
         sesion: {
           select: { sessionId: true, agente: true },

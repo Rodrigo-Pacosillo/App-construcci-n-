@@ -11,6 +11,7 @@ import { obtenerAgente } from "@/lib/ai/agents";
 import { obtenerConocimiento, buscarConocimiento } from "@/lib/ai/conocimiento";
 import { verificarChatToken } from "@/lib/tokens";
 import type { CategoriaConocimiento } from "@/lib/ai/conocimiento";
+import { chatInicioSchema, chatMensajeSchema } from "@/lib/validators/chat";
 import {
   TOOL_OBTENER_MIS_COTIZACIONES,
   TOOL_OBTENER_AVANCE_OBRA,
@@ -20,6 +21,9 @@ import {
   TOOL_RESUMEN_AVANCE_OBRA,
   TOOL_INVENTARIO_HERRAMIENTAS_MATERIALES,
 } from "@/lib/ai/agents";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 type ErrorCode =
   | "SESION_NO_ENCONTRADA"
@@ -43,15 +47,56 @@ function errorResponse(
 }
 
 /**
- * Limpia bloques de razonamiento (�````think`�````) de la respuesta de NVIDIA
- * y hace log para debuggear respuestas vacías.
+ * Limpia bloques de razonamiento (<think>...</think>) de la respuesta de NVIDIA
+ * antes de PERSISTIRLA (lo que ve el usuario también se limpia en el frontend).
  */
 function limpiarRespuestaIA(texto: string, contexto: string): string {
-  const limpio = texto.replace(/<think[\s\S]*?<\/think>/gi, "").trim();
-  console.error(
-    `[NVIDIA ${contexto}] Texto completo: "${texto.substring(0, 200)}" | Texto limpio: "${limpio.substring(0, 200)}"`
-  );
+  const limpio = texto.replace(/<think[\s\S]*?(<\/think>|$)/gi, "").trim();
+  if (process.env.NODE_ENV !== "production") {
+    console.log(
+      `[NVIDIA ${contexto}] texto=${texto.length} chars, limpio=${limpio.length} chars`
+    );
+  }
   return limpio;
+}
+
+/**
+ * Persiste la respuesta del asistente cuando el stream termina.
+ * Se invoca desde `onFinish` de streamText (NO como promesa flotante):
+ * onFinish corre dentro del ciclo de vida de la respuesta, así que el
+ * mensaje del asistente no se pierde en entornos serverless.
+ */
+async function persistirRespuestaAsistente(
+  sesionId: string,
+  textoCrudo: string,
+  contexto: string
+): Promise<void> {
+  try {
+    const textoLimpio = limpiarRespuestaIA(textoCrudo, contexto);
+    if (!textoLimpio) {
+      console.error(`[CHAT ${contexto}] el stream terminó sin texto`);
+      return;
+    }
+    await prisma.chatMensaje.create({
+      data: {
+        sesionId,
+        rol: "assistant",
+        contenido: textoLimpio,
+      },
+    });
+    await prisma.chatSesion.update({
+      where: { id: sesionId },
+      data: {
+        mensajeCount: { increment: 1 },
+        ultimoMensajeEn: new Date(),
+      },
+    });
+  } catch (persistError) {
+    console.error(
+      `[CHAT ${contexto}] Error persisting assistant message:`,
+      persistError
+    );
+  }
 }
 
 const MENSAJES_CONTEXTO = 20;
@@ -71,36 +116,43 @@ type Identidad = {
 
 type ChatBody = Record<string, unknown>;
 
+function obtenerToken(req: NextRequest, body?: ChatBody): string | undefined {
+  const { searchParams } = new URL(req.url);
+  const token = searchParams.get("t") || (body?.t as string | undefined);
+  return token || undefined;
+}
+
 async function resolverIdentidad(
   req: NextRequest,
   body: ChatBody
 ): Promise<Identidad> {
-  const { searchParams } = new URL(req.url);
-  const tokenPublico = searchParams.get("t") || body?.t;
+  const tokenPublico = obtenerToken(req, body);
 
   if (tokenPublico) {
+    let cotizacionId: string;
     try {
-      const cotizacionId = verificarChatToken(tokenPublico as string);
-      const cotizacion = await prisma.cotizacion.findUnique({
-        where: { id: cotizacionId },
-        select: {
-          id: true,
-          clienteId: true,
-          cliente: { select: { nombre: true } },
-        },
-      });
-      if (!cotizacion) {
-        throw new Error("TOKEN_INVALIDO");
-      }
-      return {
-        agente: "publico",
-        cotizacionId: cotizacion.id,
-        clienteNombre: cotizacion.cliente?.nombre,
-        sitioWeb: req.headers.get("origin") ?? undefined,
-      };
+      cotizacionId = verificarChatToken(tokenPublico);
     } catch {
       throw new Error("TOKEN_INVALIDO");
     }
+    const cotizacion = await prisma.cotizacion.findUnique({
+      where: { id: cotizacionId },
+      select: {
+        id: true,
+        clienteId: true,
+        cliente: { select: { nombre: true } },
+      },
+    });
+    if (!cotizacion) {
+      throw new Error("TOKEN_INVALIDO");
+    }
+    return {
+      agente: "publico",
+      cotizacionId: cotizacion.id,
+      clienteId: cotizacion.clienteId,
+      clienteNombre: cotizacion.cliente?.nombre,
+      sitioWeb: req.headers.get("origin") ?? undefined,
+    };
   }
 
   const session = await auth();
@@ -168,8 +220,6 @@ type AiTool = {
   execute: (args: ToolArgs) => Promise<unknown>;
 };
 
-
-
 function aiTool(
   def: unknown,
   ctx: { usuarioId?: string }
@@ -216,41 +266,56 @@ async function crearChatAccion(
    ───────────────────────────────────────────────────────────────────────────── */
 
 export async function POST(req: NextRequest) {
-  requireNvidiaKey();
-
   try {
+    requireNvidiaKey();
+
     const body = await req.json();
 
     // ── Caso 1: __INICIO__ ──
     if (body.mensaje === "__INICIO__") {
+      // Nunca confiar en el cliente: validar la forma del inicio con Zod.
+      const inicio = chatInicioSchema.safeParse(body);
+      if (!inicio.success) {
+        return errorResponse(
+          inicio.error.issues[0]?.message ?? "Solicitud de inicio inválida",
+          "VALIDACION",
+          400
+        );
+      }
       const identidad = await resolverIdentidad(req, body);
       const agente = obtenerAgente(identidad.agente);
 
-      const clienteId =
-        identidad.agente === "publico"
-          ? await (async () => {
-              const c = await prisma.cotizacion.findUnique({
-                where: { id: identidad.cotizacionId! },
-                select: { clienteId: true },
-              });
-              return c?.clienteId ?? "";
-            })()
-          : identidad.clienteId ?? "";
-
       // Usar sessionId del cliente si se provee, sino generar uno nuevo
-      const clientSessionId = (body.sessionId as string) ?? crypto.randomUUID();
+      let clientSessionId =
+        typeof body.sessionId === "string" && body.sessionId.length > 0
+          ? body.sessionId
+          : crypto.randomUUID();
 
-      // Verificar si la sesión ya existe (reconexión)
+      // Verificar si la sesión ya existe (reconexión) y que pertenezca a esta identidad
       let sesion = await prisma.chatSesion.findUnique({
         where: { sessionId: clientSessionId },
       });
+
+      const sesionAjena =
+        sesion &&
+        ((sesion.agente === "publico" &&
+          sesion.cotizacionId !== identidad.cotizacionId) ||
+          (sesion.agente !== "publico" &&
+            identidad.usuarioId != null &&
+            sesion.usuarioId !== identidad.usuarioId));
+
+      if (sesionAjena) {
+        // No reutilizar sesiones de otra persona u otra cotización: crear una nueva
+        clientSessionId = crypto.randomUUID();
+        sesion = null;
+      }
 
       if (!sesion) {
         sesion = await prisma.chatSesion.create({
           data: {
             sessionId: clientSessionId,
             agente: identidad.agente,
-            clienteId,
+            clienteId: identidad.clienteId ?? null,
             usuarioId: identidad.usuarioId ?? null,
             cotizacionId: identidad.cotizacionId ?? null,
             estado: "activa",
@@ -307,10 +372,9 @@ export async function POST(req: NextRequest) {
 
       const resultado = streamText({
         model: nvidiaProvider(agente.model),
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: "__INICIO__" },
-        ],
+        // AI SDK 7: el system prompt va en `system`, no como mensaje del array.
+        system: systemPrompt,
+        messages: [{ role: "user", content: "__INICIO__" }],
         temperature: agente.temperature,
         maxOutputTokens: agente.maxTokens,
         providerOptions: {
@@ -319,41 +383,27 @@ export async function POST(req: NextRequest) {
           },
         },
         tools: herramientas,
-      });
-
-      // Persistir respuesta del asistente cuando el stream termine
-      resultado.text.then(async (textoCompleto) => {
-        try {
-          const textoLimpio = limpiarRespuestaIA(textoCompleto, "INICIO");
-          await prisma.chatMensaje.create({
-            data: {
-              sesionId: sesion.id,
-              rol: "assistant",
-              contenido: textoLimpio,
-            },
-          });
-
-          await prisma.chatSesion.update({
-            where: { id: sesion.id },
-            data: { mensajeCount: { increment: 1 } },
-          });
-        } catch (persistError) {
-          console.error("[CHAT INICIO] Error persisting assistant message:", persistError);
-        }
+        // Persistir respuesta del asistente cuando el stream termine
+        // (onFinish corre dentro del ciclo de vida de la respuesta: no se
+        // pierde el mensaje en serverless, a diferencia de una promesa flotante).
+        onFinish: async ({ text }) => {
+          await persistirRespuestaAsistente(sesion.id, text, "INICIO");
+        },
       });
 
       return createUIMessageStreamResponse({ stream: resultado.toUIMessageStream() });
     }
 
     // ── Caso 2: mensaje normal ──
-    const { mensaje, sessionId } = body;
-    if (!mensaje || !sessionId) {
+    const entrada = chatMensajeSchema.safeParse(body);
+    if (!entrada.success) {
       return errorResponse(
-        "mensaje y sessionId son requeridos",
+        entrada.error.issues[0]?.message ?? "mensaje y sessionId son requeridos",
         "VALIDACION",
         400
       );
     }
+    const { mensaje, sessionId } = entrada.data;
 
     const sesion = await prisma.chatSesion.findUnique({
       where: { sessionId },
@@ -367,6 +417,33 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // ── Identidad y propiedad de la sesión ──
+    // Sesiones públicas: exigir token válido de la misma cotización.
+    // Sesiones con usuario: exigir ser el propietario o un admin.
+    if (sesion.agente === "publico") {
+      const token = obtenerToken(req, body);
+      if (!token) {
+        return errorResponse("Token requerido", "TOKEN_INVALIDO", 401);
+      }
+      try {
+        if (verificarChatToken(token) !== sesion.cotizacionId) {
+          return errorResponse("Token no coincide con la sesión", "TOKEN_INVALIDO", 401);
+        }
+      } catch {
+        return errorResponse("Token inválido o expirado", "TOKEN_INVALIDO", 401);
+      }
+    } else if (sesion.usuarioId) {
+      const session = await auth();
+      const userRole = session?.user?.role;
+      const userId = session?.user?.id;
+      const esPropietario = userId && userId === sesion.usuarioId;
+      if (userRole !== "admin" && !esPropietario) {
+        return errorResponse("No autorizado", "NO_AUTORIZADO", 403);
+      }
+    } else {
+      return errorResponse("No autorizado para esta sesión", "NO_AUTORIZADO", 403);
+    }
+
     const agente = obtenerAgente(sesion.agente as AgenteId);
 
     if (agente.limiteMensajesSesion !== null && sesion.mensajeCount >= agente.limiteMensajesSesion) {
@@ -377,14 +454,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    await prisma.chatMensaje.create({
-      data: { sesionId: sesion.id, rol: "user", contenido: mensaje },
-    });
-
-    const historial = await prisma.chatMensaje.findMany({
+    // Historial ANTES de guardar el mensaje nuevo (evita duplicarlo al final)
+    const historialPrevio = await prisma.chatMensaje.findMany({
       where: { sesionId: sesion.id },
       orderBy: { creadoEn: "desc" },
       take: MENSAJES_CONTEXTO,
+    });
+
+    await prisma.chatMensaje.create({
+      data: { sesionId: sesion.id, rol: "user", contenido: mensaje },
     });
 
     const conocimiento = await obtenerConocimiento({
@@ -396,24 +474,34 @@ export async function POST(req: NextRequest) {
       sesion.cotizacionId &&
       (await prisma.cotizacion.findUnique({ where: { id: sesion.cotizacionId } }));
 
+    // Nombre real del cliente vinculado a la sesión (para el prompt)
+    const clienteNombre = sesion.clienteId
+      ? (
+          await prisma.cliente.findUnique({
+            where: { id: sesion.clienteId },
+            select: { nombre: true },
+          })
+        )?.nombre ?? "Cliente"
+      : "Cliente";
+
     const systemPrompt = await agente.sistemaPromptBuilder({
       datosContexto: {
         cotizacion: cotizacionData,
-        clienteNombre: "Cliente",
+        clienteNombre,
         sitioWeb: req.headers.get("origin") ?? undefined,
       },
       conocimiento,
     });
 
-    const mensajesHistorial = historial
+    const mensajesHistorial = historialPrevio
       .slice()
       .reverse()
       .map((m) => ({ role: m.rol as "user" | "assistant", content: m.contenido }));
 
     const herramientas = construirHerramientas(
-        agente.id,
-        sesion.usuarioId ?? undefined,
-        sesion.id
+      agente.id,
+      sesion.usuarioId ?? undefined,
+      sesion.id
     );
 
     const result = streamText({
@@ -428,27 +516,12 @@ export async function POST(req: NextRequest) {
         },
       },
       tools: herramientas,
-    });
-
-    // Persistir respuesta del asistente cuando el stream termine
-    result.text.then(async (textoCompleto) => {
-      try {
-        const textoLimpio = limpiarRespuestaIA(textoCompleto, "MENSAJE");
-        await prisma.chatMensaje.create({
-          data: {
-            sesionId: sesion.id,
-            rol: "assistant",
-            contenido: textoLimpio,
-          },
-        });
-
-        await prisma.chatSesion.update({
-          where: { id: sesion.id },
-          data: { mensajeCount: { increment: 1 } },
-        });
-      } catch (persistError) {
-        console.error("[CHAT MENSAJE] Error persisting assistant message:", persistError);
-      }
+      // Persistir respuesta del asistente cuando el stream termine
+      // (onFinish corre dentro del ciclo de vida de la respuesta: no se
+      // pierde el mensaje en serverless, a diferencia de una promesa flotante).
+      onFinish: async ({ text }) => {
+        await persistirRespuestaAsistente(sesion.id, text, "MENSAJE");
+      },
     });
 
     return createUIMessageStreamResponse({ stream: result.toUIMessageStream() });
@@ -460,6 +533,13 @@ export async function POST(req: NextRequest) {
     }
     if (mensaje === "NO_AUTORIZADO") {
       return errorResponse("No autorizado", "NO_AUTORIZADO", 403);
+    }
+    if (mensaje.startsWith("NVIDIA_API_KEY")) {
+      return errorResponse(
+        "El servicio de IA no está configurado.",
+        "PROVEEDOR_IA",
+        503
+      );
     }
     return errorResponse(
       "Lo siento, tuve un problema técnico. Intenta de nuevo en unos segundos.",
@@ -485,9 +565,6 @@ export async function GET(req: NextRequest) {
 
     const sesion = await prisma.chatSesion.findUnique({
       where: { sessionId },
-      include: {
-        mensajes: { orderBy: { creadoEn: "asc" }, take: MENSAJES_CONTEXTO },
-      },
     });
 
     if (!sesion) {
@@ -512,7 +589,7 @@ export async function GET(req: NextRequest) {
       } else {
         return errorResponse("No autorizado para ver esta sesión", "NO_AUTORIZADO", 403);
       }
-    } else if (sesion.cotizacionId && tokenPublico) {
+    } else if (sesion.agente === "publico" && sesion.cotizacionId && tokenPublico) {
       // Sesión pública: validar token
       try {
         const cotizacionIdValido = verificarChatToken(tokenPublico);
@@ -527,10 +604,18 @@ export async function GET(req: NextRequest) {
       return errorResponse("No autorizado para ver esta sesión", "NO_AUTORIZADO", 403);
     }
 
+    // Últimos N mensajes en orden ascendente (los más recientes, no los más viejos)
+    const mensajes = await prisma.chatMensaje.findMany({
+      where: { sesionId: sesion.id },
+      orderBy: { creadoEn: "desc" },
+      take: MENSAJES_CONTEXTO,
+    });
+    mensajes.reverse();
+
     return NextResponse.json({
       agente: sesion.agente,
       estado: sesion.estado,
-      mensajes: sesion.mensajes.map((m) => ({
+      mensajes: mensajes.map((m) => ({
         id: m.id,
         rol: m.rol as "user" | "assistant",
         contenido: m.contenido,
@@ -619,33 +704,6 @@ function construirHerramientas(
         return {
           pendiente: true,
           mensaje: `Se ha creado una propuesta para cambiar el estado de la cotización ${cotizacionId} a "${nuevoEstado}". Un administrador debe confirmar esta acción.`,
-        };
-      },
-    };
-
-    tools["proponer_crear_contrato_borrador"] = {
-      description:
-        "Propone crear un contrato borrador para un cliente. Requiere confirmación humana.",
-      inputSchema: z.object({
-        clienteId: z.string().cuid(),
-        montoTotal: z.number().optional(),
-        observaciones: z.string().optional(),
-      }),
-      execute: async (args: ToolArgs) => {
-        const { clienteId, montoTotal, observaciones } = args as {
-          clienteId: string;
-          montoTotal?: number;
-          observaciones?: string;
-        };
-        await crearChatAccion(
-          sesionId,
-          usuarioId ?? "",
-          "proponer_crear_contrato_borrador",
-          { clienteId, montoTotal, observaciones }
-        );
-        return {
-          pendiente: true,
-          mensaje: `Se ha creado una propuesta para crear un contrato borrador para el cliente ${clienteId}. Un administrador debe confirmar esta acción.`,
         };
       },
     };
