@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { normalizarTexto, normalizarTelefono, tokenizar } from "../normalizar";
+import { normalizarTexto, normalizarTelefono, tokenizar, esCorreo } from "../normalizar";
 
 export type Resolucion<T> =
   | { estado: "unico"; valor: T }
