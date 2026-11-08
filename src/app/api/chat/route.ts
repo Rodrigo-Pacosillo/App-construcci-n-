@@ -376,10 +376,10 @@ export async function POST(req: NextRequest) {
         const { TIPO_OBRA_LABELS, TIPO_CONSTRUCCION_LABELS, RANGO_M2_LABELS, PLAZO_INICIO_LABELS } = await import("@/lib/constants");
         const saludo = await construirSaludoPublico({
           nombre: identidad.clienteNombre ?? "Cliente",
-          tipoObraLabel: (TIPO_OBRA_LABELS as any)[cot?.tipoObra as any] ?? String(cot?.tipoObra ?? ""),
-          tipoConstruccionLabel: (TIPO_CONSTRUCCION_LABELS as any)[cot?.tipoConstruccion as any] ?? String(cot?.tipoConstruccion ?? ""),
-          rangoM2Label: (RANGO_M2_LABELS as any)[cot?.rangoM2 as any] ?? String(cot?.rangoM2 ?? ""),
-          plazoLabel: (PLAZO_INICIO_LABELS as any)[cot?.plazoInicio as any] ?? String(cot?.plazoInicio ?? ""),
+          tipoObraLabel: (TIPO_OBRA_LABELS as Record<string, string>)[String(cot?.tipoObra ?? "")] ?? String(cot?.tipoObra ?? ""),
+          tipoConstruccionLabel: (TIPO_CONSTRUCCION_LABELS as Record<string, string>)[String(cot?.tipoConstruccion ?? "")] ?? String(cot?.tipoConstruccion ?? ""),
+          rangoM2Label: (RANGO_M2_LABELS as Record<string, string>)[String(cot?.rangoM2 ?? "")] ?? String(cot?.rangoM2 ?? ""),
+          plazoLabel: (PLAZO_INICIO_LABELS as Record<string, string>)[String(cot?.plazoInicio ?? "")] ?? String(cot?.plazoInicio ?? ""),
           ubicacionObra: cot?.ubicacionObra,
           requerimiento: cot?.requerimiento,
         });
@@ -387,7 +387,7 @@ export async function POST(req: NextRequest) {
         sugerencias = saludo.sugerencias;
       } else if (identidad.agente === "cliente" && identidad.clienteId) {
         const cl = await prisma.cliente.findUnique({ where: { id: identidad.clienteId }, include: { obras: { take: 1 } } });
-        const obra = (cl as any)?.obras?.[0];
+        const obra = (cl as { obras?: { nombreComercial: string | null; direccionObra: string; estado: string; progreso: number }[] } | null)?.obras?.[0];
         const { construirSaludoCliente } = await import("@/lib/ai/saludos/cliente");
         const saludo = await construirSaludoCliente({
           nombre: identidad.clienteNombre ?? "Cliente",
