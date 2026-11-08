@@ -1,4 +1,5 @@
 import type { Tool } from "ai";
+import { tool } from "ai";
 import type { ToolContext } from "@/lib/ai/contexto";
 import { buscarConocimientoTool } from "./publico/conocimiento";
 import { miResumenTool } from "./cliente/mi_resumen";
@@ -23,14 +24,41 @@ import { proponerCambioEstadoCotizacionTool } from "./admin/proponer_cambio_esta
 import { proponerEventoCalendarioTool } from "./admin/proponer_evento_calendario";
 import { buscarConocimientoAdminTool } from "./admin/buscar_conocimiento";
 
+/**
+ * Compacta la salida para el modelo: elimina claves con forma de ID y campos de UI.
+ * La salida completa (con accionId, ui, etc.) sigue llegando a la UI.
+ */
+function compactarParaModelo(valor: unknown): unknown {
+  if (Array.isArray(valor)) return valor.map(compactarParaModelo);
+  if (valor && typeof valor === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(valor as Record<string, unknown>)) {
+      if (/^id$|Id$|accionId|ui$/i.test(k)) continue;
+      out[k] = compactarParaModelo(v);
+    }
+    return out;
+  }
+  return valor;
+}
+
+function envolver(toolOriginal: Tool): Tool {
+  return {
+    ...toolOriginal,
+    toModelOutput: async ({ output }) => ({
+      type: "json",
+      value: compactarParaModelo(output),
+    }),
+  } as Tool;
+}
+
 export function toolsPara(agente: "publico" | "cliente" | "admin", ctx: ToolContext): Record<string, Tool> {
+  let base: Record<string, Tool>;
   if (agente === "publico") {
-    return {
+    base = {
       buscar_conocimiento: buscarConocimientoTool(ctx),
     };
-  }
-  if (agente === "cliente") {
-    return {
+  } else if (agente === "cliente") {
+    base = {
       mi_resumen: miResumenTool(ctx),
       mis_cotizaciones: misCotizacionesTool(ctx),
       mi_obra: miObraTool(ctx),
@@ -40,20 +68,26 @@ export function toolsPara(agente: "publico" | "cliente" | "admin", ctx: ToolCont
       proponer_nota_calendario: proponerNotaCalendarioTool(ctx),
       buscar_conocimiento: buscarConocimientoClienteTool(ctx),
     };
+  } else {
+    base = {
+      buscar_clientes: buscarClientesTool(ctx),
+      ficha_cliente: fichaClienteTool(ctx),
+      listar_cotizaciones: listarCotizacionesTool(ctx),
+      listar_obras: listarObrasTool(ctx),
+      detalle_obra: detalleObraTool(ctx),
+      estado_financiero: estadoFinancieroTool(ctx),
+      agenda: agendaTool(ctx),
+      inventario: inventarioTool(ctx),
+      equipo_obra: equipoObraTool(ctx),
+      pendientes: pendientesTool(ctx),
+      proponer_cambio_estado_cotizacion: proponerCambioEstadoCotizacionTool(ctx),
+      proponer_evento_calendario: proponerEventoCalendarioTool(ctx),
+      buscar_conocimiento: buscarConocimientoAdminTool(ctx),
+    };
   }
-  return {
-    buscar_clientes: buscarClientesTool(ctx),
-    ficha_cliente: fichaClienteTool(ctx),
-    listar_cotizaciones: listarCotizacionesTool(ctx),
-    listar_obras: listarObrasTool(ctx),
-    detalle_obra: detalleObraTool(ctx),
-    estado_financiero: estadoFinancieroTool(ctx),
-    agenda: agendaTool(ctx),
-    inventario: inventarioTool(ctx),
-    equipo_obra: equipoObraTool(ctx),
-    pendientes: pendientesTool(ctx),
-    proponer_cambio_estado_cotizacion: proponerCambioEstadoCotizacionTool(ctx),
-    proponer_evento_calendario: proponerEventoCalendarioTool(ctx),
-    buscar_conocimiento: buscarConocimientoAdminTool(ctx),
-  };
+  const out: Record<string, Tool> = {};
+  for (const [k, v] of Object.entries(base)) {
+    out[k] = envolver(v);
+  }
+  return out;
 }
