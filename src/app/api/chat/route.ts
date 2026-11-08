@@ -43,7 +43,7 @@ function errorResponse(
 
 /**
  * Limpia bloques de razonamiento (<think>...</think>) de la respuesta de NVIDIA
- * antes de PERSISTIRLA (lo que ve el usuario tambiÃ©n se limpia en el frontend).
+ * antes de PERSISTIRLA (lo que ve el usuario también se limpia en el frontend).
  */
 function limpiarRespuestaIA(texto: string, contexto: string): string {
   const limpio = texto.replace(/<think[\s\S]*?(<\/think>|$)/gi, "").trim();
@@ -58,7 +58,7 @@ function limpiarRespuestaIA(texto: string, contexto: string): string {
 /**
  * Persiste la respuesta del asistente cuando el stream termina.
  * Se invoca desde `onFinish` de streamText (NO como promesa flotante):
- * onFinish corre dentro del ciclo de vida de la respuesta, asÃ­ que el
+ * onFinish corre dentro del ciclo de vida de la respuesta, así que el
  * mensaje del asistente no se pierde en entornos serverless.
  */
 type HerramientaUsada = { herramienta: string; resultado: string };
@@ -255,7 +255,7 @@ function aiTool(
 }
 
 /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-   Herramientas de escritura (proponer_* â†’ ChatAccion pendiente)
+   Herramientas de escritura (proponer_* →’ ChatAccion pendiente)
    â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 async function crearChatAccion(
@@ -300,7 +300,7 @@ async function nombreDeCliente(clienteId: string): Promise<string> {
   return cliente?.nombre ?? "Cliente sin nombre";
 }
 
-/** Mensaje legible para que el modelo pregunte cuÃ¡l obra usar. */
+/** Mensaje legible para que el modelo pregunte cuál obra usar. */
 function mensajeObraNoResuelta(
   resolucion: Awaited<ReturnType<typeof resolverObraDeCliente>>
 ): string | null {
@@ -308,11 +308,11 @@ function mensajeObraNoResuelta(
     const lista = resolucion.candidatas
       .map((c, i) => `${i + 1}) ${c.etiqueta}`)
       .join("  ");
-    return `El cliente tiene varias obras activas. PregÃºntale al admin a cuÃ¡l corresponde: ${lista}`;
+    return `El cliente tiene varias obras activas. PregÃºntale al admin a cuál corresponde: ${lista}`;
   }
   if (resolucion.estado === "sinActivas") {
     const reciente = resolucion.recientes[0];
-    return `El cliente no tiene obras activas (solo finalizada/entregada). Pregunta si va con la obra mÃ¡s reciente${
+    return `El cliente no tiene obras activas (solo finalizada/entregada). Pregunta si va con la obra más reciente${
       reciente ? ` (${reciente.etiqueta})` : ""
     }, o si es una nota interna sin obra. Si el admin elige sin obra, vuelve a invocar la herramienta con sinObra=true.`;
   }
@@ -452,7 +452,7 @@ export async function POST(req: NextRequest) {
     }
 
     // â”€â”€ Identidad y propiedad de la sesiÃ³n â”€â”€
-    // Sesiones pÃºblicas: exigir token vÃ¡lido de la misma cotizaciÃ³n.
+    // Sesiones pÃºblicas: exigir token válido de la misma cotizaciÃ³n.
     // Sesiones con usuario: exigir ser el propietario o un admin.
     if (sesion.agente === "publico") {
       const token = obtenerToken(req, body);
@@ -464,7 +464,7 @@ export async function POST(req: NextRequest) {
           return errorResponse("Token no coincide con la sesiÃ³n", "TOKEN_INVALIDO", 401);
         }
       } catch {
-        return errorResponse("Token invÃ¡lido o expirado", "TOKEN_INVALIDO", 401);
+        return errorResponse("Token inválido o expirado", "TOKEN_INVALIDO", 401);
       }
     } else if (sesion.usuarioId) {
       const session = await auth();
@@ -482,7 +482,7 @@ export async function POST(req: NextRequest) {
 
     if (agente.limiteMensajesSesion !== null && sesion.mensajeCount >= agente.limiteMensajesSesion) {
       return errorResponse(
-        "Has alcanzado el lÃ­mite de mensajes para esta sesiÃ³n.",
+        "Has alcanzado el límite de mensajes para esta sesiÃ³n.",
         "SESION_LIMITE",
         429
       );
@@ -519,7 +519,7 @@ export async function POST(req: NextRequest) {
       : "Cliente";
 
     // Datos del cliente (mismo patrÃ³n que __INICIO__) para no perder contexto
-    // desde el segundo turno (corrige H03 de forma mÃ­nima; se rehace en Fase 4/6).
+    // desde el segundo turno (corrige H03 de forma mínima; se rehace en Fase 4/6).
     const datosCliente =
       sesion.agente === "cliente" && sesion.clienteId
         ? await (async () => {
@@ -559,7 +559,7 @@ export async function POST(req: NextRequest) {
         const bloque = meta?.herramientasUsadas?.length
           ? " " +
             meta.herramientasUsadas
-              .map((h) => `âŸ¦toolâŸ§ ${h.herramienta} â†’ ${h.resultado}âŸ¦/toolâŸ§`)
+              .map((h) => `"¦tool"§ ${h.herramienta} →’ ${h.resultado}"¦/tool"§`)
               .join(" ")
           : "";
         return { role: m.rol as "user" | "assistant", content: m.contenido + bloque };
@@ -609,20 +609,20 @@ export async function POST(req: NextRequest) {
     console.error("[CHAT] Error inesperado:", error);
     const mensaje = error instanceof Error ? error.message : "Error desconocido";
     if (mensaje === "TOKEN_INVALIDO") {
-      return errorResponse("Token invÃ¡lido o expirado", "TOKEN_INVALIDO", 401);
+      return errorResponse("Token inválido o expirado", "TOKEN_INVALIDO", 401);
     }
     if (mensaje === "NO_AUTORIZADO") {
       return errorResponse("No autorizado", "NO_AUTORIZADO", 403);
     }
     if (mensaje.startsWith("NVIDIA_API_KEY")) {
       return errorResponse(
-        "El servicio de IA no estÃ¡ configurado.",
+        "El servicio de IA no está configurado.",
         "PROVEEDOR_IA",
         503
       );
     }
     return errorResponse(
-      "Lo siento, tuve un problema tÃ©cnico. Intenta de nuevo en unos segundos.",
+      "Lo siento, tuve un problema técnico. Intenta de nuevo en unos segundos.",
       "DESCONOCIDO",
       500
     );
@@ -630,7 +630,7 @@ export async function POST(req: NextRequest) {
 }
 
 /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-   GET /api/chat?sessionId=... â€” historial
+   GET /api/chat?sessionId=... "” historial
    â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 export async function GET(req: NextRequest) {
@@ -677,14 +677,14 @@ export async function GET(req: NextRequest) {
           return errorResponse("Token no coincide con la sesiÃ³n", "TOKEN_INVALIDO", 401);
         }
       } catch {
-        return errorResponse("Token invÃ¡lido o expirado", "TOKEN_INVALIDO", 401);
+        return errorResponse("Token inválido o expirado", "TOKEN_INVALIDO", 401);
       }
     } else {
       // SesiÃ³n sin propietario identificable
       return errorResponse("No autorizado para ver esta sesiÃ³n", "NO_AUTORIZADO", 403);
     }
 
-    // Ãšltimos N mensajes en orden ascendente (los mÃ¡s recientes, no los mÃ¡s viejos)
+    // Ãšltimos N mensajes en orden ascendente (los más recientes, no los más viejos)
     const mensajes = await prisma.chatMensaje.findMany({
       where: { sesionId: sesion.id },
       orderBy: { creadoEn: "desc" },
@@ -705,7 +705,7 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     console.error("[CHAT GET] Error inesperado:", error);
     return errorResponse(
-      "Lo siento, tuve un problema tÃ©cnico.",
+      "Lo siento, tuve un problema técnico.",
       "DESCONOCIDO",
       500
     );

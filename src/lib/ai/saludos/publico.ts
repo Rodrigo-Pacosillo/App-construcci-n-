@@ -8,14 +8,14 @@ export async function construirSaludoPublico(datos: {
   requerimiento?: string | null;
 }) {
   const lines: string[] = [];
-  lines.push(`¡Hola, \`${datos.nombre}\`! Gracias por solicitar su cotizacion en Constr-art.`);
+  lines.push(`¡Hola, \`${datos.nombre}\`! Gracias por solicitar su cotización en Constr-art.`);
   lines.push("Esto es lo que recibimos:");
-  lines.push(`• Obra: \`${datos.tipoObraLabel}\` · Construccion: \`${datos.tipoConstruccionLabel}\` · Superficie: \`${datos.rangoM2Label}\``);
-  lines.push(`• Inicio: \`${datos.plazoLabel}\` · Ubicacion: \`${datos.ubicacionObra ?? "No especificada"}\``);
+  lines.push(`• Obra: \`${datos.tipoObraLabel}\` · Construcción: \`${datos.tipoConstruccionLabel}\` · Superficie: \`${datos.rangoM2Label}\``);
+  lines.push(`• Inicio: \`${datos.plazoLabel}\` · Ubicación: \`${datos.ubicacionObra ?? "No especificada"}\``);
   if (datos.requerimiento) {
     lines.push(`• Su requerimiento: \`${String(datos.requerimiento).slice(0, 200)}\``);
   }
-  lines.push("Nuestro equipo la revisara y le contactara en 24-48 horas habiles. Mientras tanto, puedo resolver sus dudas.");
-  const sugerencias = ["¿Que sistema le conviene: construccion en seco o tradicional?", "¿Cuanto tarda una obra como la suya?"];
+  lines.push("Nuestro equipo la revisará y le contactará en 24-48 horas hábiles. Mientras tanto, puedo resolver sus dudas.");
+  const sugerencias = ["¿Qué sistema le conviene: construcción en seco o tradicional?", "¿Cuánto tarda una obra como la suya?"];
   return { texto: lines.join("\n"), sugerencias };
 }
