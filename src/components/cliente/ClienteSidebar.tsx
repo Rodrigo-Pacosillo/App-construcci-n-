@@ -18,7 +18,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { CLIENTE_NAV_SECTIONS } from "@/lib/constants";
-import { ChatPanel } from "@/components/chat/ChatPanel";
+import { ChatShell } from "@/components/chat/ChatShell";
 
 const ICONS: Record<string, LucideIcon> = {
   LayoutDashboard,
@@ -273,7 +273,8 @@ export function ClienteSidebar({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="h-[calc(100vh-2rem)] overflow-hidden flex flex-col">
-              <ChatPanel
+              <ChatShell
+                esAdmin={false}
                 clienteId={clienteId}
                 cotizacionId={cotizacionId}
                 clienteNombre={clienteNombre}

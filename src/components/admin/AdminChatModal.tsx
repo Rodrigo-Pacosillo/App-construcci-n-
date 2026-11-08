@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { X } from "lucide-react";
-import { ChatPanel } from "@/components/chat/ChatPanel";
+import { ChatShell } from "@/components/chat/ChatShell";
 
 interface AdminChatModalProps {
   sessionId: string;
@@ -35,7 +35,7 @@ export function AdminChatModal({ sessionId, onClose }: AdminChatModalProps) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="h-[calc(100vh-2rem)] overflow-hidden flex flex-col">
-          <ChatPanel esAdmin={true} initialSessionId={sessionId} />
+          <ChatShell esAdmin={true} initialSessionId={sessionId} />
         </div>
       </div>
     </div>
