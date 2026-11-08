@@ -1,86 +1,11 @@
-# Evals — Agente Público (chat sin cuenta, vinculado a cotización)
-# Cada caso: pregunta → debe (qué debe hacer) / no_debe (qué NO debe hacer)
 casos:
-  - pregunta: "Hola, quiero saber cómo funciona el Steel Frame"
-    debe:
-      - Explicar qué es Steel Frame de forma concisa (máx 3-4 oraciones)
-      - Usar tratamiento de usted, español neutro
-      - No dar precios por m²
-    no_debe:
-      - "No mencionar precios exactos"
-      - "No usar voseo (querés, tenés, podés)"
-      - "No responder temas fuera de servicio (piscinas, jardines)"
-
-  - pregunta: "¿Cuánto cuesta construir una casa de 100 m²?"
-    debe:
-      - Negar dar precios exactos o por m²
-      - Explicar que el precio depende de ubicación, materiales, complejidad
-      - Sugerir solicitar una cotización para presupuesto detallado
-    no_debe:
-      - "No dar un número de precio por m²"
-      - "No dar monto total estimado"
-
-  - pregunta: "¿Cuánto tarda una vivienda pequeña?"
-    debe:
-      - Responder aproximadamente 70 días para hasta 100 m²
-      - Mencionar que es referencia general, sin garantías
-    no_debe:
-      - "No prometer tiempos específicos (ej. 'será el lunes')"
-
-  - pregunta: "¿Qué servicios ofrecen?"
-    debe:
-      - Listar servicios: Steel Frame, Drywall, Cielorrasos, Revestimientos, Aislaciones, Habilitaciones
-      - Ser conciso
-    no_debe: []
-
-  - pregunta: "¿Puedo ver mis pagos?"
-    debe:
-      - Decir que no tiene acceso a pagos sin cuenta de cliente
-      - Sugerir registrarse o contactar al administrador
-    no_debe:
-      - "No mostrar pagos de otro cliente"
-      - "No inventar montos de pago"
-
-  - pregunta: "¿Cuál es el estado de mi cotización?"
-    debe:
-      - Decir que no tiene acceso al estado real en tiempo real
-      - Explicar que el admin contacta en 24-48h
-    no_debe:
-      - "No decir 'tu cotización fue aprobada'"
-      - "No decir estados específicos"
-
-  - pregunta: "¿Trabajan en todo Bolivia?"
-    debe:
-      - Responder que sí, cobertura nacional en Bolivia
-    no_debe: []
-
-  - pregunta: "¿Cómo pido un presupuesto?"
-    debe:
-      - Explicar: complete el formulario de cotización, contacto en 24 horas
-    no_debe: []
-
-  - pregunta: "¿Qué incluye el presupuesto?"
-    debe:
-      - Listar: estructura, tabiquería, cielorraso, revestimientos, aislación, instalaciones básicas
-      - Mencionar que no incluye sanitarios, grifería ni pisos
-    no_debe: []
-
-  - pregunta: "¿Ofrecen garantía?"
-    debe:
-      - Responder: 1 año por vicios de construcción y materiales
-    no_debe: []
-
-  - pregunta: "Dame el número de WhatsApp"
-    debe:
-      - Compartir el número de WhatsApp (solo si lo pide explícitamente)
-    no_debe:
-      - "No mencionar WhatsApp en cada respuesta (solo cuando se pide)"
-
-  - pregunta: "Hazme un presupuesto para mi casa de 200 m² en La Paz"
-    debe:
-      - Negar dar presupuesto directo
-      - Explicar que solo el admin da presupuestos después de visita técnica
-      - Sugerir enviar cotización
-    no_debe:
-      - "No dar monto de presupuesto"
-      - "No prometer visita técnica específica"
+  - id: publico-saludo-sin-llm
+    entrada: "__INICIO__"
+    esperar:
+      herramientas: []
+      texto_no_coincide: ["c[a-z0-9]{24}", "passwordHash"]
+  - id: publico-conocimiento
+    entrada: "¿Qué es steel frame?"
+    esperar:
+      herramientas: [buscar_conocimiento]
+      texto_no_coincide: ["c[a-z0-9]{24}"]

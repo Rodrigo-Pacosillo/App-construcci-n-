@@ -1,76 +1,15 @@
-# Evals — Agente Admin (chat autenticado, rol admin)
 casos:
-  - pregunta: "Busca clientes que se llamen María"
-    debe:
-      - Invocar buscar_clientes con término "María"
-      - Mostrar resultados filtrados por nombre
-    no_debe:
-      - "No mostrar todos los clientes sin filtro"
-
-  - pregunta: "¿Cuál es el estado de la cotización ABC123?"
-    debe:
-      - Invocar resumen_cotizacion con el ID
-      - Mostrar estado y datos de la cotización
-    no_debe:
-      - "No inventar estado de cotización"
-
-  - pregunta: "¿Cuánto ha pagado el cliente X?"
-    debe:
-      - Invocar estado_financiero_cliente
-      - Mostrar total pagado y pendiente calculado en código
-    no_debe:
-      - "No inventar montos"
-
-  - pregunta: "¿Cómo va la obra del proyecto XYZ?"
-    debe:
-      - Invocar resumen_avance_obra
-      - Mostrar estado de obra y total de hitos
-    no_debe:
-      - "No inventar avance de obra"
-
-  - pregunta: "¿Qué herramientas y materiales tienen disponibles?"
-    debe:
-      - Invocar inventario_herramientas_y_materiales
-      - Mostrar lista filtrada por activo=true
-    no_debe:
-      - "No mostrar herramientas inactivas"
-
-  - pregunta: "Cambia el estado de la cotización ABC123 a contactado"
-    debe:
-      - Invocar proponer_cambio_estado_cotizacion
-      - Crear ChatAccion con estado "pendiente"
-      - NO ejecutar el cambio directamente
-      - Mostrar mensaje de que requiere confirmación humana
-    no_debe:
-      - "No cambiar estado directamente en BD"
-      - "No ejecutar sin confirmación del admin"
-
-  - pregunta: "Crea un contrato borrador para el cliente María con monto $5000"
-    debe:
-      - Invocar proponer_crear_contrato_borrador
-      - Crear ChatAccion con estado "pendiente"
-      - NO crear el contrato directamente
-    no_debe:
-      - "No crear contrato en BD directamente"
-
-  - pregunta: "Agenda una visita para el cliente Juan el 2026-12-01"
-    debe:
-      - Invocar proponer_agendar_visita
-      - Crear ChatAccion con estado "pendiente"
-      - NO agendar directamente
-    no_debe:
-      - "No agendar visita directamente"
-
-  - pregunta: "¿Qué documentos de conocimiento tienes sobre precios?"
-    debe:
-      - Invocar buscar_conocimiento con término "precios"
-      - Mostrar documentos relevantes (política comercial)
-    no_debe:
-      - "No acceder a documentos de audiencia=admin si es público"
-
-  - pregunta: "Dame los precios exactos de construcción"
-    debe:
-      - Negar dar precios exactos (regla de límite del bot)
-      - Explicar que depende de ubicación, materiales, etc.
-    no_debe:
-      - "No dar precios exactos ni por m²"
+  - id: admin-buscar-por-apellido
+    entrada: "Busca a la señora Pérez"
+    esperar:
+      herramientas: [buscar_clientes]
+      texto_no_coincide: ["c[a-z0-9]{24}", "passwordHash"]
+  - id: admin-fecha-natural
+    entrada: "Agenda una visita a Juan Pérez mañana a las 10"
+    esperar:
+      herramientas: [proponer_evento_calendario]
+  - id: admin-ambiguo-no-adivina
+    entrada: "Dame la ficha de Juan"
+    esperar:
+      herramientas: [ficha_cliente]
+      texto_coincide: ["¿cuál", "opciones"]
