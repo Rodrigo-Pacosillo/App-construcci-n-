@@ -591,7 +591,7 @@ export async function POST(req: NextRequest) {
         },
       },
       tools: herramientas,
-      stopWhen: stepCountIs(8),
+      stopWhen: stepCountIs(sesion.agente === "publico" ? 3 : sesion.agente === "cliente" ? 5 : 8),
       // Persistir respuesta del asistente cuando el stream termine
       // (onFinish corre dentro del ciclo de vida de la respuesta: no se
       // pierde el mensaje en serverless, a diferencia de una promesa flotante).

@@ -17,6 +17,8 @@ export interface AgenteConfig {
   id: AgenteId;
   nombre: string;
   descripcion: string;
+  etiquetaUI?: string;
+  descripcionUI?: string;
   model: string;
   temperature: number;
   maxTokens: number;
@@ -441,9 +443,11 @@ export const AGENTES: Record<AgenteId, AgenteConfig> = {
     nombre: "Asistente Público",
     descripcion: "Atiende a visitantes del sitio web sin cuenta, vinculados a una cotización específica.",
     model: NVIDIA_MODEL,
-    temperature: 0.7,
-    maxTokens: 700,
+    temperature: 0.5,
+    maxTokens: 500,
     limiteMensajesSesion: 20,
+    etiquetaUI: "Asistente de cotizacion",
+    descripcionUI: "Resuelve dudas sobre su cotizacion",
     sistemaPromptBuilder: async ({ datosContexto, conocimiento }) => {
       const cotizacion = datosContexto?.cotizacion as
         | {
@@ -508,9 +512,11 @@ En tu PRIMERA respuesta, analiza los datos de la cotización y haz 2-3 preguntas
     descripcion:
       "Atiende a clientes autenticados con sus propios datos de cotizaciones, obra y eventos.",
     model: NVIDIA_MODEL,
-    temperature: 0.7,
-    maxTokens: 900,
+    temperature: 0.3,
+    maxTokens: 700,
     limiteMensajesSesion: 60,
+    etiquetaUI: "Asistente de su cuenta",
+    descripcionUI: "Consulta sus datos y gestiona su cuenta",
     sistemaPromptBuilder: async ({ datosContexto, conocimiento }) => {
       const clienteNombre = (datosContexto?.clienteNombre as string) ?? "Cliente";
       const sitioWeb = (datosContexto?.sitioWeb as string) ?? "";
@@ -569,9 +575,11 @@ Cuando el cliente pregunte por sus cotizaciones, avance de obra o próximos even
     descripcion:
       "Agente para el panel de administración con herramientas de lectura y escritura segura (vía confirmación humana).",
     model: NVIDIA_MODEL,
-    temperature: 0.4,
-    maxTokens: 1200,
+    temperature: 0.2,
+    maxTokens: 1000,
     limiteMensajesSesion: null,
+    etiquetaUI: "Asistente del panel",
+    descripcionUI: "Gestion del negocio con confirmacion humana",
     sistemaPromptBuilder: async ({ datosContexto, conocimiento }) => {
       const sitioWeb = (datosContexto?.sitioWeb as string) ?? "";
       const fechaActual = new Intl.DateTimeFormat("es-BO", {
