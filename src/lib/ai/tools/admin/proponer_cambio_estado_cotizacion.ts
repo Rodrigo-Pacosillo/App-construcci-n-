@@ -6,6 +6,7 @@ import type { ToolContext } from "@/lib/ai/contexto";
 import { resolverCliente } from "@/lib/ai/datos/resolvers/cliente";
 import { resolverCotizacion } from "@/lib/ai/datos/resolvers/cotizacion";
 import { ESTADO_LABELS } from "@/lib/ai/datos/labels";
+import { ACCION_EXPIRACION_MIN } from "@/lib/ai/config";
 
 const TRANSICIONES: Record<string, string[]> = {
   nuevo: ["contactado", "contratado", "no_concretado"],
@@ -16,10 +17,10 @@ const TRANSICIONES: Record<string, string[]> = {
 
 export const proponerCambioEstadoCotizacionTool = (ctx: ToolContext) =>
   tool({
-    description: "Propone cambiar el estado de una cotizacion. Requiere confirmacion humana.",
+    description: "Propone cambiar el estado de una cotización. Requiere confirmación humana.",
     inputSchema: z.object({
-      cliente: z.string().min(1).describe("Cliente (nombre, email o telefono)"),
-      cotizacion: z.string().optional().describe("Descripcion de la cotizacion (opcional)"),
+      cliente: z.string().min(2).describe("Cliente (nombre, apellido, teléfono o correo)"),
+      cotizacion: z.string().optional().describe("Referencia de la cotización (tipo, fecha, etc.), opcional"),
       nuevoEstado: z.enum(["nuevo", "contactado", "contratado", "no_concretado"]),
     }),
     execute: async ({ cliente, cotizacion, nuevoEstado }) => {
@@ -35,25 +36,29 @@ export const proponerCambioEstadoCotizacionTool = (ctx: ToolContext) =>
       if (cotRes.estado === "ambiguo") return { estado: "ambiguo", opciones: cotRes.opciones, sugerencia: cotRes.sugerencia };
 
       const cot = cotRes.valor;
-      if (cot.estado === nuevoEstado) return { estado: "sin_cambios", mensaje: "La cotizacion ya tiene ese estado." };
+      if (cot.estado === nuevoEstado) return { estado: "sin_cambios", mensaje: "La cotización ya tiene ese estado." };
 
       const permitidos = TRANSICIONES[cot.estado] ?? [];
       if (!permitidos.includes(nuevoEstado)) {
         return {
           estado: "transicion_invalida",
-          mensaje: `No se puede pasar de "${cot.estado}" a "${nuevoEstado}".`,
+          mensaje: `No se puede pasar de "${ESTADO_LABELS[cot.estado as keyof typeof ESTADO_LABELS] ?? cot.estado}" a "${ESTADO_LABELS[nuevoEstado as keyof typeof ESTADO_LABELS] ?? nuevoEstado}".`,
         };
       }
 
       if (nuevoEstado === "contratado") {
-        const contrato = await prisma.contrato.findFirst({ where: { cotizacionId: cot.id } });
+        const contrato = await prisma.contrato.findFirst({ where: { cotizacionId: cot.id, estado: { not: "anulado" } } });
         if (!contrato) {
           return {
             estado: "sin_contrato",
-            mensaje: "Para marcar como contratado debe existir un contrato asociado a la cotizacion.",
+            mensaje: "Para marcar como contratado debe existir un contrato no anulado asociado a la cotización. Créelo desde el panel Contratos.",
           };
         }
       }
+
+      const clienteNombre = `${cr.valor.nombre} ${cr.valor.apellidos}`;
+      const estadoActualLabel = ESTADO_LABELS[cot.estado as keyof typeof ESTADO_LABELS] ?? cot.estado;
+      const estadoNuevoLabel = ESTADO_LABELS[nuevoEstado as keyof typeof ESTADO_LABELS] ?? nuevoEstado;
 
       const accion = await prisma.chatAccion.create({
         data: {
@@ -62,12 +67,15 @@ export const proponerCambioEstadoCotizacionTool = (ctx: ToolContext) =>
           herramienta: "proponer_cambio_estado_cotizacion",
           argumentos: { cotizacionId: cot.id, nuevoEstado } as unknown as Prisma.InputJsonValue,
           resumen: {
-            cotizacion: `${cot.tipoObra} - ${cot.estado}`,
-            nuevoEstado: ESTADO_LABELS[nuevoEstado as keyof typeof ESTADO_LABELS] ?? nuevoEstado,
+            tipo: "cambio_estado",
+            cliente: clienteNombre,
+            cotizacion: `${cot.tipoObra} - ${estadoActualLabel}`,
+            estadoActual: estadoActualLabel,
+            estadoNuevo: estadoNuevoLabel,
           } as unknown as Prisma.InputJsonValue,
-          precondiciones: { estadoActual: cot.estado, transicionValida: true } as unknown as Prisma.InputJsonValue,
+          precondiciones: { estadoAnterior: cot.estado } as unknown as Prisma.InputJsonValue,
           estado: "pendiente",
-          expiraEn: new Date(ctx.ahora.getTime() + 30 * 60 * 1000),
+          expiraEn: new Date(ctx.ahora.getTime() + ACCION_EXPIRACION_MIN * 60 * 1000),
         },
       });
 
@@ -75,9 +83,20 @@ export const proponerCambioEstadoCotizacionTool = (ctx: ToolContext) =>
         estado: "ok",
         pendiente: true,
         accionId: accion.id,
-        mensaje: `Propuesta creada para cambiar la cotizacion a "${nuevoEstado}". Requiere confirmacion.`,
+        ui: {
+          tipo: "accion",
+          accionId: accion.id,
+          herramienta: "proponer_cambio_estado_cotizacion",
+          estado: "pendiente",
+          resumen: {
+            tipo: "cambio_estado",
+            cliente: clienteNombre,
+            cotizacion: `${cot.tipoObra} - ${estadoActualLabel}`,
+            estadoActual: estadoActualLabel,
+            estadoNuevo: estadoNuevoLabel,
+          },
+        },
+        mensaje: `Propuesta creada: cambiar estado de la cotización de "${estadoActualLabel}" a "${estadoNuevoLabel}". Requiere confirmación.`,
       };
     },
   });
-
-export default proponerCambioEstadoCotizacionTool;

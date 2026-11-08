@@ -3,52 +3,62 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { Prisma } from "@prisma/client";
 import type { ToolContext } from "@/lib/ai/contexto";
-import { fechaNegocio } from "@/lib/ai/datos/formato";
+import { fechaNegocio, instanteNegocio } from "@/lib/ai/datos/formato";
 import { resolverObra } from "@/lib/ai/datos/resolvers/obra";
+import { ACCION_EXPIRACION_MIN } from "@/lib/ai/config";
 
 export const proponerNotaCalendarioTool = (ctx: ToolContext) =>
   tool({
-    description: "Propone dejar una nota en el calendario del cliente. Requiere confirmacion humana.",
+    description: "Propone dejar una nota en el propio calendario del cliente. Requiere confirmación humana.",
     inputSchema: z.object({
-      cliente: z.string().optional().describe("Nombre o contacto del cliente (opcional, usa la sesion si falta)"),
-      obra: z.string().optional().describe("Nombre o direccion de la obra (opcional)"),
-      sinObra: z.boolean().default(false),
       titulo: z.string().min(1).max(120),
       descripcion: z.string().max(2000).optional(),
-      fechaInicio: z.string().datetime(),
-      fechaFin: z.string().datetime().optional(),
-      todoElDia: z.boolean().default(true),
-      visibleCliente: z.boolean().default(false),
+      fecha: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).describe("YYYY-MM-DD en hora de Bolivia"),
+      hora: z.string().regex(/^\d{2}:\d{2}$/).optional().describe("HH:mm 24h; omitir si es todo el día"),
+      obra: z.string().optional().describe("Obra (nombre o dirección), solo si el cliente la mencionó"),
     }),
     execute: async (args) => {
-      const clienteId = ctx.clienteId ?? "";
-      if (!clienteId) return { estado: "sin_cliente", mensaje: "No hay cliente asociado a la sesion." };
+      if (!ctx.clienteId) return { estado: "sin_cliente", mensaje: "No hay cliente asociado a la sesión." };
       if (!ctx.usuarioId) return { estado: "sin_usuario", mensaje: "Se requiere usuario autenticado." };
 
-      const sinObra = Boolean(args.sinObra);
-      const visibleCliente = Boolean(args.visibleCliente);
-      const todoElDia = args.todoElDia === undefined ? true : Boolean(args.todoElDia);
-
-      let res: Awaited<ReturnType<typeof resolverObra>>;
-      if (sinObra) {
-        res = { estado: "ninguno", opciones: [], sugerencia: "Sin obra" } as unknown as Awaited<ReturnType<typeof resolverObra>>;
-      } else {
-        res = await resolverObra(args.obra ?? "", { clienteId });
-      }
-
+      const clienteId = ctx.clienteId;
+      const sinObra = !args.obra || !args.obra.trim();
+      let obraRes: Awaited<ReturnType<typeof resolverObra>> | null = null;
       if (!sinObra) {
-        if (res.estado === "ninguno") return { estado: "ninguno", sugerencia: res.sugerencia };
-        if (res.estado === "ambiguo") return { estado: "ambiguo", opciones: res.opciones, sugerencia: res.sugerencia };
+        obraRes = await resolverObra(args.obra!, { clienteId });
+        if (obraRes.estado === "ninguno") {
+          return { estado: "ninguno", sugerencia: (obraRes as { sugerencia?: string }).sugerencia ?? "No encontré la obra." };
+        }
+        if (obraRes.estado === "ambiguo") {
+          return { estado: "ambiguo", opciones: obraRes.opciones, sugerencia: obraRes.sugerencia };
+        }
       }
 
-      const obraFijada = !sinObra && res.estado === "unico" ? res.valor.id : undefined;
-      const obraEtiqueta = obraFijada
-        ? (res as { valor: { nombreComercial?: string | null; direccionObra: string } }).valor?.nombreComercial ?? (res as { valor: { nombreComercial?: string | null; direccionObra: string } }).valor?.direccionObra ?? "Obra"
-        : "Sin obra (nota interna, solo admin)";
-      const visibleClienteEfectiva = obraFijada ? visibleCliente : false;
+      const obraUnica = !sinObra && obraRes && obraRes.estado === "unico"
+        ? (obraRes as { valor: { id: string; nombreComercial: string | null; direccionObra: string } }).valor
+        : undefined;
+      const obraFijada = obraUnica?.id;
+      const obraEtiqueta = obraFijada && obraUnica
+        ? (obraUnica.nombreComercial ?? obraUnica.direccionObra)
+        : "Sin obra (nota personal)";
+
+      // Nota del cliente siempre visible para él
+      const visibleClienteEfectiva = true;
+
+      let fechaInicio: Date;
+      try {
+        fechaInicio = instanteNegocio(args.fecha, args.hora ?? null);
+      } catch (e) {
+        return { estado: "fecha_invalida", mensaje: e instanceof Error ? e.message : "Fecha u hora inválida." };
+      }
+      if (fechaInicio < new Date()) {
+        return { estado: "fecha_pasada", mensaje: "La fecha indicada ya pasó. ¿Quiere otra fecha?" };
+      }
 
       const cliente = await prisma.cliente.findUnique({ where: { id: clienteId }, select: { nombre: true, apellidos: true } });
       const clienteNombre = cliente ? `${cliente.nombre} ${cliente.apellidos}` : "Cliente";
+
+      const cuando = fechaNegocio(fechaInicio);
 
       const accion = await prisma.chatAccion.create({
         data: {
@@ -58,24 +68,28 @@ export const proponerNotaCalendarioTool = (ctx: ToolContext) =>
           argumentos: {
             clienteId,
             obraId: obraFijada ?? null,
-            titulo: args.titulo,
-            descripcion: args.descripcion ?? null,
-            fechaInicio: args.fechaInicio,
-            fechaFin: args.fechaFin ?? null,
-            todoElDia,
-            visibleCliente: visibleClienteEfectiva,
-          } as unknown as Prisma.InputJsonValue,
-          resumen: {
             tipo: "nota",
             titulo: args.titulo,
-            clienteNombre,
-            obraEtiqueta,
-            fechaInicio: args.fechaInicio,
-            visibleCliente: visibleClienteEfectiva,
+            descripcion: args.descripcion ?? null,
+            fecha: args.fecha,
+            hora: args.hora ?? null,
+            visibleCliente: true,
+          } as unknown as Prisma.InputJsonValue,
+          resumen: {
+            tipo: "evento",
+            subtipo: "nota",
+            titulo: args.titulo,
+            descripcion: args.descripcion ?? null,
+            cliente: clienteNombre,
+            obra: obraEtiqueta,
+            cuando,
+            fecha: args.fecha,
+            hora: args.hora ?? null,
+            visibleCliente: true,
           } as unknown as Prisma.InputJsonValue,
           precondiciones: { clienteExiste: true } as unknown as Prisma.InputJsonValue,
           estado: "pendiente",
-          expiraEn: new Date(ctx.ahora.getTime() + 30 * 60 * 1000),
+          expiraEn: new Date(ctx.ahora.getTime() + ACCION_EXPIRACION_MIN * 60 * 1000),
         },
       });
 
@@ -83,9 +97,25 @@ export const proponerNotaCalendarioTool = (ctx: ToolContext) =>
         estado: "ok",
         pendiente: true,
         accionId: accion.id,
-        mensaje: `Propuesta creada: nota "${args.titulo}" para el ${fechaNegocio(args.fechaInicio)}. Visible para el cliente: ${visibleClienteEfectiva ? "Si" : "No"}. Requiere confirmacion.`,
+        ui: {
+          tipo: "accion",
+          accionId: accion.id,
+          herramienta: "proponer_nota_calendario",
+          estado: "pendiente",
+          resumen: {
+            tipo: "evento",
+            subtipo: "nota",
+            titulo: args.titulo,
+            descripcion: args.descripcion ?? null,
+            cliente: clienteNombre,
+            obra: obraEtiqueta,
+            cuando,
+            fecha: args.fecha,
+            hora: args.hora ?? null,
+            visibleCliente: true,
+          },
+        },
+        mensaje: `Propuesta creada: nota "${args.titulo}" para el ${cuando}. Visible para usted: Sí. Requiere confirmación.`,
       };
     },
   });
-
-export default proponerNotaCalendarioTool;
