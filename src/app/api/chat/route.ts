@@ -15,17 +15,7 @@ import { verificarChatToken } from "@/lib/tokens";
 import { resolverObraDeCliente } from "@/lib/ai/resolver-obra";
 import type { CategoriaConocimiento } from "@/lib/ai/conocimiento";
 import { chatInicioSchema, chatMensajeSchema } from "@/lib/validators/chat";
-import {
-  TOOL_OBTENER_MIS_COTIZACIONES,
-  TOOL_OBTENER_AVANCE_OBRA,
-  TOOL_OBTENER_PROXIMOS_EVENTOS,
-  TOOL_BUSCAR_CLIENTES,
-  TOOL_RESUMEN_COTIZACION,
-  TOOL_RESUMEN_AVANCE_OBRA,
-  TOOL_RESUMEN_PANEL,
-  TOOL_RESUMEN_CLIENTE,
-  TOOL_INVENTARIO_HERRAMIENTAS_MATERIALES,
-} from "@/lib/ai/agents";
+// (tools antiguos eliminados; ahora se usa toolsPara de @/lib/ai/tools)
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -53,7 +43,7 @@ function errorResponse(
 
 /**
  * Limpia bloques de razonamiento (<think>...</think>) de la respuesta de NVIDIA
- * antes de PERSISTIRLA (lo que ve el usuario también se limpia en el frontend).
+ * antes de PERSISTIRLA (lo que ve el usuario tambiÃ©n se limpia en el frontend).
  */
 function limpiarRespuestaIA(texto: string, contexto: string): string {
   const limpio = texto.replace(/<think[\s\S]*?(<\/think>|$)/gi, "").trim();
@@ -68,7 +58,7 @@ function limpiarRespuestaIA(texto: string, contexto: string): string {
 /**
  * Persiste la respuesta del asistente cuando el stream termina.
  * Se invoca desde `onFinish` de streamText (NO como promesa flotante):
- * onFinish corre dentro del ciclo de vida de la respuesta, así que el
+ * onFinish corre dentro del ciclo de vida de la respuesta, asÃ­ que el
  * mensaje del asistente no se pierde en entornos serverless.
  */
 type HerramientaUsada = { herramienta: string; resultado: string };
@@ -82,7 +72,7 @@ async function persistirRespuestaAsistente(
   try {
     const textoLimpio = limpiarRespuestaIA(textoCrudo, contexto);
     if (!textoLimpio) {
-      console.error(`[CHAT ${contexto}] el stream terminó sin texto`);
+      console.error(`[CHAT ${contexto}] el stream terminÃ³ sin texto`);
       return;
     }
     await prisma.chatMensaje.create({
@@ -112,9 +102,9 @@ async function persistirRespuestaAsistente(
 
 const MENSAJES_CONTEXTO = 20;
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Resolución de identidad
-   ───────────────────────────────────────────────────────────────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   ResoluciÃ³n de identidad
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 type Identidad = {
   agente: "publico" | "cliente" | "admin";
@@ -232,9 +222,9 @@ async function resolverIdentidad(
   throw new Error("NO_AUTORIZADO");
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Conversión de herramientas de agents.ts al formato AI SDK
-   ───────────────────────────────────────────────────────────────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   ConversiÃ³n de herramientas de agents.ts al formato AI SDK
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 type ToolArgs = Record<string, unknown>;
 
@@ -264,9 +254,9 @@ function aiTool(
   };
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Herramientas de escritura (proponer_* → ChatAccion pendiente)
-   ───────────────────────────────────────────────────────────────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   Herramientas de escritura (proponer_* â†’ ChatAccion pendiente)
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 async function crearChatAccion(
   sesionId: string,
@@ -310,7 +300,7 @@ async function nombreDeCliente(clienteId: string): Promise<string> {
   return cliente?.nombre ?? "Cliente sin nombre";
 }
 
-/** Mensaje legible para que el modelo pregunte cuál obra usar. */
+/** Mensaje legible para que el modelo pregunte cuÃ¡l obra usar. */
 function mensajeObraNoResuelta(
   resolucion: Awaited<ReturnType<typeof resolverObraDeCliente>>
 ): string | null {
@@ -318,20 +308,20 @@ function mensajeObraNoResuelta(
     const lista = resolucion.candidatas
       .map((c, i) => `${i + 1}) ${c.etiqueta}`)
       .join("  ");
-    return `El cliente tiene varias obras activas. Pregúntale al admin a cuál corresponde: ${lista}`;
+    return `El cliente tiene varias obras activas. PregÃºntale al admin a cuÃ¡l corresponde: ${lista}`;
   }
   if (resolucion.estado === "sinActivas") {
     const reciente = resolucion.recientes[0];
-    return `El cliente no tiene obras activas (solo finalizada/entregada). Pregunta si va con la obra más reciente${
+    return `El cliente no tiene obras activas (solo finalizada/entregada). Pregunta si va con la obra mÃ¡s reciente${
       reciente ? ` (${reciente.etiqueta})` : ""
     }, o si es una nota interna sin obra. Si el admin elige sin obra, vuelve a invocar la herramienta con sinObra=true.`;
   }
   return null;
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    POST /api/chat
-   ───────────────────────────────────────────────────────────────────────────── */
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 export async function POST(req: NextRequest) {
   try {
@@ -339,7 +329,7 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
 
-    // ── Caso 1: __INICIO__ (saludo sin LLM) ──
+    // â”€â”€ Caso 1: __INICIO__ (saludo sin LLM) â”€â”€
     if (body.mensaje === "__INICIO__") {
       const inicio = chatInicioSchema.safeParse(body);
       if (!inicio.success) {
@@ -438,7 +428,7 @@ export async function POST(req: NextRequest) {
       return createUIMessageStreamResponse({ stream });
     }
 
-    // ── Caso 2: mensaje normal ──
+    // â”€â”€ Caso 2: mensaje normal â”€â”€
     const entrada = chatMensajeSchema.safeParse(body);
     if (!entrada.success) {
       return errorResponse(
@@ -455,14 +445,14 @@ export async function POST(req: NextRequest) {
 
     if (!sesion) {
       return errorResponse(
-        "Sesión de chat no encontrada",
+        "SesiÃ³n de chat no encontrada",
         "SESION_NO_ENCONTRADA",
         404
       );
     }
 
-    // ── Identidad y propiedad de la sesión ──
-    // Sesiones públicas: exigir token válido de la misma cotización.
+    // â”€â”€ Identidad y propiedad de la sesiÃ³n â”€â”€
+    // Sesiones pÃºblicas: exigir token vÃ¡lido de la misma cotizaciÃ³n.
     // Sesiones con usuario: exigir ser el propietario o un admin.
     if (sesion.agente === "publico") {
       const token = obtenerToken(req, body);
@@ -471,10 +461,10 @@ export async function POST(req: NextRequest) {
       }
       try {
         if (verificarChatToken(token) !== sesion.cotizacionId) {
-          return errorResponse("Token no coincide con la sesión", "TOKEN_INVALIDO", 401);
+          return errorResponse("Token no coincide con la sesiÃ³n", "TOKEN_INVALIDO", 401);
         }
       } catch {
-        return errorResponse("Token inválido o expirado", "TOKEN_INVALIDO", 401);
+        return errorResponse("Token invÃ¡lido o expirado", "TOKEN_INVALIDO", 401);
       }
     } else if (sesion.usuarioId) {
       const session = await auth();
@@ -485,14 +475,14 @@ export async function POST(req: NextRequest) {
         return errorResponse("No autorizado", "NO_AUTORIZADO", 403);
       }
     } else {
-      return errorResponse("No autorizado para esta sesión", "NO_AUTORIZADO", 403);
+      return errorResponse("No autorizado para esta sesiÃ³n", "NO_AUTORIZADO", 403);
     }
 
     const agente = obtenerAgente(sesion.agente as AgenteId);
 
     if (agente.limiteMensajesSesion !== null && sesion.mensajeCount >= agente.limiteMensajesSesion) {
       return errorResponse(
-        "Has alcanzado el límite de mensajes para esta sesión.",
+        "Has alcanzado el lÃ­mite de mensajes para esta sesiÃ³n.",
         "SESION_LIMITE",
         429
       );
@@ -518,7 +508,7 @@ export async function POST(req: NextRequest) {
       sesion.cotizacionId &&
       (await prisma.cotizacion.findUnique({ where: { id: sesion.cotizacionId } }));
 
-    // Nombre real del cliente vinculado a la sesión (para el prompt)
+    // Nombre real del cliente vinculado a la sesiÃ³n (para el prompt)
     const clienteNombre = sesion.clienteId
       ? (
           await prisma.cliente.findUnique({
@@ -528,8 +518,8 @@ export async function POST(req: NextRequest) {
         )?.nombre ?? "Cliente"
       : "Cliente";
 
-    // Datos del cliente (mismo patrón que __INICIO__) para no perder contexto
-    // desde el segundo turno (corrige H03 de forma mínima; se rehace en Fase 4/6).
+    // Datos del cliente (mismo patrÃ³n que __INICIO__) para no perder contexto
+    // desde el segundo turno (corrige H03 de forma mÃ­nima; se rehace en Fase 4/6).
     const datosCliente =
       sesion.agente === "cliente" && sesion.clienteId
         ? await (async () => {
@@ -569,7 +559,7 @@ export async function POST(req: NextRequest) {
         const bloque = meta?.herramientasUsadas?.length
           ? " " +
             meta.herramientasUsadas
-              .map((h) => `⟦tool⟧ ${h.herramienta} → ${h.resultado}⟦/tool⟧`)
+              .map((h) => `âŸ¦toolâŸ§ ${h.herramienta} â†’ ${h.resultado}âŸ¦/toolâŸ§`)
               .join(" ")
           : "";
         return { role: m.rol as "user" | "assistant", content: m.contenido + bloque };
@@ -619,29 +609,29 @@ export async function POST(req: NextRequest) {
     console.error("[CHAT] Error inesperado:", error);
     const mensaje = error instanceof Error ? error.message : "Error desconocido";
     if (mensaje === "TOKEN_INVALIDO") {
-      return errorResponse("Token inválido o expirado", "TOKEN_INVALIDO", 401);
+      return errorResponse("Token invÃ¡lido o expirado", "TOKEN_INVALIDO", 401);
     }
     if (mensaje === "NO_AUTORIZADO") {
       return errorResponse("No autorizado", "NO_AUTORIZADO", 403);
     }
     if (mensaje.startsWith("NVIDIA_API_KEY")) {
       return errorResponse(
-        "El servicio de IA no está configurado.",
+        "El servicio de IA no estÃ¡ configurado.",
         "PROVEEDOR_IA",
         503
       );
     }
     return errorResponse(
-      "Lo siento, tuve un problema técnico. Intenta de nuevo en unos segundos.",
+      "Lo siento, tuve un problema tÃ©cnico. Intenta de nuevo en unos segundos.",
       "DESCONOCIDO",
       500
     );
   }
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   GET /api/chat?sessionId=... — historial
-   ───────────────────────────────────────────────────────────────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   GET /api/chat?sessionId=... â€” historial
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 export async function GET(req: NextRequest) {
   try {
@@ -659,42 +649,42 @@ export async function GET(req: NextRequest) {
 
     if (!sesion) {
       return errorResponse(
-        "Sesión de chat no encontrada",
+        "SesiÃ³n de chat no encontrada",
         "SESION_NO_ENCONTRADA",
         404
       );
     }
 
-    // Validar propiedad de la sesión
+    // Validar propiedad de la sesiÃ³n
     const session = await auth();
     const userRole = session?.user?.role;
     const userId = session?.user?.id;
 
     if (sesion.usuarioId) {
-      // Sesión de cliente o admin: solo el propietario o un admin puede leer
+      // SesiÃ³n de cliente o admin: solo el propietario o un admin puede leer
       if (userRole === "admin") {
         // admin puede leer todo
       } else if (userId && userId === sesion.usuarioId) {
-        // propietario de la sesión
+        // propietario de la sesiÃ³n
       } else {
-        return errorResponse("No autorizado para ver esta sesión", "NO_AUTORIZADO", 403);
+        return errorResponse("No autorizado para ver esta sesiÃ³n", "NO_AUTORIZADO", 403);
       }
     } else if (sesion.agente === "publico" && sesion.cotizacionId && tokenPublico) {
-      // Sesión pública: validar token
+      // SesiÃ³n pÃºblica: validar token
       try {
         const cotizacionIdValido = verificarChatToken(tokenPublico);
         if (cotizacionIdValido !== sesion.cotizacionId) {
-          return errorResponse("Token no coincide con la sesión", "TOKEN_INVALIDO", 401);
+          return errorResponse("Token no coincide con la sesiÃ³n", "TOKEN_INVALIDO", 401);
         }
       } catch {
-        return errorResponse("Token inválido o expirado", "TOKEN_INVALIDO", 401);
+        return errorResponse("Token invÃ¡lido o expirado", "TOKEN_INVALIDO", 401);
       }
     } else {
-      // Sesión sin propietario identificable
-      return errorResponse("No autorizado para ver esta sesión", "NO_AUTORIZADO", 403);
+      // SesiÃ³n sin propietario identificable
+      return errorResponse("No autorizado para ver esta sesiÃ³n", "NO_AUTORIZADO", 403);
     }
 
-    // Últimos N mensajes en orden ascendente (los más recientes, no los más viejos)
+    // Ãšltimos N mensajes en orden ascendente (los mÃ¡s recientes, no los mÃ¡s viejos)
     const mensajes = await prisma.chatMensaje.findMany({
       where: { sesionId: sesion.id },
       orderBy: { creadoEn: "desc" },
@@ -715,264 +705,9 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     console.error("[CHAT GET] Error inesperado:", error);
     return errorResponse(
-      "Lo siento, tuve un problema técnico.",
+      "Lo siento, tuve un problema tÃ©cnico.",
       "DESCONOCIDO",
       500
     );
   }
-}
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   Construcción de herramientas dinámicas por agente
-   ───────────────────────────────────────────────────────────────────────────── */
-
-function construirHerramientas(
-  agente: AgenteId,
-  usuarioId: string | undefined,
-  sesionId: string
-): Record<string, AiTool> {
-  const ctx = { usuarioId };
-  const tools: Record<string, AiTool> = {};
-
-  if (agente === "cliente" && usuarioId) {
-    tools["obtener_mis_cotizaciones"] = aiTool(
-      TOOL_OBTENER_MIS_COTIZACIONES,
-      ctx
-    );
-    tools["obtener_avance_obra"] = aiTool(TOOL_OBTENER_AVANCE_OBRA, ctx);
-    tools["obtener_proximos_eventos"] = aiTool(TOOL_OBTENER_PROXIMOS_EVENTOS, ctx);
-  }
-
-  if (agente === "admin" && usuarioId) {
-    tools["buscar_clientes"] = aiTool(TOOL_BUSCAR_CLIENTES, ctx);
-    tools["resumen_cotizacion"] = aiTool(TOOL_RESUMEN_COTIZACION, ctx);
-    tools["resumen_avance_obra"] = aiTool(TOOL_RESUMEN_AVANCE_OBRA, ctx);
-    tools["inventario_herramientas_y_materiales"] = aiTool(
-      TOOL_INVENTARIO_HERRAMIENTAS_MATERIALES,
-      ctx
-    );
-    tools["resumen_panel"] = aiTool(TOOL_RESUMEN_PANEL, ctx);
-    tools["resumen_cliente"] = aiTool(TOOL_RESUMEN_CLIENTE, ctx);
-  }
-
-  // búsqueda de conocimiento para todos
-  tools["buscar_conocimiento"] = {
-    description:
-      "Busca documentos de conocimiento por término y categoría opcional.",
-    inputSchema: z.object({
-      termino: z.string().min(1),
-      categoria: z.string().optional(),
-    }),
-    execute: async (args: ToolArgs) => {
-      const configAgente = obtenerAgente(agente);
-      return buscarConocimiento({
-        termino: args.termino as string,
-        audiencia: (configAgente.audienciaConocimiento as AudienciaConocimiento) ?? "publico",
-        categoria: args.categoria as CategoriaConocimiento | undefined,
-      });
-    },
-  };
-
-  // herramientas de escritura (proponer_*) — solo admin
-  if (agente === "admin") {
-    tools["proponer_cambio_estado_cotizacion"] = {
-      description:
-        "Propone cambiar el estado de una cotización. Requiere confirmación humana antes de ejecutar.",
-      inputSchema: z.object({
-        cotizacionId: z.string().cuid(),
-        nuevoEstado: z.enum(["nuevo", "contactado", "contratado", "no_concretado"]),
-      }),
-      execute: async (args: ToolArgs) => {
-        const { cotizacionId, nuevoEstado } = args as {
-          cotizacionId: string;
-          nuevoEstado: string;
-        };
-        await crearChatAccion(
-          sesionId,
-          usuarioId ?? "",
-          "proponer_cambio_estado_cotizacion",
-          { cotizacionId, nuevoEstado }
-        );
-        return {
-          pendiente: true,
-          mensaje: `Se ha creado una propuesta para cambiar el estado de la cotización ${cotizacionId} a "${nuevoEstado}". Un administrador debe confirmar esta acción.`,
-        };
-      },
-    };
-
-    tools["proponer_agendar_visita"] = {
-      description:
-        "Propone agendar una visita técnica para un cliente. Requiere confirmación humana. " +
-        "Visibilidad: si el admin dice 'que el cliente la vea' o 'en su calendario' → visibleCliente=true; " +
-        "si dice 'recuérdame', 'nota interna' o 'para mí' → visibleCliente=false; " +
-        "si no queda claro, PREGUNTA antes de invocar la herramienta.",
-      inputSchema: z.object({
-        clienteId: z.string().cuid(),
-        obraId: z.string().cuid().optional(),
-        sinObra: z.boolean().default(false),
-        fecha: z.string().datetime(),
-        notas: z.string().max(2000).optional(),
-        visibleCliente: z.boolean().default(false),
-      }),
-      execute: async (args: ToolArgs) => {
-        const { clienteId, obraId, fecha, notas } = args as {
-          clienteId: string;
-          obraId?: string;
-          fecha: string;
-          notas?: string;
-          visibleCliente: boolean;
-        };
-        const visibleCliente = Boolean(args.visibleCliente);
-        const sinObra = Boolean(args.sinObra);
-
-        const resolucion = sinObra
-          ? ({ estado: "sinObras" } as const)
-          : await resolverObraDeCliente(clienteId, obraId);
-        const aviso = mensajeObraNoResuelta(resolucion);
-        if (aviso) {
-          return { pendiente: false, mensaje: aviso };
-        }
-
-        const obraFijada =
-          resolucion.estado === "unica" ? resolucion.obraId : undefined;
-        const obraEtiqueta =
-          resolucion.estado === "unica"
-            ? resolucion.etiqueta
-            : "Sin obra (solo la ve el admin)";
-        const obraEstado =
-          resolucion.estado === "unica" ? resolucion.estadoObra : null;
-        // Una nota/visita sin obra no puede mostrarse al cliente: el portal
-        // filtra por obraId. Si el admin pidió visible=true sin obra, se
-        // ajusta a false (y se le avisa en el mensaje).
-        const visibleClienteEfectiva = obraFijada ? visibleCliente : false;
-
-        const accion = await crearChatAccion(
-          sesionId,
-          usuarioId ?? "",
-          "proponer_agendar_visita",
-          { clienteId, obraId: obraFijada, fecha, notas, visibleCliente: visibleClienteEfectiva }
-        );
-
-        const resumen: ResumenAccionCalendario = {
-          tipo: "visita",
-          titulo: "Visita técnica",
-          clienteNombre: await nombreDeCliente(clienteId),
-          obraEtiqueta,
-          obraEstado,
-          fechaInicio: fecha,
-          todoElDia: false,
-          visibleCliente: visibleClienteEfectiva,
-        };
-
-        return {
-          pendiente: true,
-          accionId: accion.id,
-          resumen,
-          mensaje: `Propuesta: visita técnica el ${fecha} — ${obraEtiqueta}. Visible para el cliente: ${
-            visibleClienteEfectiva ? "SÍ" : "NO"
-          }${!obraFijada && visibleCliente ? " (ajustado a NO: sin obra, el cliente no podría verla)" : ""}. Requiere confirmación.`,
-        };
-      },
-    };
-
-    tools["agregar_nota_calendario"] = {
-      description:
-        "Deja una NOTA en el calendario de un cliente (tipo fijo 'nota'). " +
-        "Visibilidad: 'en su calendario' o 'que el cliente la vea' → visibleCliente=true; " +
-        "'recuérdame', 'nota interna', 'apúntate tú' → visibleCliente=false; " +
-        "si no queda claro, PREGUNTA al admin ANTES de invocar esta herramienta. " +
-        "Requiere confirmación humana.",
-      inputSchema: z.object({
-        clienteId: z.string().cuid(),
-        obraId: z.string().cuid().optional(),
-        sinObra: z.boolean().default(false),
-        titulo: z.string().min(1).max(120),
-        descripcion: z.string().max(2000).optional(),
-        fechaInicio: z.string().datetime(),
-        fechaFin: z.string().datetime().optional(),
-        todoElDia: z.boolean().default(true),
-        visibleCliente: z.boolean().default(false),
-      }),
-      execute: async (args: ToolArgs) => {
-        const {
-          clienteId,
-          obraId,
-          titulo,
-          descripcion,
-          fechaInicio,
-          fechaFin,
-        } = args as {
-          clienteId: string;
-          obraId?: string;
-          titulo: string;
-          descripcion?: string;
-          fechaInicio: string;
-          fechaFin?: string;
-          todoElDia: boolean;
-          visibleCliente: boolean;
-        };
-        const todoElDia =
-          args.todoElDia === undefined ? true : Boolean(args.todoElDia);
-        const visibleCliente = Boolean(args.visibleCliente);
-        const sinObra = Boolean(args.sinObra);
-
-        const resolucion = sinObra
-          ? ({ estado: "sinObras" } as const)
-          : await resolverObraDeCliente(clienteId, obraId);
-        const aviso = mensajeObraNoResuelta(resolucion);
-        if (aviso) {
-          return { pendiente: false, mensaje: aviso };
-        }
-
-        const obraFijada =
-          resolucion.estado === "unica" ? resolucion.obraId : undefined;
-        const obraEtiqueta =
-          resolucion.estado === "unica"
-            ? resolucion.etiqueta
-            : "Sin obra (nota interna, solo la ve el admin)";
-        const obraEstado =
-          resolucion.estado === "unica" ? resolucion.estadoObra : null;
-        const visibleClienteEfectiva = obraFijada ? visibleCliente : false;
-
-        const accion = await crearChatAccion(
-          sesionId,
-          usuarioId ?? "",
-          "agregar_nota_calendario",
-          {
-            clienteId,
-            obraId: obraFijada,
-            titulo,
-            descripcion,
-            fechaInicio,
-            fechaFin,
-            todoElDia,
-            visibleCliente: visibleClienteEfectiva,
-          }
-        );
-
-        const resumen: ResumenAccionCalendario = {
-          tipo: "nota",
-          titulo,
-          clienteNombre: await nombreDeCliente(clienteId),
-          obraEtiqueta,
-          obraEstado,
-          fechaInicio,
-          fechaFin: fechaFin ?? null,
-          todoElDia,
-          visibleCliente: visibleClienteEfectiva,
-        };
-
-        return {
-          pendiente: true,
-          accionId: accion.id,
-          resumen,
-          mensaje: `Propuesta: nota "${titulo}" para el ${fechaInicio} — ${obraEtiqueta}. Visible para el cliente: ${
-            visibleClienteEfectiva ? "SÍ" : "NO"
-          }${!obraFijada && visibleCliente ? " (ajustado a NO: sin obra, el cliente no podría verla)" : ""}. Requiere confirmación.`,
-        };
-      },
-    };
-  }
-
-  return tools;
 }
