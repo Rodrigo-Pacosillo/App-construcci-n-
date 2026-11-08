@@ -160,7 +160,10 @@ async function resolverIdentidad(
       cotizacionId: cotizacion.id,
       clienteId: cotizacion.clienteId,
       clienteNombre: cotizacion.cliente?.nombre,
-      sitioWeb: req.headers.get("origin") ?? undefined,
+      sitioWeb:
+        req.headers.get("origin") ??
+        process.env.NEXT_PUBLIC_SITE_URL ??
+        undefined,
     };
   }
 
@@ -173,7 +176,14 @@ async function resolverIdentidad(
   const usuarioId = session.user.id as string;
 
   if (role === "admin") {
-    return { agente: "admin", usuarioId, sitioWeb: req.headers.get("origin") ?? undefined };
+    return {
+      agente: "admin",
+      usuarioId,
+      sitioWeb:
+        req.headers.get("origin") ??
+        process.env.NEXT_PUBLIC_SITE_URL ??
+        undefined,
+    };
   }
 
   if (role === "cliente") {
@@ -210,7 +220,10 @@ async function resolverIdentidad(
       clienteId: usuario.cliente.id,
       cotizacionId: cotizacionReciente?.id,
       clienteNombre: usuario.cliente.nombre,
-      sitioWeb: req.headers.get("origin") ?? undefined,
+      sitioWeb:
+        req.headers.get("origin") ??
+        process.env.NEXT_PUBLIC_SITE_URL ??
+        undefined,
     };
   }
 
@@ -542,11 +555,33 @@ export async function POST(req: NextRequest) {
         )?.nombre ?? "Cliente"
       : "Cliente";
 
+    // Datos del cliente (mismo patrón que __INICIO__) para no perder contexto
+    // desde el segundo turno (corrige H03 de forma mínima; se rehace en Fase 4/6).
+    const datosCliente =
+      sesion.agente === "cliente" && sesion.clienteId
+        ? await (async () => {
+            const cl = await prisma.cliente.findUnique({
+              where: { id: sesion.clienteId as string },
+              include: {
+                cotizaciones: { orderBy: { creadoEn: "desc" }, take: 3 },
+                obras: { take: 3 },
+              },
+            });
+            return cl
+              ? { nombre: cl.nombre, cotizaciones: cl.cotizaciones, obras: cl.obras }
+              : {};
+          })()
+        : undefined;
+
     const systemPrompt = await agente.sistemaPromptBuilder({
       datosContexto: {
         cotizacion: cotizacionData,
         clienteNombre,
-        sitioWeb: req.headers.get("origin") ?? undefined,
+        sitioWeb:
+          req.headers.get("origin") ??
+          process.env.NEXT_PUBLIC_SITE_URL ??
+          undefined,
+        datosCliente,
       },
       conocimiento,
     });
