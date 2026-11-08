@@ -202,6 +202,13 @@ mismos tokens pero es funcional, sin storytelling.
 - `npm run db:studio` — Prisma Studio (puerto 5555)
 - El `postinstall` corre `prisma generate` (necesario antes del primer `dev`)
 
+## Chat (v2)
+
+- Herramientas del chat usan lenguaje natural (sin IDs); resolución determinista en servidor.
+- Saludo inicial sin LLM (plantillas + datos reales de BD).
+- Sesiones públicas: 1 por cotización, vigencia 24 h. Cliente/admin: múltiples sesiones con lista lateral.
+- Acciones de escritura pasan por `ChatAccion` con confirmación atómica y caducidad 30 min.
+
 ## Gotchas
 
 - **Next.js 16 renombró el middleware: el archivo es `src/proxy.ts`.**
