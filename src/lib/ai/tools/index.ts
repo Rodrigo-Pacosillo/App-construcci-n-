@@ -33,7 +33,7 @@ function compactarParaModelo(valor: unknown): unknown {
   if (valor && typeof valor === "object") {
     const out: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(valor as Record<string, unknown>)) {
-      if (/^id$|Id$|accionId|ui$/i.test(k)) continue;
+      if (/^id$|^accionId$|^ui$|Id$/.test(k)) continue;
       out[k] = compactarParaModelo(v);
     }
     return out;

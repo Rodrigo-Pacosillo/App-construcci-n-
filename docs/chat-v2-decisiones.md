@@ -1,35 +1,61 @@
-# Decisiones y discrepancias — chat v2
+# Decisiones y discrepancias — chat v3 correctivo
 
-## Estado base (Fase 0, rama feat/chat-agentes-v2)
+## Estado base (Fase 1 completada)
 
-- `npx prisma validate`: OK.
-- `npx tsc --noEmit`: sin errores.
-- `npm run lint`: 0 errores, 23 warnings (preexistentes, no bloquean).
-- Baseline anotado antes de cambios.
+- Mojibake en `src/app/api/chat/route.ts` corregido (22 ocurrencias → 0).
+- Tildes restauradas en `lib/ai/saludos/*`, `lib/ai/prompts/*`, `lib/ai/prompts/base.ts`.
+- Test detector creado: `tests/unit/mojibake.test.ts` (8/8 pasan).
+- Build, tsc, lint en verde.
 
-## Riesgos a cerrar (acordados)
+## Pendientes (según PLAN-chat-agentes-v3-CORRECTIVO.md)
 
-1. Búsqueda por apellido/acento: cargar todos los clientes y filtrar en memoria con `normalizarTexto` (no depender de `ILIKE`).
-2. Compatibilidad hacia atrás: `ChatMensaje.partes` y `ChatAccion.resumen` pueden ser `null` en filas previas; `historial.ts` y UI de tarjetas con fallback.
-3. Saludo persistido como `assistant` se omite del historial del modelo y se pliega al system prompt.
-4. Sesiones cliente/admin se crean perezosamente en el primer mensaje del usuario (no al abrir "nuevo chat").
-5. `visibleCliente` se envía explícito en todos los puntos de creación de eventos.
+**B01–B23** documentados en el plan correctivo.
 
-## Estado final de implementacion (2026-11-08)
+### Fase 1 ✅
+- Mojibake + tildes + test detector.
 
-Completado:
-- Fases 0-9, 11 parcial. Backend completo, migraciones aplicadas, tools sin IDs, saludo sin LLM, sesiones, acciones atomicas, toModelOutput, unit tests.
-- Build (tsc + npm run build + lint) en verde.
+### Fase 2 ⏳ (Contratos y datos compartidos)
+- `lib/ai/chat/tipos.ts` (contratos compartidos servidor/cliente).
+- `lib/ai/datos/pendientes.ts` → `obtenerPendientes()`.
+- `lib/ai/datos/resumenCliente.ts` → `obtenerResumenCliente(clienteId)`.
+- `lib/ai/datos/cotizacionPublica.ts` → `vistaCotizacionPublica(id)`.
+- `instanteNegocio(fecha, hora?)` en `datos/formato.ts`.
+- `compactarParaModelo` regex corregido.
 
-Pendiente:
-- Chips de sugerencias en UI.
-- Ejecucion real de evals (servidor + BD + API key).
-- Playwright de nuevos flujos.
-- Actualizacion completa de docs/arquitectura.md y DATABASE.md.
+### Fase 3 ⏳ (Backend: sesiones, saludo, ruta)
+- Saludos con datos reales (funciones puras).
+- Sugerencias públicas por regla.
+- Sesiones: público 1/cotización/24h, cliente/admin perezosa + título auto.
+- Endpoints rediseñados (JSON para `__INICIO__`, GET `/api/chat/saludo`, etc.).
+- Rate limit por hora.
+- Historial simplificado, saludo plegado al system prompt.
+- `route.ts` ≤ 250 líneas.
 
-## Huecos adicionales
+### Fase 4 ⏳ (Tools calendario/estado + ejecutor)
+- `proponer_evento_calendario` con schema nuevo.
+- `proponer_nota_calendario` (cliente, sin obra por defecto, visible=true).
+- `proponer_cambio_estado_cotizacion` con precondiciones correctas.
+- Ejecutor con `cambios`, `revalidatePath`, transacción.
+- Calendario cliente/admin actualizado.
 
-- `resolverCotizacion` con texto libre: reglas deterministas (estado abierto + fecha desc, o coincidencia de `tipoObra`).
-- Rate limit por hora requiere índice por `creadoEn`.
-- Backfill `EventoCalendario.clienteId`: verificar nombre real de tabla (`@@map`).
-- `Contrato.cotizacionId` único parcial: pre-check de duplicados antes de migrar.
+### Fase 5 ⏳ (Frontend chat)
+- `ChatPanel` refactor: chips desde servidor, modo borrador, header insignia.
+- `TarjetaAccion` unificada (evento + cambio_estado), campos editables.
+- `ChatShell` sincronizado (cliente/admin), `ChatSoloLectura` para supervisión admin.
+
+### Fase 6 ⏳ (Prompts y agentes)
+- `agents.ts` solo config + delegación a `prompts/*.ts`.
+- Builders con DTOs, ejemplos few-shot, estructura estándar.
+
+### Fase 7 ⏳ (Seguridad)
+- `__INICIO__` público sin campos de identidad.
+- Token público por header + revocación.
+- Límite longitud.
+
+### Fase 8 ⏳ (Pruebas)
+- Unit tests: `instanteNegocio`, `obtenerPendientes`, `obtenerResumenCliente`, saludos, sugerencias, ejecutor, parser SSE.
+- Evals reales + Playwright (guion §7).
+
+### Fase 9 ⏳ (Limpieza)
+- Borrar código muerto: `resolver-obra.ts`, `ejecutar-accion.ts`, `lib/chat/*`, `obtenerUsuarioIdDeSesion`, `chat_admin*`.
+- Actualizar docs: `arquitectura.md`, `modelo-datos.md`, `AGENTS.md`, `chat-v2-decisiones.md`.

@@ -371,35 +371,22 @@ export async function POST(req: NextRequest) {
       let saludoTexto = "";
       let sugerencias: string[] = [];
       if (identidad.agente === "publico" && identidad.cotizacionId) {
-        const cot = await prisma.cotizacion.findUnique({ where: { id: identidad.cotizacionId } });
         const { construirSaludoPublico } = await import("@/lib/ai/saludos/publico");
-        const { TIPO_OBRA_LABELS, TIPO_CONSTRUCCION_LABELS, RANGO_M2_LABELS, PLAZO_INICIO_LABELS } = await import("@/lib/constants");
         const saludo = await construirSaludoPublico({
+          cotizacionId: identidad.cotizacionId,
           nombre: identidad.clienteNombre ?? "Cliente",
-          tipoObraLabel: (TIPO_OBRA_LABELS as Record<string, string>)[String(cot?.tipoObra ?? "")] ?? String(cot?.tipoObra ?? ""),
-          tipoConstruccionLabel: (TIPO_CONSTRUCCION_LABELS as Record<string, string>)[String(cot?.tipoConstruccion ?? "")] ?? String(cot?.tipoConstruccion ?? ""),
-          rangoM2Label: (RANGO_M2_LABELS as Record<string, string>)[String(cot?.rangoM2 ?? "")] ?? String(cot?.rangoM2 ?? ""),
-          plazoLabel: (PLAZO_INICIO_LABELS as Record<string, string>)[String(cot?.plazoInicio ?? "")] ?? String(cot?.plazoInicio ?? ""),
-          ubicacionObra: cot?.ubicacionObra,
-          requerimiento: cot?.requerimiento,
         });
         saludoTexto = saludo.texto;
         sugerencias = saludo.sugerencias;
       } else if (identidad.agente === "cliente" && identidad.clienteId) {
-        const cl = await prisma.cliente.findUnique({ where: { id: identidad.clienteId }, include: { obras: { take: 1 } } });
-        const obra = (cl as { obras?: { nombreComercial: string | null; direccionObra: string; estado: string; progreso: number }[] } | null)?.obras?.[0];
         const { construirSaludoCliente } = await import("@/lib/ai/saludos/cliente");
-        const saludo = await construirSaludoCliente({
-          nombre: identidad.clienteNombre ?? "Cliente",
-          obra: obra?.nombreComercial ?? obra?.direccionObra,
-          estado: obra?.estado,
-          progreso: obra?.progreso,
-        });
+        const saludo = await construirSaludoCliente({ clienteId: identidad.clienteId });
         saludoTexto = saludo.texto;
         sugerencias = saludo.sugerencias;
       } else {
         const { construirSaludoAdmin } = await import("@/lib/ai/saludos/admin");
-        const saludo = await construirSaludoAdmin({ nombre: identidad.clienteNombre ?? "Admin" });
+        const session = await import("@/lib/auth").then(m => m.auth());
+        const saludo = await construirSaludoAdmin({ nombre: session?.user?.name ?? "Admin" });
         saludoTexto = saludo.texto;
         sugerencias = saludo.sugerencias;
       }

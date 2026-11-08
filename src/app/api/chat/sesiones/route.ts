@@ -24,6 +24,6 @@ export async function POST(req: NextRequest) {
   const sesion = await crearSesion({ usuarioId: session.user.id, agente });
   const saludo = agente === "admin"
     ? await construirSaludoAdmin({ nombre: session.user.name ?? "Admin" })
-    : await construirSaludoCliente({ nombre: session.user.name ?? "Cliente" });
+    : await construirSaludoCliente({ clienteId: session.user.id });
   return NextResponse.json({ sessionId: sesion.sessionId, saludo: saludo.texto, sugerencias: saludo.sugerencias });
 }
