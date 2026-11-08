@@ -74,14 +74,42 @@ export function ChatShell(props: ChatShellProps) {
         {loading && <div className="text-xs text-muted-foreground p-2">Cargando...</div>}
         <ul className="space-y-1">
           {sessions.map((s) => (
-            <li key={s.sessionId}>
+            <li key={s.sessionId} className="flex items-center gap-1">
               <button
                 onClick={() => setActiveId(s.sessionId)}
-                className={`w-full text-left px-3 py-2 rounded-md text-sm truncate ${
+                className={`flex-1 text-left px-3 py-2 rounded-md text-sm truncate ${
                   activeId === s.sessionId ? "bg-muted font-medium" : "hover:bg-muted/50"
                 }`}
               >
                 {s.titulo || "Sin titulo"}
+              </button>
+              <button
+                title="Renombrar"
+                onClick={async () => {
+                  const t = prompt("Nuevo titulo", s.titulo ?? "");
+                  if (t) {
+                    await fetch(`/api/chat/sesiones/${s.sessionId}`, {
+                      method: "PATCH",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ titulo: t }),
+                    });
+                    cargar();
+                  }
+                }}
+                className="text-xs px-1"
+              >
+                ✎
+              </button>
+              <button
+                title="Archivar"
+                onClick={async () => {
+                  await fetch(`/api/chat/sesiones/${s.sessionId}`, { method: "DELETE" });
+                  if (activeId === s.sessionId) setActiveId(null);
+                  cargar();
+                }}
+                className="text-xs px-1"
+              >
+                ✕
               </button>
             </li>
           ))}

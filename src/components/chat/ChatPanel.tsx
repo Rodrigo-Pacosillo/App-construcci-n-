@@ -11,6 +11,7 @@ import {
   TarjetaAccionCalendario,
   type AccionCalendarioPendiente,
 } from "./TarjetaAccionCalendario";
+import { RenderTextoChat } from "./RenderTextoChat";
 
 // ─── Lectura de stream SSE (AI SDK UI Message Stream) ─────────────────────
 type SSEMessage = {
@@ -765,9 +766,7 @@ export function ChatPanel({
                   : "bg-[var(--chat-bot-bg)] border border-[var(--chat-bot-border)] shadow-sm text-[var(--chat-bot-fg)]"
               }`}
             >
-              <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                {msg.contenido}
-              </p>
+              <RenderTextoChat texto={msg.contenido} />
               {msg.acciones?.map((accion) => (
                 <TarjetaAccionCalendario
                   key={accion.accionId}
