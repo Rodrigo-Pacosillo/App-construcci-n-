@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { streamText, createUIMessageStreamResponse, stepCountIs } from "ai";
+import { streamText, createUIMessageStreamResponse, createUIMessageStream, stepCountIs } from "ai";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
@@ -339,45 +339,32 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
 
-    // ── Caso 1: __INICIO__ ──
+    // ── Caso 1: __INICIO__ (saludo sin LLM) ──
     if (body.mensaje === "__INICIO__") {
-      // Nunca confiar en el cliente: validar la forma del inicio con Zod.
       const inicio = chatInicioSchema.safeParse(body);
       if (!inicio.success) {
         return errorResponse(
-          inicio.error.issues[0]?.message ?? "Solicitud de inicio inválida",
+          inicio.error.issues[0]?.message ?? "Solicitud de inicio invalida",
           "VALIDACION",
           400
         );
       }
       const identidad = await resolverIdentidad(req, body);
-      const agente = obtenerAgente(identidad.agente);
 
-      // Usar sessionId del cliente si se provee, sino generar uno nuevo
       let clientSessionId =
         typeof body.sessionId === "string" && body.sessionId.length > 0
           ? body.sessionId
           : crypto.randomUUID();
 
-      // Verificar si la sesión ya existe (reconexión) y que pertenezca a esta identidad
-      let sesion = await prisma.chatSesion.findUnique({
-        where: { sessionId: clientSessionId },
-      });
-
+      let sesion = await prisma.chatSesion.findUnique({ where: { sessionId: clientSessionId } });
       const sesionAjena =
         sesion &&
-        ((sesion.agente === "publico" &&
-          sesion.cotizacionId !== identidad.cotizacionId) ||
-          (sesion.agente !== "publico" &&
-            identidad.usuarioId != null &&
-            sesion.usuarioId !== identidad.usuarioId));
-
+        ((sesion.agente === "publico" && sesion.cotizacionId !== identidad.cotizacionId) ||
+          (sesion.agente !== "publico" && identidad.usuarioId != null && sesion.usuarioId !== identidad.usuarioId));
       if (sesionAjena) {
-        // No reutilizar sesiones de otra persona u otra cotización: crear una nueva
         clientSessionId = crypto.randomUUID();
         sesion = null;
       }
-
       if (!sesion) {
         sesion = await prisma.chatSesion.create({
           data: {
@@ -391,85 +378,64 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      const conocimiento = await obtenerConocimiento({
-        audiencia: agente.audienciaConocimiento,
-        categorias: agente.categoriasConocimiento as CategoriaConocimiento[],
-      });
+      let saludoTexto = "";
+      let sugerencias: string[] = [];
+      if (identidad.agente === "publico" && identidad.cotizacionId) {
+        const cot = await prisma.cotizacion.findUnique({ where: { id: identidad.cotizacionId } });
+        const { construirSaludoPublico } = await import("@/lib/ai/saludos/publico");
+        const { TIPO_OBRA_LABELS, TIPO_CONSTRUCCION_LABELS, RANGO_M2_LABELS, PLAZO_INICIO_LABELS } = await import("@/lib/constants");
+        const saludo = await construirSaludoPublico({
+          nombre: identidad.clienteNombre ?? "Cliente",
+          tipoObraLabel: (TIPO_OBRA_LABELS as any)[cot?.tipoObra as any] ?? String(cot?.tipoObra ?? ""),
+          tipoConstruccionLabel: (TIPO_CONSTRUCCION_LABELS as any)[cot?.tipoConstruccion as any] ?? String(cot?.tipoConstruccion ?? ""),
+          rangoM2Label: (RANGO_M2_LABELS as any)[cot?.rangoM2 as any] ?? String(cot?.rangoM2 ?? ""),
+          plazoLabel: (PLAZO_INICIO_LABELS as any)[cot?.plazoInicio as any] ?? String(cot?.plazoInicio ?? ""),
+          ubicacionObra: cot?.ubicacionObra,
+          requerimiento: cot?.requerimiento,
+        });
+        saludoTexto = saludo.texto;
+        sugerencias = saludo.sugerencias;
+      } else if (identidad.agente === "cliente" && identidad.clienteId) {
+        const cl = await prisma.cliente.findUnique({ where: { id: identidad.clienteId }, include: { obras: { take: 1 } } });
+        const obra = (cl as any)?.obras?.[0];
+        const { construirSaludoCliente } = await import("@/lib/ai/saludos/cliente");
+        const saludo = await construirSaludoCliente({
+          nombre: identidad.clienteNombre ?? "Cliente",
+          obra: obra?.nombreComercial ?? obra?.direccionObra,
+          estado: obra?.estado,
+          progreso: obra?.progreso,
+        });
+        saludoTexto = saludo.texto;
+        sugerencias = saludo.sugerencias;
+      } else {
+        const { construirSaludoAdmin } = await import("@/lib/ai/saludos/admin");
+        const saludo = await construirSaludoAdmin({ nombre: identidad.clienteNombre ?? "Admin" });
+        saludoTexto = saludo.texto;
+        sugerencias = saludo.sugerencias;
+      }
 
-      const cotizacionData =
-        identidad.cotizacionId &&
-        (await prisma.cotizacion.findUnique({
-          where: { id: identidad.cotizacionId },
-        }));
-
-      const datosCliente =
-        identidad.agente === "cliente" && identidad.clienteId
-          ? await (async () => {
-              const cl = await prisma.cliente.findUnique({
-                where: { id: identidad.clienteId },
-                include: {
-                  cotizaciones: { orderBy: { creadoEn: "desc" }, take: 3 },
-                  obras: { take: 3 },
-                },
-              });
-              return cl
-                ? {
-                    nombre: cl.nombre,
-                    cotizaciones: cl.cotizaciones,
-                    obras: cl.obras,
-                  }
-                : {};
-            })()
-          : undefined;
-
-      const systemPrompt = await agente.sistemaPromptBuilder({
-        datosContexto: {
-          cotizacion: cotizacionData,
-          clienteNombre: identidad.clienteNombre,
-          sitioWeb: identidad.sitioWeb,
-          datosCliente,
-        },
-        conocimiento,
-      });
-
-      const herramientas = toolsPara(
-        identidad.agente,
-        buildToolContext({
-          usuarioId: identidad.usuarioId,
-          clienteId: identidad.clienteId,
-          rol: identidad.agente,
+      await prisma.chatMensaje.create({
+        data: {
           sesionId: sesion.id,
-          sitioWeb: identidad.sitioWeb,
-        })
-      );
-
-      const resultado = streamText({
-        model: nvidiaProvider(agente.model),
-        // AI SDK 7: el system prompt va en `system`, no como mensaje del array.
-        system: systemPrompt,
-        messages: [{ role: "user", content: "__INICIO__" }],
-        temperature: agente.temperature,
-        maxOutputTokens: agente.maxTokens,
-        providerOptions: {
-          nvidia: {
-            chat_template_kwargs: { enable_thinking: false },
-          },
+          rol: "assistant",
+          contenido: saludoTexto,
+          partes: { role: "assistant", parts: [{ type: "text", text: saludoTexto }] },
+          metadatos: { tipo: "saludo" },
         },
-        tools: herramientas,
-        stopWhen: stepCountIs(8),
-        // Persistir respuesta del asistente cuando el stream termine
-        // (onFinish corre dentro del ciclo de vida de la respuesta: no se
-        // pierde el mensaje en serverless, a diferencia de una promesa flotante).
-        onFinish: async ({ text, toolResults }) => {
-          const usadas = (toolResults ?? []).map((r) => ({
-            herramienta: r.toolName,
-            resultado: JSON.stringify(r.output ?? {}).slice(0, 600),
-          }));
-          await persistirRespuestaAsistente(sesion.id, text, "INICIO", usadas);
+      });
+      await prisma.chatSesion.update({
+        where: { id: sesion.id },
+        data: { mensajeCount: { increment: 1 }, ultimoMensajeEn: new Date() },
+      });
+
+      const stream = createUIMessageStream({
+        execute: async ({ writer }) => {
+          writer.write({ type: "text-delta", id: "saludo", delta: saludoTexto });
+          writer.write({ type: "finish" });
         },
       });
 
-      return createUIMessageStreamResponse({ stream: resultado.toUIMessageStream() });
+      return createUIMessageStreamResponse({ stream });
     }
 
     // ── Caso 2: mensaje normal ──
