@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
+import { rechazarChatAccion } from "@/lib/ai/acciones/ejecutar";
 
 export async function POST(
   req: NextRequest,
@@ -15,38 +15,18 @@ export async function POST(
         { status: 403 }
       );
     }
-
-    const accion = await prisma.chatAccion.findUnique({
-      where: { id },
-    });
-
-    if (!accion) {
+    const result = await rechazarChatAccion(id, { usuarioId: session.user.id });
+    if (!result.ok) {
       return NextResponse.json(
-        { error: { code: "SESION_NO_ENCONTRADA", message: "Acción no encontrada" } },
-        { status: 404 }
-      );
-    }
-
-    if (accion.estado !== "pendiente") {
-      return NextResponse.json(
-        { error: { code: "VALIDACION", message: "La acción ya no está pendiente" } },
+        { error: { code: "VALIDACION", message: result.mensaje } },
         { status: 400 }
       );
     }
-
-    await prisma.chatAccion.update({
-      where: { id },
-      data: {
-        estado: "rechazada",
-        confirmadaPorUsuarioId: session.user.id,
-      },
-    });
-
     return NextResponse.json({ ok: true, estado: "rechazada" });
   } catch (error) {
     console.error("[CHAT ACCION RECHAZAR] Error:", error);
     return NextResponse.json(
-      { error: { code: "DESCONOCIDO", message: "Error al rechazar la acción" } },
+      { error: { code: "DESCONOCIDO", message: "Error al rechazar la accion" } },
       { status: 500 }
     );
   }

@@ -1,6 +1,7 @@
 import { tool } from "ai";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
+import { Prisma } from "@prisma/client";
 import type { ToolContext } from "@/lib/ai/contexto";
 import { fechaNegocio } from "@/lib/ai/datos/formato";
 import { resolverCliente } from "@/lib/ai/datos/resolvers/cliente";
@@ -32,23 +33,21 @@ export const proponerEventoCalendarioTool = (ctx: ToolContext) =>
       const visibleCliente = Boolean(args.visibleCliente);
       const todoElDia = args.todoElDia === undefined ? true : Boolean(args.todoElDia);
 
-      let res: any;
-      if (sinObra) {
-        res = { estado: "ninguno" };
-      } else {
-        res = await resolverObra(args.obra ?? "", { clienteId });
-      }
+      let obraRes: Awaited<ReturnType<typeof resolverObra>> | null = null;
       if (!sinObra) {
-        if (res.estado === "ninguno" && (args.obra ?? "").trim()) {
-          // permitir sin obra si no se encontro? no
+        obraRes = await resolverObra(args.obra ?? "", { clienteId });
+        if (obraRes.estado === "ninguno" && (args.obra ?? "").trim()) {
+          return { estado: "ninguno", sugerencia: (obraRes as { sugerencia?: string }).sugerencia ?? "No encontre la obra." };
         }
-        if (res.estado === "ninguno" && (args.obra ?? "").trim()) return { estado: "ninguno", sugerencia: res.sugerencia };
-        if (res.estado === "ambiguo") return { estado: "ambiguo", opciones: res.opciones, sugerencia: res.sugerencia };
+        if (obraRes.estado === "ambiguo") {
+          return { estado: "ambiguo", opciones: obraRes.opciones, sugerencia: obraRes.sugerencia };
+        }
       }
 
-      const obraFijada = !sinObra && res && res.estado === "unico" ? res.valor.id : undefined;
-      const obraEtiqueta = obraFijada
-        ? (res.valor.nombreComercial ?? res.valor.direccionObra)
+      const obraUnica = !sinObra && obraRes && obraRes.estado === "unico" ? (obraRes as { valor: { id: string; nombreComercial: string | null; direccionObra: string } }).valor : undefined;
+      const obraFijada = obraUnica?.id;
+      const obraEtiqueta = obraFijada && obraUnica
+        ? (obraUnica.nombreComercial ?? obraUnica.direccionObra)
         : "Sin obra (solo admin)";
       const visibleClienteEfectiva = obraFijada ? visibleCliente : false;
 
@@ -69,7 +68,7 @@ export const proponerEventoCalendarioTool = (ctx: ToolContext) =>
             fechaFin: args.fechaFin ?? null,
             todoElDia,
             visibleCliente: visibleClienteEfectiva,
-          } as any,
+          } as unknown as Prisma.InputJsonValue,
           resumen: {
             tipo: "evento",
             titulo: args.titulo,
@@ -77,8 +76,8 @@ export const proponerEventoCalendarioTool = (ctx: ToolContext) =>
             obraEtiqueta,
             fechaInicio: args.fechaInicio,
             visibleCliente: visibleClienteEfectiva,
-          } as any,
-          precondiciones: { clienteExiste: true } as any,
+          } as unknown as Prisma.InputJsonValue,
+          precondiciones: { clienteExiste: true } as unknown as Prisma.InputJsonValue,
           estado: "pendiente",
           expiraEn: new Date(ctx.ahora.getTime() + 30 * 60 * 1000),
         },

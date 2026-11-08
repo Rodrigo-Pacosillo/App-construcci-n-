@@ -1,18 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import {
-  ejecutarChatAccion,
-  type ResultadoEjecucion,
-} from "@/lib/ai/ejecutar-accion";
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   POST /api/admin/chat-acciones/[id]/confirmar
-   Confirma y EJECUTA una acción propuesta por el agente admin.
-   La lógica de negocio vive en src/lib/ai/ejecutar-accion.ts (compartida
-   con el server action confirmarChatAccion del panel /admin/chat).
-   ───────────────────────────────────────────────────────────────────────────── */
+import { ejecutarChatAccion } from "@/lib/ai/acciones/ejecutar";
 
 export async function POST(
   req: NextRequest,
@@ -28,81 +17,25 @@ export async function POST(
       );
     }
 
-    const accion = await prisma.chatAccion.findUnique({
-      where: { id },
+    const result = await ejecutarChatAccion({
+      accionId: id,
+      actor: { usuarioId: session.user.id, rol: "admin" },
     });
 
-    if (!accion) {
+    if (!result.ok) {
+      const status =
+        result.codigo === "ACCION_EXPIRADA" ? 409 :
+        result.codigo === "ACCION_NO_PENDIENTE" ? 409 : 400;
       return NextResponse.json(
-        { error: { code: "SESION_NO_ENCONTRADA", message: "Acción no encontrada" } },
-        { status: 404 }
+        { error: { code: result.codigo, message: result.mensaje } },
+        { status }
       );
     }
-
-    if (accion.estado !== "pendiente") {
-      return NextResponse.json(
-        { error: { code: "VALIDACION", message: "La acción ya no está pendiente" } },
-        { status: 400 }
-      );
-    }
-
-    let resultado: ResultadoEjecucion;
-    try {
-      resultado = await ejecutarChatAccion(
-        accion.herramienta,
-        accion.argumentos,
-        session.user.id
-      );
-    } catch (ejecucionError) {
-      const mensajeError =
-        ejecucionError instanceof Error
-          ? ejecucionError.message
-          : "Error desconocido al ejecutar";
-      await prisma.chatAccion.update({
-        where: { id },
-        data: {
-          estado: "fallida",
-          error: mensajeError,
-          confirmadaPorUsuarioId: session.user.id,
-        },
-      });
-      return NextResponse.json(
-        {
-          error: {
-            code: "VALIDACION",
-            message: `La acción no pudo ejecutarse: ${mensajeError}`,
-          },
-        },
-        { status: 400 }
-      );
-    }
-
-    await prisma.chatAccion.update({
-      where: { id },
-      data: {
-        estado: "ejecutada",
-        ejecutadoEn: new Date(),
-        confirmadaPorUsuarioId: session.user.id,
-        resultado: resultado as unknown as Prisma.InputJsonObject,
-      },
-    });
-
-    return NextResponse.json({ ok: true, estado: "ejecutada", resultado });
+    return NextResponse.json({ ok: true, estado: "ejecutada", resultado: result });
   } catch (error) {
     console.error("[CHAT ACCION CONFIRMAR] Error:", error);
-    try {
-      await prisma.chatAccion.update({
-        where: { id },
-        data: {
-          estado: "fallida",
-          error: error instanceof Error ? error.message : "Error desconocido",
-        },
-      });
-    } catch {
-      // la acción puede no existir: ignorar
-    }
     return NextResponse.json(
-      { error: { code: "DESCONOCIDO", message: "Error al ejecutar la acción" } },
+      { error: { code: "DESCONOCIDO", message: "Error al ejecutar la accion" } },
       { status: 500 }
     );
   }

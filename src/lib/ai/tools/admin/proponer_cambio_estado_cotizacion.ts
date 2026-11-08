@@ -1,6 +1,7 @@
 import { tool } from "ai";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
+import { Prisma } from "@prisma/client";
 import type { ToolContext } from "@/lib/ai/contexto";
 import { resolverCliente } from "@/lib/ai/datos/resolvers/cliente";
 import { resolverCotizacion } from "@/lib/ai/datos/resolvers/cotizacion";
@@ -59,12 +60,12 @@ export const proponerCambioEstadoCotizacionTool = (ctx: ToolContext) =>
           sesionId: ctx.sesionId,
           usuarioId: ctx.usuarioId,
           herramienta: "proponer_cambio_estado_cotizacion",
-          argumentos: { cotizacionId: cot.id, nuevoEstado } as any,
+          argumentos: { cotizacionId: cot.id, nuevoEstado } as unknown as Prisma.InputJsonValue,
           resumen: {
             cotizacion: `${cot.tipoObra} - ${cot.estado}`,
             nuevoEstado: ESTADO_LABELS[nuevoEstado as keyof typeof ESTADO_LABELS] ?? nuevoEstado,
-          } as any,
-          precondiciones: { estadoActual: cot.estado, transicionValida: true } as any,
+          } as unknown as Prisma.InputJsonValue,
+          precondiciones: { estadoActual: cot.estado, transicionValida: true } as unknown as Prisma.InputJsonValue,
           estado: "pendiente",
           expiraEn: new Date(ctx.ahora.getTime() + 30 * 60 * 1000),
         },

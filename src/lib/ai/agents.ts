@@ -4,6 +4,9 @@ import type {
   DocConocimiento,
   AudienciaConocimiento,
 } from "./conocimiento";
+import { buildPublicoPrompt } from "./prompts/publico";
+import { buildClientePrompt } from "./prompts/cliente";
+import { buildAdminPrompt } from "./prompts/admin";
 import type { EstadoHerramienta } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";

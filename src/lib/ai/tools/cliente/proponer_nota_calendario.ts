@@ -1,6 +1,7 @@
 import { tool } from "ai";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
+import { Prisma } from "@prisma/client";
 import type { ToolContext } from "@/lib/ai/contexto";
 import { fechaNegocio } from "@/lib/ai/datos/formato";
 import { resolverObra } from "@/lib/ai/datos/resolvers/obra";
@@ -30,7 +31,7 @@ export const proponerNotaCalendarioTool = (ctx: ToolContext) =>
 
       let res: Awaited<ReturnType<typeof resolverObra>>;
       if (sinObra) {
-        res = { estado: "ninguno", opciones: [], sugerencia: "Sin obra" } as any;
+        res = { estado: "ninguno", opciones: [], sugerencia: "Sin obra" } as unknown as Awaited<ReturnType<typeof resolverObra>>;
       } else {
         res = await resolverObra(args.obra ?? "", { clienteId });
       }
@@ -42,7 +43,7 @@ export const proponerNotaCalendarioTool = (ctx: ToolContext) =>
 
       const obraFijada = !sinObra && res.estado === "unico" ? res.valor.id : undefined;
       const obraEtiqueta = obraFijada
-        ? (res as any).valor?.nombreComercial ?? (res as any).valor?.direccionObra ?? "Obra"
+        ? (res as { valor: { nombreComercial?: string | null; direccionObra: string } }).valor?.nombreComercial ?? (res as { valor: { nombreComercial?: string | null; direccionObra: string } }).valor?.direccionObra ?? "Obra"
         : "Sin obra (nota interna, solo admin)";
       const visibleClienteEfectiva = obraFijada ? visibleCliente : false;
 
@@ -63,7 +64,7 @@ export const proponerNotaCalendarioTool = (ctx: ToolContext) =>
             fechaFin: args.fechaFin ?? null,
             todoElDia,
             visibleCliente: visibleClienteEfectiva,
-          } as any,
+          } as unknown as Prisma.InputJsonValue,
           resumen: {
             tipo: "nota",
             titulo: args.titulo,
@@ -71,8 +72,8 @@ export const proponerNotaCalendarioTool = (ctx: ToolContext) =>
             obraEtiqueta,
             fechaInicio: args.fechaInicio,
             visibleCliente: visibleClienteEfectiva,
-          } as any,
-          precondiciones: { clienteExiste: true } as any,
+          } as unknown as Prisma.InputJsonValue,
+          precondiciones: { clienteExiste: true } as unknown as Prisma.InputJsonValue,
           estado: "pendiente",
           expiraEn: new Date(ctx.ahora.getTime() + 30 * 60 * 1000),
         },
