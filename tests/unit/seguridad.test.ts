@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { limpiarParaModelo, assertSinProhibidos } from "../../src/lib/ai/datos/seguridad";
 
 test("limpiarParaModelo elimina id", () => {
-  const out = limpiarParaModelo({ id: "123", nombre: "Juan" }, "publico") as any;
+  const out = limpiarParaModelo({ id: "123", nombre: "Juan" }, "publico") as Record<string, unknown>;
   assert.equal(out.id, undefined);
   assert.equal(out.nombre, "Juan");
 });

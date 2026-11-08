@@ -464,10 +464,9 @@ export function ChatPanel({
     }
   }, [clienteId, cotizacionId, sessionStorageKey, iniciarChat]);
 
-  async function enviarMensaje() {
-    if (!input.trim() || !sessionId) return;
-
-    const texto = input.trim();
+  const enviarTexto = useCallback(async (textoParam: string) => {
+    const texto = textoParam.trim();
+    if (!texto || !sessionId) return;
     setInput("");
     setError(null);
 
@@ -585,7 +584,9 @@ export function ChatPanel({
     } finally {
       setLoading(false);
     }
-  }
+  }, [sessionId, chatToken, sessionStorageKey]);
+
+  const enviarMensaje = useCallback(() => enviarTexto(input), [input, enviarTexto]);
 
   const alFinalizarAccion = useCallback(
     (accionId: string, exito: boolean, mensaje?: string) => {
@@ -802,6 +803,22 @@ export function ChatPanel({
         )}
       </div>
 
+      {mensajes.length <= 1 && !loading && (
+        <div className="px-4 pb-2 flex flex-wrap gap-2">
+          {(esAdmin
+            ? ["Cotizaciones nuevas", "Agenda de hoy", "Estado de una obra", "Buscar un cliente"]
+            : ["Ver avance de mi obra", "Mis proximos eventos", "Agregar una nota a mi calendario", "Tengo una duda tecnica"]
+          ).map((chip) => (
+            <button
+              key={chip}
+              onClick={() => enviarTexto(chip)}
+              className="text-xs px-3 py-1 rounded-full border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+            >
+              {chip}
+            </button>
+          ))}
+        </div>
+      )}
       {/* Zona de input */}
       <div className="border-t border-neutral-200 dark:border-neutral-800 p-4 shrink-0">
         <div className="flex gap-2">
