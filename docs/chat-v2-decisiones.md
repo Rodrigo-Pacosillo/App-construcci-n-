@@ -15,6 +15,18 @@
 4. Sesiones cliente/admin se crean perezosamente en el primer mensaje del usuario (no al abrir "nuevo chat").
 5. `visibleCliente` se envía explícito en todos los puntos de creación de eventos.
 
+## Estado final de implementacion (2026-11-08)
+
+Completado:
+- Fases 0-9, 11 parcial. Backend completo, migraciones aplicadas, tools sin IDs, saludo sin LLM, sesiones, acciones atomicas, toModelOutput, unit tests.
+- Build (tsc + npm run build + lint) en verde.
+
+Pendiente:
+- Chips de sugerencias en UI.
+- Ejecucion real de evals (servidor + BD + API key).
+- Playwright de nuevos flujos.
+- Actualizacion completa de docs/arquitectura.md y DATABASE.md.
+
 ## Huecos adicionales
 
 - `resolverCotizacion` con texto libre: reglas deterministas (estado abierto + fecha desc, o coincidencia de `tipoObra`).
