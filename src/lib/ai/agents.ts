@@ -31,7 +31,9 @@ export interface AgenteConfig {
    Prompt base común
    ───────────────────────────────────────────────────────────────────────────── */
 
-const REGLAS_BASE = `
+function reglasComunes({ sitioWeb }: { sitioWeb?: string }): string {
+  const sw = (sitioWeb ?? "").replace(/\/$/, "");
+  return `
 # REGLAS DE COMPORTAMIENTO (Constr-art)
 
 ## Tono y estilo
@@ -51,13 +53,14 @@ const REGLAS_BASE = `
 Si el cliente hace una pregunta vaga, pedir más contexto antes de responder.
 
 Links útiles:
-- Servicios: {sitioWeb}/servicios
-- Cotización: {sitioWeb}/cotizacion
-- FAQ: {sitioWeb}/faq
-- Proyectos: {sitioWeb}/proyectos
+- Servicios: ${sw}/servicios
+- Cotización: ${sw}/cotizacion
+- FAQ: ${sw}/faq
+- Proyectos: ${sw}/proyectos
 
 Responde siempre en español neutro.
 `.trim();
+}
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Helper: obtener usuarioId de la sesión NextAuth
@@ -112,7 +115,7 @@ const TOOL_OBTENER_AVANCE_OBRA = {
       select: { clienteId: true },
     });
     if (!usuario?.clienteId) return { obra: null, avance: 0, hitos: [] };
-    const obras = await prisma.obraActiva.findMany({
+    const obrasRaw = await prisma.obraActiva.findMany({
       where: { clienteId: usuario.clienteId },
       take: 5,
       select: {
@@ -120,7 +123,16 @@ const TOOL_OBTENER_AVANCE_OBRA = {
         direccionObra: true,
         estado: true,
         progreso: true,
+        fechaInicio: true,
       },
+    });
+    // Priorizar obras en curso y luego las más recientes por fecha de inicio.
+    const obras = obrasRaw.slice().sort((a, b) => {
+      if (a.estado === "en_curso" && b.estado !== "en_curso") return -1;
+      if (b.estado === "en_curso" && a.estado !== "en_curso") return 1;
+      const fa = a.fechaInicio ? new Date(a.fechaInicio).getTime() : 0;
+      const fb = b.fechaInicio ? new Date(b.fechaInicio).getTime() : 0;
+      return fb - fa;
     });
     if (!obras[0]) return { obra: null, avance: 0, hitos: [] };
     const obra = obras[0];
@@ -134,9 +146,8 @@ const TOOL_OBTENER_AVANCE_OBRA = {
         visibleCliente: true,
       },
     });
-    const total = hitos.length;
-    const completados = hitos.filter((h) => h.visibleCliente).length;
-    const avance = total === 0 ? 0 : Math.round((completados / total) * 100);
+    // El avance real es ObraActiva.progreso (no se calcula por hitos).
+    const avance = obra.progreso ?? 0;
     return {
       obra: {
         id: obra.id,
@@ -442,6 +453,15 @@ export const AGENTES: Record<AgenteId, AgenteConfig> = {
         | undefined;
       const clienteNombre = (datosContexto?.clienteNombre as string) ?? "Cliente";
       const sitioWeb = (datosContexto?.sitioWeb as string) ?? "";
+      const fechaActual = new Intl.DateTimeFormat("es-BO", {
+        timeZone: "America/La_Paz",
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }).format(new Date());
 
       const docsTexto = conocimiento
         .map((d) => `- ${d.titulo}: ${d.contenido}`)
@@ -449,6 +469,8 @@ export const AGENTES: Record<AgenteId, AgenteConfig> = {
 
       return `
 Eres el asistente virtual de Constr-art, empresa de construcción en seco (Steel Frame) y tradicional. Atiendes a un cliente que acaba de enviar una cotización en el sitio web.
+
+Fecha y hora actual (America/La_Paz): ${fechaActual}. Interprete "hoy", "mañana", "el lunes" con esta fecha.
 
 # DATOS DE LA COTIZACIÓN DEL CLIENTE
 - Nombre: ${clienteNombre}
@@ -461,7 +483,7 @@ Eres el asistente virtual de Constr-art, empresa de construcción en seco (Steel
 # CONOCIMIENTO DISPONIBLE
 ${docsTexto || "(ningún documento de conocimiento cargado)"}
 
-${REGLAS_BASE.replace("{sitioWeb}", sitioWeb)}
+${reglasComunes({ sitioWeb })}
 
 En tu PRIMERA respuesta, analiza los datos de la cotización y haz 2-3 preguntas concretas basadas en lo que el cliente llenó. Usa el nombre del cliente al inicio.
 `.trim();
@@ -489,6 +511,15 @@ En tu PRIMERA respuesta, analiza los datos de la cotización y haz 2-3 preguntas
     sistemaPromptBuilder: async ({ datosContexto, conocimiento }) => {
       const clienteNombre = (datosContexto?.clienteNombre as string) ?? "Cliente";
       const sitioWeb = (datosContexto?.sitioWeb as string) ?? "";
+      const fechaActual = new Intl.DateTimeFormat("es-BO", {
+        timeZone: "America/La_Paz",
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }).format(new Date());
       const contextoDatos = datosContexto?.datosCliente as
         | Record<string, unknown>
         | undefined;
@@ -500,13 +531,15 @@ En tu PRIMERA respuesta, analiza los datos de la cotización y haz 2-3 preguntas
       return `
 Eres el asistente virtual de Constr-art para clientes autenticados. Atiendes a ${clienteNombre}.
 
+Fecha y hora actual (America/La_Paz): ${fechaActual}. Interprete "hoy", "mañana", "el lunes" con esta fecha.
+
 # DATOS DEL CLIENTE
 ${contextoDatos ? JSON.stringify(contextoDatos, null, 2) : "(sin datos adicionales)"}
 
 # CONOCIMIENTO DISPONIBLE
 ${docsTexto || "(ningún documento de conocimiento cargado)"}
 
-${REGLAS_BASE.replace("{sitioWeb}", sitioWeb)}
+${reglasComunes({ sitioWeb })}
 
 Cuando el cliente pregunte por sus cotizaciones, avance de obra o próximos eventos, utiliza las herramientas disponibles para obtener sus datos reales. Nunca inventes información.
 `.trim();
@@ -538,6 +571,15 @@ Cuando el cliente pregunte por sus cotizaciones, avance de obra o próximos even
     limiteMensajesSesion: null,
     sistemaPromptBuilder: async ({ datosContexto, conocimiento }) => {
       const sitioWeb = (datosContexto?.sitioWeb as string) ?? "";
+      const fechaActual = new Intl.DateTimeFormat("es-BO", {
+        timeZone: "America/La_Paz",
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }).format(new Date());
 
       const docsTexto = conocimiento
         .map((d) => `- ${d.titulo}: ${d.contenido}`)
@@ -546,10 +588,12 @@ Cuando el cliente pregunte por sus cotizaciones, avance de obra o próximos even
       return `
 Eres el agente de administración de Constr-art. Atiendes a un administrador del negocio. Tienes acceso a herramientas de lectura y escritura segura.
 
+Fecha y hora actual (America/La_Paz): ${fechaActual}. Interprete "hoy", "mañana", "el lunes" con esta fecha.
+
 # CONOCIMIENTO DISPONIBLE
 ${docsTexto || "(ningún documento de conocimiento cargado)"}
 
-${REGLAS_BASE.replace("{sitioWeb}", sitioWeb)}
+${reglasComunes({ sitioWeb })}
 
 ## Herramientas de escritura (siempre vía confirmación humana)
 Cuando necesites realizar una escritura (cambiar estado de cotización, agendar visita o dejar una nota en el calendario), debes:
