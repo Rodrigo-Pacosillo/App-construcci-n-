@@ -8,6 +8,8 @@ import type { AgenteId } from "@/lib/ai/agents";
 import type { AudienciaConocimiento } from "@/lib/ai/conocimiento";
 import { Prisma } from "@prisma/client";
 import { obtenerAgente } from "@/lib/ai/agents";
+import { toolsPara } from "@/lib/ai/tools";
+import { buildToolContext } from "@/lib/ai/contexto";
 import { obtenerConocimiento, buscarConocimiento } from "@/lib/ai/conocimiento";
 import { verificarChatToken } from "@/lib/tokens";
 import { resolverObraDeCliente } from "@/lib/ai/resolver-obra";
@@ -430,10 +432,15 @@ export async function POST(req: NextRequest) {
         conocimiento,
       });
 
-      const herramientas = construirHerramientas(
-        agente.id,
-        identidad.usuarioId,
-        sesion.id
+      const herramientas = toolsPara(
+        identidad.agente,
+        buildToolContext({
+          usuarioId: identidad.usuarioId,
+          clienteId: identidad.clienteId,
+          rol: identidad.agente,
+          sesionId: sesion.id,
+          sitioWeb: identidad.sitioWeb,
+        })
       );
 
       const resultado = streamText({
@@ -602,10 +609,18 @@ export async function POST(req: NextRequest) {
         return { role: m.rol as "user" | "assistant", content: m.contenido + bloque };
       });
 
-    const herramientas = construirHerramientas(
-      agente.id,
-      sesion.usuarioId ?? undefined,
-      sesion.id
+    const herramientas = toolsPara(
+      sesion.agente as "publico" | "cliente" | "admin",
+      buildToolContext({
+        usuarioId: sesion.usuarioId ?? undefined,
+        clienteId: sesion.clienteId ?? undefined,
+        rol: sesion.agente as "publico" | "cliente" | "admin",
+        sesionId: sesion.id,
+        sitioWeb:
+          req.headers.get("origin") ??
+          process.env.NEXT_PUBLIC_SITE_URL ??
+          undefined,
+      })
     );
 
     const result = streamText({
