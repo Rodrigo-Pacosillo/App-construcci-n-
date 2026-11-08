@@ -98,6 +98,7 @@ enum TipoEventoCalendario {
   fin_etapa
   entrega
   reunion
+  visita_tecnica
   otro
 }
 
@@ -126,6 +127,7 @@ enum AgenteChat {
 enum EstadoChatSesion {
   activa
   cerrada
+  archivada
 }
 
 enum RolChatMensaje {
@@ -135,9 +137,11 @@ enum RolChatMensaje {
 
 enum EstadoChatAccion {
   pendiente
+  ejecutando
   ejecutada
   rechazada
   fallida
+  expirada
 }
 
 enum AudienciaConocimiento {
@@ -210,6 +214,7 @@ model Cliente {
   testimonios  Testimonio[]
   invitaciones InvitacionUsuario[]
   chatSesiones ChatSesion[]
+  eventosCalendario EventoCalendario[]
 
   @@map("clientes")
 }
@@ -436,6 +441,9 @@ model EventoCalendario {
   obraId String?     @map("obra_id")
   obra   ObraActiva? @relation(fields: [obraId], references: [id], onDelete: Cascade)
 
+  clienteId String? @map("cliente_id")
+  cliente   Cliente? @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+
   titulo      String
   descripcion String? @db.Text
 
@@ -456,6 +464,7 @@ model EventoCalendario {
   @@index([obraId])
   @@index([fechaInicio])
   @@index([visibleCliente, fechaInicio])
+  @@index([clienteId, fechaInicio])
   @@map("eventos_calendario")
 }
 
@@ -648,6 +657,8 @@ model ChatSesion {
   estado          EstadoChatSesion @default(activa)
   titulo          String?          @map("titulo")
   resumen         String?          @db.Text @map("resumen")
+  expiraEn        DateTime?        @map("expira_en")
+  archivadaEn     DateTime?        @map("archivada_en")
   ultimoMensajeEn DateTime         @default(now()) @map("ultimo_mensaje_en")
   creadoEn        DateTime         @default(now()) @map("creado_en")
 
@@ -661,6 +672,7 @@ model ChatSesion {
   @@index([cotizacionId])
   @@index([usuarioId])
   @@index([estado, ultimoMensajeEn])
+  @@index([usuarioId, agente, ultimoMensajeEn(sort: Desc)])
   @@map("chat_sesiones")
 }
 
@@ -669,6 +681,7 @@ model ChatMensaje {
   sesionId  String         @map("sesion_id")
   rol       RolChatMensaje @default(user)
   contenido String         @db.Text
+  partes    Json?
   metadatos Json?
   creadoEn  DateTime       @default(now()) @map("creado_en")
 
@@ -686,9 +699,12 @@ model ChatAccion {
   herramienta            String           @map("herramienta")
   argumentos             Json
   resultado              Json?
+  resumen                Json?
+  precondiciones         Json?
   estado                 EstadoChatAccion @default(pendiente)
   error                  String?          @map("error")
   confirmadaPorUsuarioId String?          @map("confirmada_por_usuario_id")
+  expiraEn               DateTime?        @map("expira_en")
   creadoEn               DateTime         @default(now()) @map("creado_en")
   ejecutadoEn            DateTime?        @map("ejecutado_en")
 
@@ -698,6 +714,7 @@ model ChatAccion {
 
   @@index([sesionId])
   @@index([estado, creadoEn])
+  @@index([usuarioId, estado])
   @@map("chat_acciones")
 }
 
