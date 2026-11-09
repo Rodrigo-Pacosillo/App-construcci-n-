@@ -7,6 +7,7 @@ import Image from "next/image";
  * Reproductor de video de Cloudinary (click-to-play).
  * - Ningún <video> hasta el clic.
  * - videoUrl null → no renderiza nada.
+ * - object-contain para que videos verticales (formato teléfono) se vean completos.
  */
 export function CloudinaryVideoPlayer({
   videoUrl,
@@ -20,14 +21,14 @@ export function CloudinaryVideoPlayer({
   const [activo, setActivo] = useState(false);
 
   return (
-    <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-neutral-200">
+    <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-neutral-900">
       {activo ? (
         <video
           src={videoUrl}
           title={titulo}
           controls
           playsInline
-          className="absolute inset-0 h-full w-full object-cover"
+          className="absolute inset-0 h-full w-full object-contain"
           poster={portadaUrl ?? undefined}
         />
       ) : (
