@@ -2,14 +2,18 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { TikTokPlayer } from "@/components/proyecto/TikTokPlayer";
 import { CloudinaryVideoPlayer } from "@/components/proyecto/CloudinaryVideoPlayer";
+import { VideoSlot } from "@/components/proyecto/VideoSlot";
+import { GaleriaProyecto } from "@/components/proyecto/GaleriaProyecto";
 import { prisma } from "@/lib/db";
 import { FALLBACK_PROYECTOS } from "@/lib/fallback-data";
+import { cloudSrc } from "@/lib/cloudinary-img";
+import Image from "next/image";
 import type { Metadata } from "next";
 
 async function getProyecto(slug: string) {
   try {
-    const proyecto = await prisma.proyectoPortafolio.findUnique({
-      where: { slug },
+    const proyecto = await prisma.proyectoPortafolio.findFirst({
+      where: { slug, publicado: true },
       select: {
         id: true, slug: true, titulo: true, tipoConstruccion: true,
         m2Construidos: true, diasEjecucion: true, ubicacion: true,
@@ -37,8 +41,8 @@ export async function generateMetadata({
     return { title: "Proyecto no encontrado" };
   }
 
-  const tipoConstructivo = proyecto.tipoConstruccion === "seco" ? "Steel Frame" : 
-    proyecto.tipoConstruccion === "tradicional" ? "Construcción Tradicional" : 
+  const tipoConstructivo = proyecto.tipoConstruccion === "seco" ? "Steel Frame" :
+    proyecto.tipoConstruccion === "tradicional" ? "Construcción Tradicional" :
     "Solución Integral";
 
   return {
@@ -113,10 +117,23 @@ export default async function ProyectoPage({
           </div>
         </div>
 
-        {proyecto.videoUrl && (
-          <div className="mt-12">
-            <p className="section-label mb-2 text-ink-faint">VIDEO DE OBRA</p>
-            {proyecto.videoUrl.includes("res.cloudinary.com") ? (
+        {proyecto.portadaUrl && (
+          <figure className="relative mt-8 aspect-[16/9] overflow-hidden rounded-xl border border-border">
+            <Image
+              src={cloudSrc(proyecto.portadaUrl, { w: 1600, ar: "16:9" })}
+              alt={proyecto.titulo}
+              fill
+              priority
+              sizes="(max-width: 896px) 100vw, 896px"
+              className="object-cover"
+            />
+          </figure>
+        )}
+
+        <div className="mt-12">
+          <p className="section-label mb-2 text-ink-faint">VIDEO DE OBRA</p>
+          {proyecto.videoUrl ? (
+            proyecto.videoUrl.includes("res.cloudinary.com") ? (
               <CloudinaryVideoPlayer
                 videoUrl={proyecto.videoUrl}
                 portadaUrl={proyecto.portadaUrl}
@@ -128,9 +145,13 @@ export default async function ProyectoPage({
                 portadaUrl={proyecto.portadaUrl}
                 titulo={proyecto.titulo}
               />
-            )}
-          </div>
-        )}
+            )
+          ) : (
+            <VideoSlot />
+          )}
+        </div>
+
+        <GaleriaProyecto urls={proyecto.galeriaUrls ?? []} titulo={proyecto.titulo} />
 
         <div className="mt-12 text-center">
           <Link

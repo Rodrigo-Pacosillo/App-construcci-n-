@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { FALLBACK_PROYECTOS } from "@/lib/fallback-data";
+import { cloudSrc } from "@/lib/cloudinary-img";
 
 async function getProyectos() {
   try {
@@ -11,6 +12,7 @@ async function getProyectos() {
         id: true, slug: true, titulo: true, tipoConstruccion: true,
         m2Construidos: true, diasEjecucion: true, portadaUrl: true,
       },
+      orderBy: [{ orden: "asc" }, { creadoEn: "desc" }],
       take: 4,
     });
     return proyectos.length > 0 ? proyectos : FALLBACK_PROYECTOS;
@@ -31,7 +33,7 @@ export async function ProyectosSection() {
         </h2>
 
         <div className="mt-12 grid gap-4 sm:grid-cols-2">
-          {proyectos.map((proyecto) => (
+          {proyectos.map((proyecto, i) => (
             <Link
               key={proyecto.id}
               href={`/proyectos/${proyecto.slug}`}
@@ -40,11 +42,12 @@ export async function ProyectosSection() {
               <div className="aspect-[4/3] relative">
                 {proyecto.portadaUrl ? (
                   <Image
-                    src={proyecto.portadaUrl}
+                    src={cloudSrc(proyecto.portadaUrl, { w: 1200, ar: "4:3" })}
                     alt={proyecto.titulo}
                     fill
+                    priority={i < 2}
                     sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    className="object-cover"
+                    className="object-cover transition-transform duration-500 motion-safe:group-hover:scale-105"
                   />
                 ) : (
                   <div className="absolute inset-0 bg-white/5" />
