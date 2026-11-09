@@ -289,6 +289,7 @@ export function ChatPanel(props: ChatPanelProps) {
         setErrorEsFatal(res.status === 404 || res.status === 410 || res.status === 429);
         if (res.status === 404 || res.status === 410 || res.status === 429) {
           sessionStorage.removeItem(sessionStorageKey);
+          sessionStorage.removeItem(`${sessionStorageKey}_token`);
           setSessionId(null);
         }
         setLoading(false);
@@ -300,6 +301,10 @@ export function ChatPanel(props: ChatPanelProps) {
       sessionJustCreated.current = true; // Marcar que la sesión fue creada recién
       setSessionId(data.sessionId);
       sessionStorage.setItem(sessionStorageKey, data.sessionId);
+      // Guardar token para mensajes posteriores (solo público)
+      if (esPublico && chatToken) {
+        sessionStorage.setItem(`${sessionStorageKey}_token`, chatToken);
+      }
       setMensajes(data.mensajes || []);
       setSugerencias(data.sugerencias || []);
       setAgenteUI(data.agente || null);
@@ -375,13 +380,18 @@ export function ChatPanel(props: ChatPanelProps) {
     setMostrarSugerencias(false);
 
     try {
+      // Para chat público, recuperar token de sessionStorage si no está en props
+      const token = esPublico
+        ? (chatToken || (typeof window !== "undefined" ? sessionStorage.getItem(`${sessionStorageKey}_token`) : null))
+        : chatToken;
+
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           mensaje: texto,
           sessionId,
-          t: chatToken,
+          t: token,
         }),
       });
 
@@ -392,6 +402,7 @@ export function ChatPanel(props: ChatPanelProps) {
         setErrorEsFatal(res.status === 404 || res.status === 429);
         if (res.status === 404 || res.status === 429) {
           sessionStorage.removeItem(sessionStorageKey);
+          sessionStorage.removeItem(`${sessionStorageKey}_token`);
           setSessionId(null);
         }
         setLoading(false);
@@ -430,6 +441,7 @@ export function ChatPanel(props: ChatPanelProps) {
   // Nueva conversación
   const nuevaConversacion = useCallback(() => {
     sessionStorage.removeItem(sessionStorageKey);
+    sessionStorage.removeItem(`${sessionStorageKey}_token`);
     setSessionId(null);
     setMensajes([]);
     setAcciones({});

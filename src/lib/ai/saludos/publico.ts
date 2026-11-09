@@ -8,14 +8,11 @@ export async function construirSaludoPublico(datos: {
   if (!vista) throw new Error("Cotización no encontrada");
 
   const lines: string[] = [];
-  lines.push(`¡Hola, \`${datos.nombre}\`! Gracias por solicitar su cotización en Constr-art.`);
-  lines.push("Esto es lo que recibimos:");
-  lines.push(`• Obra: \`${vista.tipoObra}\` · Construcción: \`${vista.tipoConstruccion}\` · Superficie: \`${vista.rangoM2}\``);
-  lines.push(`• Inicio: \`${vista.plazoInicio}\` · Ubicación: \`${vista.ubicacionObra ?? "No especificada"}\``);
-  if (vista.requerimiento) {
-    lines.push(`• Su requerimiento: \`${vista.requerimiento}\``);
-  }
-  lines.push("Nuestro equipo la revisará y le contactará en 24-48 horas hábiles. Mientras tanto, puedo resolver sus dudas.");
+  lines.push(`¡Hola, ${datos.nombre}! Gracias por solicitar su cotización en Constr-art.`);
+  lines.push("");
+  lines.push("Nuestro equipo revisará su solicitud y le contactará en 24-48 horas hábiles.");
+  lines.push("");
+  lines.push("Mientras tanto, estoy aquí para resolver cualquier duda que tenga sobre su proyecto. ¿En qué puedo ayudarle?");
 
   const sugerencias = [];
   if (vista.tipoConstruccion.toLowerCase().includes("no estoy") || vista.tipoConstruccion.toLowerCase().includes("asesórenme")) {
