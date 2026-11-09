@@ -130,12 +130,12 @@ async function validarSesionPrivada(sesion: { usuarioId?: string | null; agente:
   return sesion;
 }
 
-async function validarExpiracionYPropiedad(sesion: { id: string; agente: string; expiraEn?: Date | null; cotizacionId?: string | null; usuarioId?: string | null }, req: NextRequest, token?: string | null) {
+async function validarExpiracionYPropiedad(sesion: { id: string; sessionId: string; agente: string; expiraEn?: Date | null; cotizacionId?: string | null; usuarioId?: string | null }, req: NextRequest, token?: string | null) {
   if (sesion.agente === "publico" && sesion.expiraEn && sesion.expiraEn < new Date()) {
-    await prisma.chatSesion.update({ where: { sessionId: sesion.id }, data: { estado: "cerrada" } });
+    await prisma.chatSesion.update({ where: { sessionId: sesion.sessionId }, data: { estado: "cerrada" } });
     return errorResponse("Esta conversación ha finalizado. Escríbanos por WhatsApp o envíe otra cotización.", "SESION_EXPIRADA", 410);
   }
-  if (sesion.agente === "publico") return validarSesionPublica(req, sesion.id, token);
+  if (sesion.agente === "publico") return validarSesionPublica(req, sesion.sessionId, token);
   if (sesion.usuarioId) return validarSesionPrivada(sesion, req);
   return errorResponse("No autorizado para esta sesión", "NO_AUTORIZADO", 403);
 }
@@ -156,7 +156,7 @@ export async function POST(req: NextRequest) {
 
       const sesion = await obtenerOCrearSesionPublica(cotizacionId);
       if (sesion.expiraEn && sesion.expiraEn < new Date()) {
-        await prisma.chatSesion.update({ where: { id: sesion.id }, data: { estado: "cerrada" } });
+        await prisma.chatSesion.update({ where: { id: sesion.sessionId }, data: { estado: "cerrada" } });
         return errorResponse("Esta conversación ha finalizado. Escríbanos por WhatsApp o envíe otra cotización.", "SESION_EXPIRADA", 410);
       }
 
@@ -171,7 +171,7 @@ export async function POST(req: NextRequest) {
       // Persistir saludo como mensaje assistant
       await prisma.chatMensaje.create({
         data: {
-          sesionId: sesion.id,
+          sesionId: sesion.sessionId,
           rol: "assistant",
           contenido: saludo.texto,
           partes: { role: "assistant", parts: [{ type: "text", text: saludo.texto }] },
@@ -179,7 +179,7 @@ export async function POST(req: NextRequest) {
         },
       });
       await prisma.chatSesion.update({
-        where: { id: sesion.id },
+        where: { id: sesion.sessionId },
         data: { mensajeCount: { increment: 1 }, ultimoMensajeEn: new Date() },
       });
 
@@ -231,7 +231,7 @@ export async function POST(req: NextRequest) {
       // Persistir saludo
       await prisma.chatMensaje.create({
         data: {
-          sesionId: sesion.id,
+          sesionId: sesion.sessionId,
           rol: "assistant",
           contenido: saludo.texto,
           partes: { role: "assistant", parts: [{ type: "text", text: saludo.texto }] },
@@ -239,7 +239,7 @@ export async function POST(req: NextRequest) {
         },
       });
       await prisma.chatSesion.update({
-        where: { id: sesion.id },
+        where: { id: sesion.sessionId },
         data: { mensajeCount: { increment: 1 }, ultimoMensajeEn: new Date() },
       });
 
@@ -290,11 +290,11 @@ export async function POST(req: NextRequest) {
     }
 
     // Guardar mensaje del usuario
-    await prisma.chatMensaje.create({ data: { sesionId: sesion.id, rol: "user", contenido: mensaje } });
+    await prisma.chatMensaje.create({ data: { sesionId: sesion.sessionId, rol: "user", contenido: mensaje } });
 
     // Historial solo texto (últimos N mensajes, sin resultados de tools)
     const historialPrevio = await prisma.chatMensaje.findMany({
-      where: { sesionId: sesion.id },
+      where: { sesionId: sesion.sessionId },
       orderBy: { creadoEn: "desc" },
       take: MENSAJES_CONTEXTO,
     });
@@ -331,7 +331,7 @@ export async function POST(req: NextRequest) {
         usuarioId: sesion.usuarioId || undefined,
         clienteId: sesion.clienteId || undefined,
         rol: sesion.agente as "publico" | "cliente" | "admin",
-        sesionId: sesion.id,
+        sesionId: sesion.sessionId,
         sitioWeb: req.headers.get("origin") ?? process.env.NEXT_PUBLIC_SITE_URL ?? undefined,
       })
     );
@@ -360,7 +360,7 @@ export async function POST(req: NextRequest) {
             return out?.accionId;
           })
           .filter((x): x is string => Boolean(x));
-        await persistirRespuestaAsistente(sesion.id, text, "MENSAJE", usadas, accionIds);
+        await persistirRespuestaAsistente(sesion.sessionId, text, "MENSAJE", usadas, accionIds);
       },
     });
 
@@ -391,12 +391,12 @@ export async function GET(req: NextRequest) {
 
     const [mensajes, acciones] = await Promise.all([
       prisma.chatMensaje.findMany({
-        where: { sesionId: sesion.id },
+        where: { sesionId: sesion.sessionId },
         orderBy: { creadoEn: "asc" },
         take: 50,
       }),
       prisma.chatAccion.findMany({
-        where: { sesionId: sesion.id },
+        where: { sesionId: sesion.sessionId },
         orderBy: { creadoEn: "asc" },
       }),
     ]);
