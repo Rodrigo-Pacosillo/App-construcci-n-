@@ -7,9 +7,11 @@ import type { AgenteId } from "@/lib/ai/agents";
 import { chatMensajeSchema } from "@/lib/validators/chat";
 import { toolsPara } from "@/lib/ai/tools";
 import { buildToolContext } from "@/lib/ai/contexto";
-import { obtenerOCrearSesionPublica } from "@/lib/ai/sesiones";
+import { obtenerOCrearSesionPublica, crearSesion } from "@/lib/ai/sesiones";
 import { RATE_LIMIT_POR_HORA } from "@/lib/ai/config";
 import { obtenerConocimiento, type CategoriaConocimiento } from "@/lib/ai/conocimiento";
+import { construirSaludoCliente } from "@/lib/ai/saludos/cliente";
+import { construirSaludoAdmin } from "@/lib/ai/saludos/admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -177,7 +179,53 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // ── Caso 2: mensaje normal ──
+    // ── Caso 2: mensaje normal O creación de sesión (cliente/admin) ──
+    
+    // Si no hay sessionId pero sí agente (cliente/admin), crear sesión nueva
+    if (!body.sessionId && (body.agente === "cliente" || body.agente === "admin")) {
+      const session = await auth();
+      if (!session || !session.user) {
+        return errorResponse("No autorizado para crear sesión", "NO_AUTORIZADO", 403);
+      }
+      
+      const agente = body.agente as "cliente" | "admin";
+      const sesion = await crearSesion({ usuarioId: session.user.id, agente });
+      
+      // Obtener saludo según el agente
+      const saludo = agente === "admin"
+        ? await construirSaludoAdmin({ nombre: session.user.name ?? "Admin" })
+        : await construirSaludoCliente({ clienteId: session.user.id });
+      
+      // Persistir saludo
+      await prisma.chatMensaje.create({
+        data: {
+          sesionId: sesion.id,
+          rol: "assistant",
+          contenido: saludo.texto,
+          partes: { role: "assistant", parts: [{ type: "text", text: saludo.texto }] },
+          metadatos: { tipo: "saludo", sugerencias: saludo.sugerencias },
+        },
+      });
+      await prisma.chatSesion.update({
+        where: { id: sesion.id },
+        data: { mensajeCount: { increment: 1 }, ultimoMensajeEn: new Date() },
+      });
+
+      return NextResponse.json({
+        sessionId: sesion.sessionId,
+        agente: { 
+          id: agente, 
+          etiqueta: agente === "admin" ? "Asistente del panel" : "Asistente de su cuenta", 
+          descripcion: agente === "admin" ? "Gestión del negocio con confirmación humana" : "Consulta sus datos y gestiona su cuenta" 
+        },
+        mensajes: [{ id: "saludo", rol: "assistant", contenido: saludo.texto, creadoEn: new Date().toISOString(), sugerencias: saludo.sugerencias }],
+        acciones: [],
+        sugerencias: saludo.sugerencias,
+        expiraEn: null,
+      });
+    }
+
+    // Validar mensaje normal (requiere sessionId y mensaje)
     const entrada = chatMensajeSchema.safeParse(body);
     if (!entrada.success) {
       return errorResponse(entrada.error.issues[0]?.message ?? "mensaje y sessionId son requeridos", "VALIDACION", 400);
