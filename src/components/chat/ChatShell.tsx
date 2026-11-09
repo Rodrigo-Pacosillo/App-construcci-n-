@@ -102,6 +102,7 @@ export function ChatShell(props: ChatShellProps) {
               <button
                 title="Archivar"
                 onClick={async () => {
+                  if (!confirm("¿Seguro que deseas archivar esta conversación?")) return;
                   await fetch(`/api/chat/sesiones/${s.sessionId}`, { method: "DELETE" });
                   if (activeId === s.sessionId) setActiveId(null);
                   cargar();

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 
 import { WHATSAPP_NUMERO } from "@/lib/constants";
 import AiAvatar from "./AiAvatar";
@@ -177,6 +177,9 @@ export function ChatPanel(props: ChatPanelProps) {
   const [expiraEn, setExpiraEn] = useState<string | null>(null);
   const [modoBorrador, setModoBorrador] = useState(!esPublico && !initialSessionId);
 
+  // Ref para evitar cargarHistorial al crear sesión nueva (race condition)
+  const sessionJustCreated = useRef(false);
+
   // Clave de storage
   const sessionStorageKey = storageKey;
 
@@ -294,6 +297,7 @@ export function ChatPanel(props: ChatPanelProps) {
 
       // Respuesta JSON para __INICIO__
       const data = await res.json();
+      sessionJustCreated.current = true; // Marcar que la sesión fue creada recién
       setSessionId(data.sessionId);
       sessionStorage.setItem(sessionStorageKey, data.sessionId);
       setMensajes(data.mensajes || []);
@@ -338,6 +342,7 @@ export function ChatPanel(props: ChatPanelProps) {
 
     // Obtener saludo del servidor
     const data = await res.json();
+    sessionJustCreated.current = true; // Marcar que la sesión fue creada recién
     setSessionId(data.sessionId);
     sessionStorage.setItem(sessionStorageKey, data.sessionId);
     setMensajes(data.mensajes || []);
@@ -476,6 +481,11 @@ export function ChatPanel(props: ChatPanelProps) {
   // Cargar sesión existente al cambiar sessionId
   useEffect(() => {
     if (!sessionId) return;
+    // Si la sesión acaba de crearse, no cargar historial (ya se cargó en iniciarChat)
+    if (sessionJustCreated.current) {
+      sessionJustCreated.current = false;
+      return;
+    }
     // eslint-disable-next-line react-hooks/set-state-in-effect
     cargarHistorial(sessionId);
   }, [sessionId, cargarHistorial]);

@@ -26,7 +26,16 @@ export async function obtenerOCrearSesionPublica(cotizacionId: string) {
   });
 }
 
-export async function crearSesion(params: { usuarioId: string; agente: "cliente" | "admin"; clienteId?: string; cotizacionId?: string }) {
+export async function crearSesion(params: { usuarioId: string; agente: "cliente" | "admin"; clienteId?: string; cotizacionId?: string; titulo?: string }) {
+  const ahora = new Date();
+  const tituloAuto = params.titulo ?? `Chat ${ahora.toLocaleString("es-BO", { 
+    timeZone: "America/La_Paz", 
+    day: "2-digit", 
+    month: "2-digit", 
+    year: "numeric", 
+    hour: "2-digit", 
+    minute: "2-digit" 
+  })}`;
   return prisma.chatSesion.create({
     data: {
       sessionId: crypto.randomUUID(),
@@ -35,6 +44,7 @@ export async function crearSesion(params: { usuarioId: string; agente: "cliente"
       clienteId: params.clienteId ?? null,
       cotizacionId: params.cotizacionId ?? null,
       estado: "activa",
+      titulo: tituloAuto,
     },
   });
 }
