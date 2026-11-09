@@ -510,14 +510,16 @@ export function ChatPanel(props: ChatPanelProps) {
   }, [esPublico, propsClienteId, cotizacionId, propsClienteNombre, whatsappNumero, chatToken, sessionStorageKey, iniciarChat]);
 
   // Leer sessionId de storage solo en cliente (evitar cascading renders con setTimeout)
+  // Público NO usa sessionStorage: siempre inicia sesión nueva/reutilizada vía obtenerOCrearSesionPublica
   useEffect(() => {
+    if (esPublico) return;
     if (typeof window !== "undefined" && !sessionId) {
       const saved = sessionStorage.getItem(sessionStorageKey);
       if (saved) {
         setTimeout(() => setSessionId(saved), 0);
       }
     }
-  }, [sessionStorageKey, sessionId]);
+  }, [esPublico, sessionStorageKey, sessionId]);
 
   // ─── Render ────────────────────────────────────────────────────────────────
 
