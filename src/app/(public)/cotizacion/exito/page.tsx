@@ -200,16 +200,11 @@ export default async function ExitoPage({
 
           <div className="lg:col-span-1">
             <ChatPanel
+              agente="publico"
               clienteId={cotizacion.cliente.id}
               cotizacionId={cotizacion.id}
               clienteNombre={cotizacion.cliente.nombre}
               whatsappNumero={WHATSAPP_NUMERO}
-              cotizacionData={{
-                tipoObra: cotizacion.tipoObra,
-                tipoConstruccion: cotizacion.tipoConstruccion,
-                rangoM2: cotizacion.rangoM2,
-                plazoInicio: cotizacion.plazoInicio,
-              }}
               chatToken={t}
             />
           </div>

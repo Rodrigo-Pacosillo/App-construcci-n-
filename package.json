@@ -14,7 +14,8 @@
     "db:studio": "prisma studio",
     "test": "playwright test",
     "postinstall": "prisma generate",
-    "test:unit": "node --import tsx --test tests/unit/**/*.test.ts"
+    "test:unit": "node --import tsx --test tests/unit/**/*.test.ts",
+    "test:eval": "node --import tsx tests/evals/chat-tools.eval.ts"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"

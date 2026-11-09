@@ -16,7 +16,6 @@ interface ChatShellProps {
   cotizacionId?: string;
   clienteNombre?: string;
   whatsappNumero?: string;
-  cotizacionData?: unknown;
   chatToken?: string;
 }
 
@@ -118,13 +117,12 @@ export function ChatShell(props: ChatShellProps) {
       <div className="flex-1 min-w-0">
         <ChatPanel
           key={activeId ?? "none"}
-          esAdmin={props.esAdmin}
+          agente={agente}
           initialSessionId={activeId ?? undefined}
           clienteId={props.clienteId}
           cotizacionId={props.cotizacionId}
           clienteNombre={props.clienteNombre}
           whatsappNumero={props.whatsappNumero}
-          cotizacionData={props.cotizacionData as never}
           chatToken={props.chatToken}
         />
       </div>

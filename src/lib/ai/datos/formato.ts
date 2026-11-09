@@ -33,7 +33,7 @@ export function instanteNegocio(fecha: string, hora?: string | null): Date {
   let hh = 12, mm = 0; // mediodía UTC para todo el día
   if (hora && /^\d{2}:\d{2}$/.test(hora)) {
     hh = Number(hora.slice(0, 2));
-    mm = Number(hora.slice(3, 2));
+    mm = Number(hora.slice(3, 5));
     if (hh < 0 || hh > 23 || mm < 0 || mm > 59) throw new Error(`Hora inválida: ${hora}`);
   }
   // Convertir de TZ_NEGOCIO (America/La_Paz = UTC-4) a UTC

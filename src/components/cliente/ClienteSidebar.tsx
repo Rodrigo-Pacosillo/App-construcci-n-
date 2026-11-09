@@ -279,7 +279,6 @@ export function ClienteSidebar({
                 cotizacionId={cotizacionId}
                 clienteNombre={clienteNombre}
                 whatsappNumero=""
-                cotizacionData={cotizacionData}
               />
             </div>
           </div>

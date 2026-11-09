@@ -1,22 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { streamText, createUIMessageStreamResponse, createUIMessageStream, stepCountIs } from "ai";
-import { z } from "zod";
+import { streamText, createUIMessageStreamResponse, stepCountIs } from "ai";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { nvidiaProvider, requireNvidiaKey } from "@/lib/ai/providers";
 import type { AgenteId } from "@/lib/ai/agents";
-import type { AudienciaConocimiento } from "@/lib/ai/conocimiento";
-import { Prisma } from "@prisma/client";
-import { obtenerAgente } from "@/lib/ai/agents";
-import { obtenerConocimiento, buscarConocimiento } from "@/lib/ai/conocimiento";
-import { verificarChatToken } from "@/lib/tokens";
-import { resolverObraDeCliente } from "@/lib/ai/resolver-obra";
-import type { CategoriaConocimiento } from "@/lib/ai/conocimiento";
 import { chatMensajeSchema } from "@/lib/validators/chat";
 import { toolsPara } from "@/lib/ai/tools";
 import { buildToolContext } from "@/lib/ai/contexto";
-import { obtenerOCrearSesionPublica, crearSesion } from "@/lib/ai/sesiones";
+import { obtenerOCrearSesionPublica } from "@/lib/ai/sesiones";
 import { RATE_LIMIT_POR_HORA } from "@/lib/ai/config";
+import { obtenerConocimiento, type CategoriaConocimiento } from "@/lib/ai/conocimiento";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -89,74 +82,46 @@ async function persistirRespuestaAsistente(
 
 const MENSAJES_CONTEXTO = 12;
 
-type Identidad = {
-  agente: "publico" | "cliente" | "admin";
-  usuarioId?: string;
-  clienteId?: string;
-  cotizacionId?: string;
-  clienteNombre?: string;
-  sitioWeb?: string;
-};
-
-type ChatBody = Record<string, unknown>;
-
-function obtenerToken(req: NextRequest, body?: ChatBody): string | undefined {
+function obtenerToken(req: NextRequest, body?: Record<string, unknown>): string | undefined {
   const { searchParams } = new URL(req.url);
   const token = searchParams.get("t") || req.headers.get("x-chat-token") || (body?.t as string | undefined);
   return token || undefined;
 }
 
-async function resolverIdentidad(
-  req: NextRequest,
-  body: ChatBody
-): Promise<Identidad> {
-  const tokenPublico = obtenerToken(req, body);
-
-  if (tokenPublico) {
-    let cotizacionId: string;
-    try {
-      cotizacionId = verificarChatToken(tokenPublico);
-    } catch {
-      throw new Error("TOKEN_INVALIDO");
-    }
-    const cotizacion = await prisma.cotizacion.findUnique({
-      where: { id: cotizacionId },
-      select: { id: true, clienteId: true, cliente: { select: { nombre: true } } },
-    });
-    if (!cotizacion) throw new Error("TOKEN_INVALIDO");
-    return {
-      agente: "publico",
-      cotizacionId: cotizacion.id,
-      clienteId: cotizacion.clienteId,
-      clienteNombre: cotizacion.cliente?.nombre,
-      sitioWeb: req.headers.get("origin") ?? process.env.NEXT_PUBLIC_SITE_URL,
-    };
+async function validarSesionPublica(req: NextRequest, sessionId: string, token?: string | null) {
+  if (!token) return errorResponse("Token requerido", "TOKEN_INVALIDO", 401);
+  let cotizacionId: string;
+  try {
+    cotizacionId = (await import("@/lib/tokens")).verificarChatToken(token);
+  } catch {
+    return errorResponse("Token inválido o expirado", "TOKEN_INVALIDO", 401);
   }
+  const sesion = await prisma.chatSesion.findUnique({ where: { sessionId } });
+  if (!sesion || sesion.cotizacionId !== cotizacionId) return errorResponse("Token no coincide con la sesión", "TOKEN_INVALIDO", 401);
+  return sesion;
+}
 
+async function validarSesionPrivada(sesion: { usuarioId?: string | null; agente: string }, req: NextRequest) {
   const session = await auth();
-  if (!session || !session.user) throw new Error("NO_AUTORIZADO");
-
-  const role = session.user.role;
-  const usuarioId = session.user.id as string;
-
-  if (role === "admin") {
-    return { agente: "admin", usuarioId, sitioWeb: req.headers.get("origin") ?? process.env.NEXT_PUBLIC_SITE_URL };
+  const userRole = session?.user?.role;
+  const userId = session?.user?.id;
+  if (sesion.usuarioId) {
+    const esPropietario = userId && userId === sesion.usuarioId;
+    if (userRole !== "admin" && !esPropietario) return errorResponse("No autorizado", "NO_AUTORIZADO", 403);
+  } else {
+    return errorResponse("No autorizado para esta sesión", "NO_AUTORIZADO", 403);
   }
-  if (role === "cliente") {
-    const usuario = await prisma.usuario.findUnique({
-      where: { id: usuarioId },
-      include: { cliente: { select: { id: true, nombre: true } } },
-    });
-    if (!usuario?.cliente) throw new Error("NO_AUTORIZADO");
-    return {
-      agente: "cliente",
-      usuarioId: usuario.id,
-      clienteId: usuario.cliente.id,
-      clienteNombre: usuario.cliente.nombre,
-      sitioWeb: req.headers.get("origin") ?? process.env.NEXT_PUBLIC_SITE_URL,
-    };
+  return sesion;
+}
+
+async function validarExpiracionYPropiedad(sesion: { id: string; agente: string; expiraEn?: Date | null; cotizacionId?: string | null; usuarioId?: string | null }, req: NextRequest, token?: string | null) {
+  if (sesion.agente === "publico" && sesion.expiraEn && sesion.expiraEn < new Date()) {
+    await prisma.chatSesion.update({ where: { sessionId: sesion.id }, data: { estado: "cerrada" } });
+    return errorResponse("Esta conversación ha finalizado. Escríbanos por WhatsApp o envíe otra cotización.", "SESION_EXPIRADA", 410);
   }
-  throw new Error("NO_AUTORIZADO");
+  if (sesion.agente === "publico") return validarSesionPublica(req, sesion.id, token);
+  if (sesion.usuarioId) return validarSesionPrivada(sesion, req);
+  return errorResponse("No autorizado para esta sesión", "NO_AUTORIZADO", 403);
 }
 
 export async function POST(req: NextRequest) {
@@ -170,7 +135,7 @@ export async function POST(req: NextRequest) {
       if (!tokenPublico) return errorResponse("Token requerido para chat público", "TOKEN_INVALIDO", 401);
 
       let cotizacionId: string;
-      try { cotizacionId = verificarChatToken(tokenPublico); }
+      try { cotizacionId = (await import("@/lib/tokens")).verificarChatToken(tokenPublico); }
       catch { return errorResponse("Token inválido o expirado", "TOKEN_INVALIDO", 401); }
 
       const sesion = await obtenerOCrearSesionPublica(cotizacionId);
@@ -182,7 +147,7 @@ export async function POST(req: NextRequest) {
       // Obtener saludo y sugerencias
       const { construirSaludoPublico } = await import("@/lib/ai/saludos/publico");
       const cot = await prisma.cotizacion.findUnique({ where: { id: cotizacionId }, include: { cliente: { select: { nombre: true } } } });
-      const saludo = await (await import("@/lib/ai/saludos/publico")).construirSaludoPublico({
+      const saludo = await construirSaludoPublico({
         cotizacionId: cotizacionId,
         nombre: cot?.cliente?.nombre ?? "Cliente",
       });
@@ -202,16 +167,14 @@ export async function POST(req: NextRequest) {
         data: { mensajeCount: { increment: 1 }, ultimoMensajeEn: new Date() },
       });
 
-      // Respuesta JSON (no stream)
-      const response = {
+      return NextResponse.json({
         sessionId: sesion.sessionId,
         agente: { id: "publico", etiqueta: "Asistente de cotización", descripcion: "Resuelve dudas sobre su cotización" },
         mensajes: [{ id: "saludo", rol: "assistant", contenido: saludo.texto, creadoEn: new Date().toISOString(), sugerencias: saludo.sugerencias }],
         acciones: [],
         sugerencias: saludo.sugerencias,
         expiraEn: sesion.expiraEn?.toISOString() ?? null,
-      };
-      return NextResponse.json(response);
+      });
     }
 
     // ── Caso 2: mensaje normal ──
@@ -224,30 +187,11 @@ export async function POST(req: NextRequest) {
     const sesion = await prisma.chatSesion.findUnique({ where: { sessionId } });
     if (!sesion) return errorResponse("Sesión de chat no encontrada", "SESION_NO_ENCONTRADA", 404);
 
-    // Validar expiración sesión pública
-    if (sesion.agente === "publico" && sesion.expiraEn && sesion.expiraEn < new Date()) {
-      await prisma.chatSesion.update({ where: { id: sesion.id }, data: { estado: "cerrada" } });
-      return errorResponse("Esta conversación ha finalizado. Escríbanos por WhatsApp o envíe otra cotización.", "SESION_EXPIRADA", 410);
-    }
+    const token = obtenerToken(req, body);
+    const validacion = await validarExpiracionYPropiedad(sesion, req, token);
+    if (validacion instanceof NextResponse) return validacion;
 
-    // Validar propiedad de la sesión
-    if (sesion.agente === "publico") {
-      const token = new URL(req.url).searchParams.get("t") || req.headers.get("x-chat-token");
-      if (!token) return errorResponse("Token requerido", "TOKEN_INVALIDO", 401);
-      try {
-        if (verificarChatToken(token) !== sesion.cotizacionId) return errorResponse("Token no coincide con la sesión", "TOKEN_INVALIDO", 401);
-      } catch { return errorResponse("Token inválido o expirado", "TOKEN_INVALIDO", 401); }
-    } else if (sesion.usuarioId) {
-      const session = await auth();
-      const userRole = session?.user?.role;
-      const userId = session?.user?.id;
-      const esPropietario = userId && userId === sesion.usuarioId;
-      if (userRole !== "admin" && !esPropietario) return errorResponse("No autorizado", "NO_AUTORIZADO", 403);
-    } else {
-      return errorResponse("No autorizado para esta sesión", "NO_AUTORIZADO", 403);
-    }
-
-    const agenteConfig = obtenerAgente(sesion.agente as AgenteId);
+    const agenteConfig = (await import("@/lib/ai/agents")).obtenerAgente(sesion.agente as AgenteId);
 
     // Rate limit por hora para cliente/admin
     if (sesion.agente !== "publico" && sesion.usuarioId) {
@@ -292,7 +236,7 @@ export async function POST(req: NextRequest) {
       ? (await prisma.cliente.findUnique({ where: { id: sesion.clienteId }, select: { nombre: true } }))?.nombre ?? "Cliente"
       : "Cliente";
 
-    const systemPrompt = await (await import("@/lib/ai/agents")).obtenerAgente(sesion.agente as AgenteId).sistemaPromptBuilder({
+    const systemPrompt = await agenteConfig.sistemaPromptBuilder({
       datosContexto: {
         cotizacion: cotizacionData,
         clienteNombre,
@@ -304,8 +248,8 @@ export async function POST(req: NextRequest) {
     const herramientas = toolsPara(
       sesion.agente as "publico" | "cliente" | "admin",
       buildToolContext({
-        usuarioId: sesion.usuarioId ?? undefined,
-        clienteId: sesion.clienteId ?? undefined,
+        usuarioId: sesion.usuarioId || undefined,
+        clienteId: sesion.clienteId || undefined,
         rol: sesion.agente as "publico" | "cliente" | "admin",
         sesionId: sesion.id,
         sitioWeb: req.headers.get("origin") ?? process.env.NEXT_PUBLIC_SITE_URL ?? undefined,
@@ -356,38 +300,20 @@ export async function GET(req: NextRequest) {
     const sesion = await prisma.chatSesion.findUnique({ where: { sessionId } });
     if (!sesion) return errorResponse("Sesión de chat no encontrada", "SESION_NO_ENCONTRADA", 404);
 
-    // Validar expiración sesión pública
-    if (sesion.agente === "publico" && sesion.expiraEn && sesion.expiraEn < new Date()) {
-      await prisma.chatSesion.update({ where: { id: sesion.id }, data: { estado: "cerrada" } });
-      return errorResponse("Esta conversación ha finalizado.", "SESION_EXPIRADA", 410);
-    }
+    const validacion = await validarExpiracionYPropiedad(sesion, req, tokenPublico);
+    if (validacion instanceof NextResponse) return validacion;
 
-    // Validar propiedad
-    const session = await auth();
-    const userRole = session?.user?.role;
-    const userId = session?.user?.id;
-
-    if (sesion.agente === "publico") {
-      if (!tokenPublico) return errorResponse("Token requerido", "TOKEN_INVALIDO", 401);
-      try {
-        if (verificarChatToken(tokenPublico) !== sesion.cotizacionId) return errorResponse("Token no coincide", "TOKEN_INVALIDO", 401);
-      } catch { return errorResponse("Token inválido o expirado", "TOKEN_INVALIDO", 401); }
-    } else if (sesion.usuarioId) {
-      if (userRole !== "admin" && userId !== sesion.usuarioId) return errorResponse("No autorizado", "NO_AUTORIZADO", 403);
-    } else {
-      return errorResponse("No autorizado", "NO_AUTORIZADO", 403);
-    }
-
-    const mensajes = await prisma.chatMensaje.findMany({
-      where: { sesionId: sesion.id },
-      orderBy: { creadoEn: "asc" },
-      take: 50,
-    });
-
-    const acciones = await prisma.chatAccion.findMany({
-      where: { sesionId: sesion.id },
-      orderBy: { creadoEn: "asc" },
-    });
+    const [mensajes, acciones] = await Promise.all([
+      prisma.chatMensaje.findMany({
+        where: { sesionId: sesion.id },
+        orderBy: { creadoEn: "asc" },
+        take: 50,
+      }),
+      prisma.chatAccion.findMany({
+        where: { sesionId: sesion.id },
+        orderBy: { creadoEn: "asc" },
+      }),
+    ]);
 
     type MetadatosMensaje = { sugerencias?: string[]; accionIds?: string[] };
     const mensajesDTO = mensajes.map((m) => {

@@ -302,7 +302,7 @@ export function AdminSidebar({ email }: { email: string }) {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="h-[calc(100vh-2rem)] overflow-hidden flex flex-col">
-              <ChatPanel esAdmin={true} />
+              <ChatPanel agente="admin" />
             </div>
           </div>
         </div>
