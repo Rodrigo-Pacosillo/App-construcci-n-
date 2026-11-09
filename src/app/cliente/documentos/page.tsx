@@ -5,6 +5,7 @@ import { elegirObraPorDefecto } from "@/lib/obra-default";
 import ObraSelector from "@/components/cliente/ObraSelector";
 import Image from "next/image";
 import { cloudSrc } from "@/lib/cloudinary-img";
+import { PlanoDistribucion } from "@/components/cliente/PlanoDistribucion";
 
 async function getDatos(obraId?: string) {
   const session = await auth();
@@ -131,18 +132,7 @@ export default async function ClienteDocumentosPage({
 
       {/* Plano de distribución */}
       {obra.planoDistribucionUrl && (
-        <div className="rounded border border-border bg-surface p-6">
-          <p className="section-label mb-4 text-ink-faint">PLANO DE DISTRIBUCIÓN</p>
-          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg bg-surface shadow-md">
-            <Image
-              src={cloudSrc(obra.planoDistribucionUrl, { w: 1600, ar: "4:3" })}
-              alt={`Plano de distribución - ${obra.direccionObra}`}
-              fill
-              sizes="(max-width: 896px) 100vw, 896px"
-              className="object-contain"
-            />
-          </div>
-        </div>
+        <PlanoDistribucion planoUrl={obra.planoDistribucionUrl} direccionObra={obra.direccionObra} />
       )}
 
       <div className="rounded border border-border bg-surface p-6">
