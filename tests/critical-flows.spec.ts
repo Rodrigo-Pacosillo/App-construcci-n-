@@ -15,8 +15,8 @@ test.describe('Login Flow', () => {
   test('client login redirects to /cliente', async ({ page }) => {
     await page.goto('/login');
     
-    await page.fill('input[name="email"]', 'cliente@gmail.com');
-    await page.fill('input[name="password"]', 'cliente123');
+    await page.fill('input[name="email"]', 'rodrigo@gmail.com');
+    await page.fill('input[name="password"]', 'rodrigo55555');
     await page.click('button[type="submit"]');
     
     await page.waitForURL(/\/cliente/);
@@ -87,8 +87,8 @@ test.describe('Admin Dashboard', () => {
 test.describe('Client Portal', () => {
   test('client can access portal after login', async ({ page }) => {
     await page.goto('/login');
-    await page.fill('input[name="email"]', 'cliente@gmail.com');
-    await page.fill('input[name="password"]', 'cliente123');
+    await page.fill('input[name="email"]', 'rodrigo@gmail.com');
+    await page.fill('input[name="password"]', 'rodrigo55555');
     await page.click('button[type="submit"]');
     
     await expect(page).toHaveURL(/\/cliente$/);
@@ -97,8 +97,8 @@ test.describe('Client Portal', () => {
 
   test('client can view cotizaciones', async ({ page }) => {
     await page.goto('/login');
-    await page.fill('input[name="email"]', 'cliente@gmail.com');
-    await page.fill('input[name="password"]', 'cliente123');
+    await page.fill('input[name="email"]', 'rodrigo@gmail.com');
+    await page.fill('input[name="password"]', 'rodrigo55555');
     await page.click('button[type="submit"]');
     
     await page.waitForURL(/\/cliente/);

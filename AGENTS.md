@@ -218,7 +218,7 @@ mismos tokens pero es funcional, sin storytelling.
 - **Test runner:** Playwright configurado (`npm run test`). La verificación
   sigue siendo `npm run build` + `npm run lint` + `npm run db:seed` contra una BD.
 - **Credenciales de demo (reales del seed):** `admin@gmail.com` / `admin123`
-  y `cliente@gmail.com` / `cliente123`. (Documentación antigua decía
+  y `rodrigo@gmail.com` / `rodrigo55555`. (Documentación antigua decía
   `admin@demo.com` / `cliente@demo.com`: **incorrecto**.)
 - **El seed crea 0 cotizaciones.** Documentación antigua afirmaba ~12-15.
   Si una tarea necesita cotizaciones de demo, hay que agregarlas al seed (o

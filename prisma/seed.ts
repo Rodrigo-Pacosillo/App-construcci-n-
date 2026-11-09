@@ -1,4 +1,4 @@
-import { PrismaClient, Rol, TipoConstruccion, RangoM2, EstadoObra, EstadoPago, EstadoTestimonio } from "@prisma/client";
+import { PrismaClient, Rol, TipoConstruccion, RangoM2, EstadoObra, EstadoPago, EstadoTestimonio, TipoEventoCalendario, AgenteChat, EstadoChatSesion, RolChatMensaje, EstadoChatAccion, AudienciaConocimiento } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -22,11 +22,14 @@ async function main() {
   await prisma.cotizacion.deleteMany();
   await prisma.chatMensaje.deleteMany();
   await prisma.chatSesion.deleteMany();
+  await prisma.chatAccion.deleteMany();
   await prisma.usuario.deleteMany();
   await prisma.cliente.deleteMany();
   await prisma.servicio.deleteMany();
   await prisma.faq.deleteMany();
   await prisma.certificacion.deleteMany();
+  await prisma.conocimiento.deleteMany();
+  await prisma.invitacionUsuario.deleteMany();
 
   console.log("👤 Creando usuario admin...");
   const passwordHash = await bcrypt.hash("admin123", 10);
@@ -44,11 +47,11 @@ async function main() {
   console.log("👥 Creando cliente demo (con acceso a portal)...");
   const cliente = await prisma.cliente.create({
     data: {
-      nombre: "Juan",
-      apellidos: "Pérez",
-      telefono: "+591 71234567",
-      email: "juan.perez@email.com",
-      ciudad: "Santa Cruz",
+      nombre: "Rodrigo",
+      apellidos: "Pacosillo Calcina",
+      telefono: "62511524",
+      email: "rodrigo@gmail.com",
+      ciudad: "La Paz El Alto",
     },
   });
   console.log(`   ✅ Cliente creado: ${cliente.nombre} ${cliente.apellidos}`);
@@ -57,40 +60,45 @@ async function main() {
   const proyectosPortafolio = await Promise.all([
     prisma.proyectoPortafolio.create({
       data: {
-        slug: "casa-steel-frame-santa-cruz",
-        titulo: "Casa Steel Frame en Santa Cruz",
-        tipoConstruccion: TipoConstruccion.seco,
-        m2Construidos: 220,
-        diasEjecucion: 45,
-        ubicacion: "Santa Cruz de la Sierra, Bolivia",
-        galeriaUrls: [],
-        destacado: true,
-        publicado: true,
-      },
-    }),
-    prisma.proyectoPortafolio.create({
-      data: {
-        slug: "ampliacion-zona-sur-la-paz",
-        titulo: "Ampliación en La Paz",
-        tipoConstruccion: TipoConstruccion.seco,
+        slug: "remodelacion-residencia-diego",
+        titulo: "Remodelación Residencia Diego",
+        tipoConstruccion: TipoConstruccion.integral,
         m2Construidos: 65,
         diasEjecucion: 20,
-        ubicacion: "Zona Sur, La Paz, Bolivia",
-        galeriaUrls: [],
+        ubicacion: "Zona cercanía al aeropuerto, Santa Cruz, Bolivia",
+        portadaUrl: "https://res.cloudinary.com/fjub0euv/image/upload/v1794204201/constr-art/proyectos/portadas/file_wyaeue.jpg",
+        portadaPublicId: "constr-art/proyectos/portadas/file_wyaeue",
+        galeriaUrls: [
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794205694/constr-art/proyectos/galeria/file_i9kk8z.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794205695/constr-art/proyectos/galeria/file_b5l2h4.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794205696/constr-art/proyectos/galeria/file_oj3bsf.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794205696/constr-art/proyectos/galeria/file_y66hy1.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794205697/constr-art/proyectos/galeria/file_kyseth.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794205698/constr-art/proyectos/galeria/file_ayiz8e.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794205700/constr-art/proyectos/galeria/file_i4aeil.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794205700/constr-art/proyectos/galeria/file_jcxhul.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794205701/constr-art/proyectos/galeria/file_layjgr.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794205702/constr-art/proyectos/galeria/file_samv3b.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794205703/constr-art/proyectos/galeria/file_r3orf5.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794205704/constr-art/proyectos/galeria/file_cbgkgj.jpg",
+        ],
+        galeriaPublicIds: [
+          "constr-art/proyectos/galeria/file_i9kk8z",
+          "constr-art/proyectos/galeria/file_b5l2h4",
+          "constr-art/proyectos/galeria/file_oj3bsf",
+          "constr-art/proyectos/galeria/file_y66hy1",
+          "constr-art/proyectos/galeria/file_kyseth",
+          "constr-art/proyectos/galeria/file_ayiz8e",
+          "constr-art/proyectos/galeria/file_i4aeil",
+          "constr-art/proyectos/galeria/file_jcxhul",
+          "constr-art/proyectos/galeria/file_layjgr",
+          "constr-art/proyectos/galeria/file_samv3b",
+          "constr-art/proyectos/galeria/file_r3orf5",
+          "constr-art/proyectos/galeria/file_cbgkgj",
+        ],
         destacado: true,
         publicado: true,
-      },
-    }),
-    prisma.proyectoPortafolio.create({
-      data: {
-        slug: "local-comercial-santa-cruz",
-        titulo: "Local Comercial en Santa Cruz",
-        tipoConstruccion: TipoConstruccion.seco,
-        m2Construidos: 90,
-        diasEjecucion: 15,
-        ubicacion: "Equipetrol, Santa Cruz, Bolivia",
-        galeriaUrls: [],
-        publicado: true,
+        orden: 0,
       },
     }),
     prisma.proyectoPortafolio.create({
@@ -102,8 +110,96 @@ async function main() {
         diasEjecucion: 80,
         ubicacion: "Tarija, Bolivia",
         galeriaUrls: [],
+        galeriaPublicIds: [],
+        destacado: true,
+        publicado: false,
+        orden: 1,
+      },
+    }),
+    prisma.proyectoPortafolio.create({
+      data: {
+        slug: "campamento-corporativo-pan-silver",
+        titulo: "Campamento Corporativo Pan Silver",
+        tipoConstruccion: TipoConstruccion.seco,
+        m2Construidos: 90,
+        diasEjecucion: 15,
+        ubicacion: "Bolivia",
+        portadaUrl: "https://res.cloudinary.com/fjub0euv/image/upload/v1794204202/constr-art/proyectos/portadas/file_sgjqs9.jpg",
+        portadaPublicId: "constr-art/proyectos/portadas/file_sgjqs9",
+        galeriaUrls: [
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794205711/constr-art/proyectos/galeria/file_plqsn9.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794205712/constr-art/proyectos/galeria/file_fdfdf1.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794205713/constr-art/proyectos/galeria/file_hzamad.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794205714/constr-art/proyectos/galeria/file_rqsnte.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794205715/constr-art/proyectos/galeria/file_ipbsux.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794205716/constr-art/proyectos/galeria/file_czlmqk.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794205717/constr-art/proyectos/galeria/file_sd7hdl.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794205718/constr-art/proyectos/galeria/file_way6w9.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794205719/constr-art/proyectos/galeria/file_aeuf1z.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794205720/constr-art/proyectos/galeria/file_ho7yg4.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794205720/constr-art/proyectos/galeria/file_cm6h87.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794205721/constr-art/proyectos/galeria/file_yapiuc.jpg",
+        ],
+        galeriaPublicIds: [
+          "constr-art/proyectos/galeria/file_plqsn9",
+          "constr-art/proyectos/galeria/file_fdfdf1",
+          "constr-art/proyectos/galeria/file_hzamad",
+          "constr-art/proyectos/galeria/file_rqsnte",
+          "constr-art/proyectos/galeria/file_ipbsux",
+          "constr-art/proyectos/galeria/file_czlmqk",
+          "constr-art/proyectos/galeria/file_sd7hdl",
+          "constr-art/proyectos/galeria/file_way6w9",
+          "constr-art/proyectos/galeria/file_aeuf1z",
+          "constr-art/proyectos/galeria/file_ho7yg4",
+          "constr-art/proyectos/galeria/file_cm6h87",
+          "constr-art/proyectos/galeria/file_yapiuc",
+        ],
+        destacado: false,
+        publicado: true,
+        orden: 2,
+      },
+    }),
+    prisma.proyectoPortafolio.create({
+      data: {
+        slug: "plaza-isabela-catolica-asfi",
+        titulo: "Plaza Isabela Católica ASFI",
+        tipoConstruccion: TipoConstruccion.integral,
+        m2Construidos: 220,
+        diasEjecucion: 45,
+        ubicacion: "Santa Cruz de la Sierra, Bolivia",
+        portadaUrl: "https://res.cloudinary.com/fjub0euv/image/upload/v1794204198/constr-art/proyectos/portadas/file_ixzcak.jpg",
+        portadaPublicId: "constr-art/proyectos/portadas/file_ixzcak",
+        galeriaUrls: [
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794205676/constr-art/proyectos/galeria/file_wocdao.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794205676/constr-art/proyectos/galeria/file_n8kzkw.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794205677/constr-art/proyectos/galeria/file_nkwul0.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794205678/constr-art/proyectos/galeria/file_kakpey.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794205679/constr-art/proyectos/galeria/file_sbtb21.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794205680/constr-art/proyectos/galeria/file_wylszt.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794205681/constr-art/proyectos/galeria/file_ilv9nu.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794205682/constr-art/proyectos/galeria/file_z3js1d.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794205683/constr-art/proyectos/galeria/file_urlsde.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794205684/constr-art/proyectos/galeria/file_lvluic.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794205684/constr-art/proyectos/galeria/file_rtf117.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794205685/constr-art/proyectos/galeria/file_n64twx.jpg",
+        ],
+        galeriaPublicIds: [
+          "constr-art/proyectos/galeria/file_wocdao",
+          "constr-art/proyectos/galeria/file_n8kzkw",
+          "constr-art/proyectos/galeria/file_nkwul0",
+          "constr-art/proyectos/galeria/file_kakpey",
+          "constr-art/proyectos/galeria/file_sbtb21",
+          "constr-art/proyectos/galeria/file_wylszt",
+          "constr-art/proyectos/galeria/file_ilv9nu",
+          "constr-art/proyectos/galeria/file_z3js1d",
+          "constr-art/proyectos/galeria/file_urlsde",
+          "constr-art/proyectos/galeria/file_lvluic",
+          "constr-art/proyectos/galeria/file_rtf117",
+          "constr-art/proyectos/galeria/file_n64twx",
+        ],
         destacado: true,
         publicado: true,
+        orden: 3,
       },
     }),
     prisma.proyectoPortafolio.create({
@@ -115,7 +211,10 @@ async function main() {
         diasEjecucion: 30,
         ubicacion: "La Paz, Bolivia",
         galeriaUrls: [],
-        publicado: true,
+        galeriaPublicIds: [],
+        destacado: false,
+        publicado: false,
+        orden: 4,
       },
     }),
     prisma.proyectoPortafolio.create({
@@ -127,13 +226,59 @@ async function main() {
         diasEjecucion: 35,
         ubicacion: "Cochabamba, Bolivia",
         galeriaUrls: [],
+        galeriaPublicIds: [],
+        destacado: false,
+        publicado: false,
+        orden: 5,
+      },
+    }),
+    prisma.proyectoPortafolio.create({
+      data: {
+        slug: "construccion-campamento-mina-bedrock",
+        titulo: "Construcción de Campamento Mina Bedrock",
+        tipoConstruccion: TipoConstruccion.seco,
+        m2Construidos: null,
+        diasEjecucion: null,
+        ubicacion: "Guadalupe, Potosí, Bolivia",
+        portadaUrl: "https://res.cloudinary.com/fjub0euv/image/upload/v1794206545/constr-art/proyectos/portadas/file_jwb6ol.jpg",
+        portadaPublicId: "constr-art/proyectos/portadas/file_jwb6ol",
+        videoUrl: "https://res.cloudinary.com/fjub0euv/video/upload/v1794206588/constr-art/proyectos/videos/file_bdatuk.mp4",
+        videoPublicId: "constr-art/proyectos/videos/file_bdatuk",
+        galeriaUrls: [
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794206548/constr-art/proyectos/galeria/file_hegxbt.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794206550/constr-art/proyectos/galeria/file_lxcysz.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794206552/constr-art/proyectos/galeria/file_n4jf47.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794206553/constr-art/proyectos/galeria/file_stnbdk.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794206555/constr-art/proyectos/galeria/file_h0y7br.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794206556/constr-art/proyectos/galeria/file_cjdnqi.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794206558/constr-art/proyectos/galeria/file_ombc8w.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794206559/constr-art/proyectos/galeria/file_ds96va.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794206560/constr-art/proyectos/galeria/file_cqpozj.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794206561/constr-art/proyectos/galeria/file_krkfls.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794206563/constr-art/proyectos/galeria/file_ocvais.jpg",
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794206564/constr-art/proyectos/galeria/file_b1m9gx.jpg",
+        ],
+        galeriaPublicIds: [
+          "constr-art/proyectos/galeria/file_hegxbt",
+          "constr-art/proyectos/galeria/file_lxcysz",
+          "constr-art/proyectos/galeria/file_n4jf47",
+          "constr-art/proyectos/galeria/file_stnbdk",
+          "constr-art/proyectos/galeria/file_h0y7br",
+          "constr-art/proyectos/galeria/file_cjdnqi",
+          "constr-art/proyectos/galeria/file_ombc8w",
+          "constr-art/proyectos/galeria/file_ds96va",
+          "constr-art/proyectos/galeria/file_cqpozj",
+          "constr-art/proyectos/galeria/file_krkfls",
+          "constr-art/proyectos/galeria/file_ocvais",
+          "constr-art/proyectos/galeria/file_b1m9gx",
+        ],
+        destacado: true,
         publicado: true,
+        orden: 6,
       },
     }),
   ]);
   console.log(`   ✅ ${proyectosPortafolio.length} proyectos de portafolio creados`);
-
-  // Los testimonios se crean después de la obra (vinculados a ObraActiva).
 
   console.log("🛠️ Creando servicios...");
   const servicios = await Promise.all([
@@ -309,12 +454,12 @@ async function main() {
   console.log(`   ✅ ${certificaciones.length} certificaciones creadas`);
 
   console.log("🏗️  Creando usuario cliente + obra activa...");
-  const clientePasswordHash = await bcrypt.hash("cliente123", 10);
+  const clientePasswordHash = await bcrypt.hash("rodrigo55555", 10);
   const usuarioCliente = await prisma.usuario.create({
     data: {
       nombre: cliente.nombre,
       apellidos: cliente.apellidos,
-      email: "cliente@gmail.com",
+      email: "rodrigo@gmail.com",
       passwordHash: clientePasswordHash,
       rol: Rol.cliente,
       clienteId: cliente.id,
@@ -351,7 +496,7 @@ async function main() {
       data: {
         obraId: obra.id,
         clienteId: cliente.id,
-        nombrePublico: "Juan P.",
+        nombrePublico: "Rodrigo P.",
         texto:
           "Increíble cómo en 45 días pasamos de terreno a casa habitable. La calidad de los acabados superó nuestras expectativas. El aislamiento térmico es notable.",
         puntaje: 5,
@@ -485,16 +630,76 @@ async function main() {
   ]);
   console.log(`   ✅ ${pagos.length} pagos de obra creados`);
 
+  console.log("🧠 Creando base de conocimiento para el chat...");
+  const conocimientos = await Promise.all([
+    prisma.conocimiento.create({
+      data: {
+        titulo: "Proceso de trabajo de CONSTR-ART (7 pasos)",
+        categoria: "proceso",
+        audiencia: AudienciaConocimiento.publico,
+        contenido:
+          "El proceso de obra en construcción en seco sigue estos pasos: 1) Recepción y análisis de la cotización. 2) Contacto en menos de 24 horas hábiles. 3) Visita técnica y toma de medidas. 4) Propuesta formal con alcances y plazo. 5) Firma de contrato. 6) Ejecución de obra con hitos y avance reportado. 7) Entrega y cierre. El cliente con cuenta puede seguir el avance, hitos, pagos y eventos del calendario desde su portal /cliente.",
+      },
+    }),
+    prisma.conocimiento.create({
+      data: {
+        titulo: "Qué es la construcción en seco y steel frame",
+        categoria: "tecnico",
+        audiencia: AudienciaConocimiento.publico,
+        contenido:
+          "La construcción en seco (steel frame) usa perfiles metálicos galvanizados y placas de yeso/cementicias en lugar de ladrillo y mortero. Ventajas: tiempos de obra más cortos, menor peso sobre la estructura, precisión milimétrica, mejor aislación térmica y acústica, y menos desperdicio en obra. Se usa para vivienda nueva, ampliaciones, tabiques interiores, cielorrasos y revestimientos. También ejecutamos obra tradicional cuando el proyecto lo requiere.",
+      },
+    }),
+    prisma.conocimiento.create({
+      data: {
+        titulo: "Política de precios y plazos del asistente",
+        categoria: "politica",
+        audiencia: AudienciaConocimiento.publico,
+        contenido:
+          "El asistente NO informa precios exactos ni precio por m²: el presupuesto se ajusta por visita técnica y materiales del momento. NO garantiza fechas de inicio o fin específicas; puede mencionar que el contacto se hace en 24-48 horas hábiles. NO habla de temas ajenos a la construcción (piscinas, jardines, decoración, política, religión). Si el visitante pide un precio, se invita a completar la cotización en /cotizacion o escribir por WhatsApp.",
+      },
+    }),
+    prisma.conocimiento.create({
+      data: {
+        titulo: "Portal del cliente: qué puede hacer cada usuario con cuenta",
+        categoria: "sitio_web",
+        audiencia: AudienciaConocimiento.cliente,
+        contenido:
+          "El portal /cliente es de solo lectura para el cliente con cuenta y muestra: sus obras con avance y estado, los hitos visibles de cada obra con fotos, los pagos registrados y su estado (registrado/confirmado), los contratos con su PDF, el calendario con visitas y plazos de su obra, y las actualizaciones con fotos/videos que sube el equipo. El asistente del portal puede consultar sus cotizaciones, el avance de su obra y sus próximos eventos cuando el cliente lo pregunte.",
+      },
+    }),
+    prisma.conocimiento.create({
+      data: {
+        titulo: "Cómo funciona el sitio web (flujo del visitante)",
+        categoria: "sitio_web",
+        audiencia: AudienciaConocimiento.publico,
+        contenido:
+          "El visitante puede: 1) Ver el portafolio de proyectos en /proyectos con fotos, m², días de ejecución y ubicación. 2) Revisar servicios en /servicios (steel frame, tabiques, cielorrasos, revestimientos, aislaciones). 3) Leer preguntas frecuentes en /faq. 4) Completar el formulario de cotización en /cotizacion, que pide tipo de obra, tipo de construcción, superficie aproximada, ubicación y plazo. 5) Al enviar la cotización, llega a la página de éxito con un asistente virtual que responde dudas sobre su solicitud. El equipo revisa cada cotización y contacta en menos de 24 horas hábiles para coordinar visita técnica.",
+      },
+    }),
+    prisma.conocimiento.create({
+      data: {
+        titulo: "Gestión interna: cotizaciones, contratos, obras e inventario",
+        categoria: "proceso",
+        audiencia: AudienciaConocimiento.admin,
+        contenido:
+          "Estados de cotización: nuevo (por revisar) → contactado (tras confirmar contacto) → contratado o no_concretado. Abrir WhatsApp no cambia el estado. Un contrato puede crearse desde una cotización y al hacerlo la cotización pasa a contratado. Los contratos van de borrador a firmado (fecha de firma), y pueden anularse o finalizarse. Las obras nacen en curso, pueden pausarse, finalizarse y entregarse, con progreso 0-100. El inventario registra herramientas (disponible/en_uso/mantenimiento/baja) y materiales con stock; los movimientos de entrada/salida/ajuste quedan en el kardex (movimientos_materiales). Las cuentas de acceso (usuarios) se crean por invitación vinculada a una ficha de cliente.",
+      },
+    }),
+  ]);
+  console.log(`   ✅ ${conocimientos.length} entradas de conocimiento creadas`);
+
   console.log("\n🎉 ¡Seed completado exitosamente!");
-  console.log(`   Usuarios: 2 (admin@gmail.com, cliente@gmail.com)`);
-  console.log(`   Cliente: 1 (Juan Pérez)`);
+  console.log(`   Usuarios: 2 (admin@gmail.com, rodrigo@gmail.com)`);
+  console.log(`   Cliente: 1 (Rodrigo Pacosillo Calcina)`);
   console.log(`   Cotizaciones: 0`);
   console.log(`   Proyectos portafolio: ${proyectosPortafolio.length}`);
   console.log(`   Testimonios: ${testimonios.length}`);
   console.log(`   Servicios: ${servicios.length}`);
   console.log(`   FAQs: ${faqs.length}`);
   console.log(`   Certificaciones: ${certificaciones.length}`);
-  console.log(`   Obras activas: 1 (cliente@gmail.com / cliente123)`);
+  console.log(`   Conocimiento: ${conocimientos.length}`);
+  console.log(`   Obras activas: 1 (rodrigo@gmail.com / rodrigo55555)`);
   console.log(`   Hitos: ${hitos.length} (3 visibles + 1 oculto)`);
   console.log(`   Pagos: ${pagos.length}`);
 }
