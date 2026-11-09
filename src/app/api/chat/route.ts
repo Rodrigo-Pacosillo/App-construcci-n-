@@ -99,7 +99,18 @@ async function validarSesionPublica(req: NextRequest, sessionId: string, token?:
     return errorResponse("Token inválido o expirado", "TOKEN_INVALIDO", 401);
   }
   const sesion = await prisma.chatSesion.findUnique({ where: { sessionId } });
-  if (!sesion || sesion.cotizacionId !== cotizacionId) return errorResponse("Token no coincide con la sesión", "TOKEN_INVALIDO", 401);
+  if (!sesion) return errorResponse("Sesión de chat no encontrada", "SESION_NO_ENCONTRADA", 404);
+  // Si el token no coincide con la sesión actual, buscar la sesión correcta para este token
+  if (sesion.cotizacionId !== cotizacionId) {
+    const sesionCorrecta = await prisma.chatSesion.findFirst({
+      where: { cotizacionId, agente: "publico", estado: "activa" },
+      orderBy: { creadoEn: "desc" },
+    });
+    if (sesionCorrecta) {
+      return sesionCorrecta;
+    }
+    return errorResponse("Token no coincide con la sesión", "TOKEN_INVALIDO", 401);
+  }
   return sesion;
 }
 
