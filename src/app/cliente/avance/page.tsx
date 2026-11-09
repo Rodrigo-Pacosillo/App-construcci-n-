@@ -4,6 +4,7 @@ import Image from "next/image";
 import { prisma } from "@/lib/db";
 import { elegirObraPorDefecto } from "@/lib/obra-default";
 import ObraSelector from "@/components/cliente/ObraSelector";
+import { cloudSrc } from "@/lib/cloudinary-img";
 
 async function getDatos(obraId?: string) {
   const session = await auth();
@@ -86,6 +87,22 @@ export default async function ClienteAvancePage({
         </p>
       </div>
 
+      {/* Plano de distribución */}
+      {obra.planoDistribucionUrl && (
+        <div className="rounded-xl border border-border bg-surface p-6 shadow-sm">
+          <p className="section-label mb-4 text-ink-faint">PLANO DE DISTRIBUCIÓN</p>
+          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg bg-surface shadow-md">
+            <Image
+              src={cloudSrc(obra.planoDistribucionUrl, { w: 1600, ar: "4:3" })}
+              alt={`Plano de distribución - ${obra.direccionObra}`}
+              fill
+              sizes="(max-width: 896px) 100vw, 896px"
+              className="object-contain"
+            />
+          </div>
+        </div>
+      )}
+
       {actualizaciones.length > 0 || fotos.length > 0 || videos.length > 0 ? (
         <div className="space-y-6">
           <div>
@@ -97,10 +114,10 @@ export default async function ClienteAvancePage({
               {actualizaciones.map((a) => (
                 <div
                   key={a.id}
-                  className="rounded border border-border bg-surface p-4 flex flex-col"
+                  className="rounded-lg border border-border bg-surface p-4 flex flex-col shadow-sm transition-shadow hover:shadow-md"
                 >
                   {a.tipo === "foto" && (
-                    <div className="aspect-video w-full rounded overflow-hidden bg-ink/5 mb-3 relative">
+                    <div className="aspect-video w-full rounded-lg overflow-hidden bg-ink/5 mb-3 relative">
                       <Image
                         src={a.urlArchivo}
                         alt={a.titulo}
@@ -111,7 +128,7 @@ export default async function ClienteAvancePage({
                     </div>
                   )}
                   {a.tipo === "video" && (
-                    <div className="aspect-video w-full rounded overflow-hidden bg-ink/10 mb-3 flex items-center justify-center">
+                    <div className="aspect-video w-full rounded-lg overflow-hidden bg-ink/10 mb-3 flex items-center justify-center">
                       <div className="text-center text-ink-muted">
                         <p className="text-sm font-medium">Video</p>
                         <p className="text-xs text-ink-faint">{a.titulo}</p>
@@ -149,7 +166,18 @@ export default async function ClienteAvancePage({
                     <div className="relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-accent font-bold text-ink">
                       {i + 1}
                     </div>
-                    <div className="flex-1 rounded border border-border bg-surface p-4">
+                    <div className="flex-1 rounded-lg border border-border bg-surface p-4 shadow-sm">
+                      {h.fotoUrl && (
+                        <div className="aspect-video w-full rounded-lg overflow-hidden bg-ink/5 mb-3 relative">
+                          <Image
+                            src={h.fotoUrl}
+                            alt={h.titulo}
+                            fill
+                            sizes="(max-width: 768px) 100vw, 50vw"
+                            style={{ objectFit: "cover" }}
+                          />
+                        </div>
+                      )}
                       <div className="flex items-center justify-between">
                         <h3 className="font-heading font-bold">{h.titulo}</h3>
                       </div>

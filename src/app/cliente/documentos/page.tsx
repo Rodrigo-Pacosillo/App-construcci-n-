@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { elegirObraPorDefecto } from "@/lib/obra-default";
 import ObraSelector from "@/components/cliente/ObraSelector";
+import Image from "next/image";
+import { cloudSrc } from "@/lib/cloudinary-img";
 
 async function getDatos(obraId?: string) {
   const session = await auth();
@@ -127,10 +129,26 @@ export default async function ClienteDocumentosPage({
         )}
       </div>
 
+      {/* Plano de distribución */}
+      {obra.planoDistribucionUrl && (
+        <div className="rounded border border-border bg-surface p-6">
+          <p className="section-label mb-4 text-ink-faint">PLANO DE DISTRIBUCIÓN</p>
+          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg bg-surface shadow-md">
+            <Image
+              src={cloudSrc(obra.planoDistribucionUrl, { w: 1600, ar: "4:3" })}
+              alt={`Plano de distribución - ${obra.direccionObra}`}
+              fill
+              sizes="(max-width: 896px) 100vw, 896px"
+              className="object-contain"
+            />
+          </div>
+        </div>
+      )}
+
       <div className="rounded border border-border bg-surface p-6">
         <p className="section-label mb-4 text-ink-faint">OTROS DOCUMENTOS</p>
         <div className="space-y-2 text-sm text-ink-muted">
-          <p>• Planos y especificaciones técnicas (pendiente)</p>
+          <p>• Planos y especificaciones técnicas {obra.planoDistribucionUrl ? "✓ Disponible arriba" : "(pendiente)"}</p>
           <p>• Certificados de avance (pendiente)</p>
           <p>• Actas de recepción (pendiente)</p>
           <p>• Garantías y seguros (pendiente)</p>

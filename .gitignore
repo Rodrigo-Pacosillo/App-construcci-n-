@@ -12,6 +12,8 @@
 
 # testing
 /coverage
+/playwright-report
+/test-results
 
 # next.js
 /.next/
@@ -54,19 +56,20 @@ next-env.d.ts
 # Skills system (not part of app)
 skills-lock.json
 
-# Temporal analysis docs (keep in local only)
-ANALISIS-FASES.md
-HERO_PLAN_FINAL.md
-INSTRUCCIONES_ACTUALIZACION_DOCUMENTACION_CONTRART.md
-INTRO_B_GUIA.md
-LOGO_GUIA.md
-ESPECIFICACION_PANEL_ADMIN_CONTRART.md
-
-# Paquetes de documentación de trabajo (no forman parte de la app)
+# Documentación de trabajo / specs (no forman parte de la app)
 /actual/
 /leerCambios/
-/sistema_de_audio.md
-
-# Markdown: ya no se ignora globalmente
-!agents.md
+/docs/
+*.md
 !README.md
+!agents.md
+
+# Scripts de utilidad / migración (solo desarrollo local)
+/scripts/
+
+# Assets locales (imágenes source - se usan Cloudinary)
+/fotos/
+/proyectos/
+
+# TypeScript cache
+*.tsbuildinfo
