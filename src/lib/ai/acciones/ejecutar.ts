@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { ACCION_EXPIRACION_MIN } from "../config";
+import { instanteNegocio } from "@/lib/ai/datos/formato";
 
 export type ResultadoEjecucion =
   | { ok: true; mensaje: string }
@@ -72,7 +73,18 @@ export async function ejecutarChatAccion(params: {
       }
       await prisma.cotizacion.update({ where: { id: cotizacionId }, data: { estado: nuevoEstado as never } });
     } else if (accion.herramienta === "proponer_evento_calendario" || accion.herramienta === "proponer_nota_calendario") {
-      const clienteId = actor.rol === "cliente" ? (actor.clienteId as string) : String(args.clienteId);
+      let clienteId: string;
+      if (actor.rol === "cliente") {
+        if (!actor.clienteId) {
+          return { ok: false, codigo: "ERROR", mensaje: "Se requiere clienteId para el rol cliente." };
+        }
+        clienteId = actor.clienteId;
+      } else {
+        if (!args.clienteId) {
+          return { ok: false, codigo: "ERROR", mensaje: "Se requiere clienteId en los argumentos para el rol admin." };
+        }
+        clienteId = String(args.clienteId);
+      }
       const obraId = args.obraId ? String(args.obraId) : null;
       const sinObra = Boolean(args.sinObra);
       const obraFijada = sinObra ? null : obraId;
@@ -85,10 +97,13 @@ export async function ejecutarChatAccion(params: {
         data: {
           clienteId,
           obraId: obraFijada,
-          titulo: String(args.titulo ?? args.notas ?? "Nota"),
-          descripcion: args.descripcion ? String(args.descripcion) : (args.notas ? String(args.notas) : null),
+          titulo: String(args.titulo ?? "Nota"),
+          descripcion: args.descripcion ? String(args.descripcion) : null,
           tipo: (args.tipo as never) ?? "nota",
-          fechaInicio: new Date(String(args.fecha ?? args.fechaInicio)),
+          fechaInicio: instanteNegocio(
+            String(args.fecha ?? args.fechaInicio),
+            (args.hora as string | null | undefined) ?? null
+          ),
           fechaFin: args.fechaFin ? new Date(String(args.fechaFin)) : null,
           todoElDia: args.todoElDia === undefined ? true : Boolean(args.todoElDia),
           visibleCliente: obraFijada ? Boolean(args.visibleCliente) : false,

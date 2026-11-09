@@ -17,13 +17,21 @@ export async function POST(
     if (!accion) {
       return NextResponse.json({ error: { code: "SESION_NO_ENCONTRADA", message: "Accion no encontrada" } }, { status: 404 });
     }
-    if (accion.usuarioId !== session.user.id) {
+
+    // Admin puede confirmar cualquier acción; cliente solo la suya
+    const esAdmin = session.user.role === "admin";
+    if (!esAdmin && accion.usuarioId !== session.user.id) {
       return NextResponse.json({ error: { code: "NO_AUTORIZADO", message: "No autorizado" } }, { status: 403 });
     }
+
     const usuario = await prisma.usuario.findUnique({ where: { id: session.user.id }, select: { clienteId: true } });
     const result = await ejecutarChatAccion({
       accionId: id,
-      actor: { usuarioId: session.user.id, rol: "cliente", clienteId: usuario?.clienteId ?? undefined },
+      actor: {
+        usuarioId: session.user.id,
+        rol: esAdmin ? "admin" : "cliente",
+        clienteId: usuario?.clienteId ?? undefined,
+      },
     });
     if (!result.ok) {
       const status = result.codigo === "ACCION_EXPIRADA" || result.codigo === "ACCION_NO_PENDIENTE" ? 409 : 400;
@@ -31,7 +39,7 @@ export async function POST(
     }
     return NextResponse.json({ ok: true, estado: "ejecutada", resultado: result });
   } catch (error) {
-    console.error("[CHAT ACCION CLIENTE CONFIRMAR] Error:", error);
+    console.error("[CHAT ACCION CONFIRMAR] Error:", error);
     return NextResponse.json({ error: { code: "DESCONOCIDO", message: "Error al ejecutar la accion" } }, { status: 500 });
   }
 }

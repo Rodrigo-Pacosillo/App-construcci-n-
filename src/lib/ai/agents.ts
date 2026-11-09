@@ -4,9 +4,6 @@ import type {
   DocConocimiento,
   AudienciaConocimiento,
 } from "./conocimiento";
-import { buildPublicoPrompt } from "./prompts/publico";
-import { buildClientePrompt } from "./prompts/cliente";
-import { buildAdminPrompt } from "./prompts/admin";
 import type { EstadoHerramienta } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -554,9 +551,13 @@ Cuando el cliente pregunte por sus cotizaciones, avance de obra o próximos even
 `.trim();
     },
     herramientas: [
-      "obtener_mis_cotizaciones",
-      "obtener_avance_obra",
-      "obtener_proximos_eventos",
+      "mi_resumen",
+      "mis_cotizaciones",
+      "mi_obra",
+      "mis_pagos",
+      "mis_documentos",
+      "mi_calendario",
+      "proponer_nota_calendario",
       "buscar_conocimiento",
     ],
     audienciaConocimiento: "cliente",
@@ -640,14 +641,17 @@ Tú: buscar_clientes("juan") → 1 resultado → resumen_cliente(id) → present
     },
     herramientas: [
       "buscar_clientes",
-      "resumen_panel",
-      "resumen_cliente",
-      "resumen_cotizacion",
-      "resumen_avance_obra",
-      "inventario_herramientas_y_materiales",
+      "ficha_cliente",
+      "listar_cotizaciones",
+      "listar_obras",
+      "detalle_obra",
+      "estado_financiero",
+      "agenda",
+      "inventario",
+      "equipo_obra",
+      "pendientes",
       "proponer_cambio_estado_cotizacion",
-      "proponer_agendar_visita",
-      "agregar_nota_calendario",
+      "proponer_evento_calendario",
       "buscar_conocimiento",
     ],
     audienciaConocimiento: "admin",

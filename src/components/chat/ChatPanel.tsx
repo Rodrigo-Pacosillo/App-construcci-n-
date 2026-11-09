@@ -337,14 +337,6 @@ export function ChatPanel(props: ChatPanelProps) {
       return;
     }
 
-    // Leer header X-Chat-Session-Id
-    const newSessionId = res.headers.get("X-Chat-Session-Id");
-    if (newSessionId) {
-      setSessionId(newSessionId);
-      sessionStorage.setItem(sessionStorageKey, newSessionId);
-      onSesionCreada?.(newSessionId);
-    }
-
     // Obtener saludo del servidor
     const data = await res.json();
     sessionJustCreated.current = true; // Marcar que la sesión fue creada recién
@@ -468,9 +460,14 @@ export function ChatPanel(props: ChatPanelProps) {
   // Render de tarjetas de acción
   const renderAcciones = useMemo(() => {
     return Object.values(acciones).map((accion) => (
-      <TarjetaAccion key={accion.accionId} accion={accion} onFinalizada={alFinalizarAccion} />
+      <TarjetaAccion
+        key={accion.accionId}
+        accion={accion}
+        agente={agente === "admin" ? "admin" : "cliente"}
+        onFinalizada={alFinalizarAccion}
+      />
     ));
-  }, [acciones, alFinalizarAccion]);
+  }, [acciones, alFinalizarAccion, agente]);
 
   // Render de chips de sugerencia
   const renderSugerencias = useMemo(() => {
@@ -580,7 +577,14 @@ export function ChatPanel(props: ChatPanelProps) {
               <RenderTextoChat texto={msg.contenido} />
               {msg.accionIds?.map((id) => (
                 <div key={id} className="mt-2">
-                  {acciones[id] && <TarjetaAccion key={id} accion={acciones[id]} onFinalizada={alFinalizarAccion} />}
+                  {acciones[id] && (
+                    <TarjetaAccion
+                      key={id}
+                      accion={acciones[id]}
+                      agente={agente === "admin" ? "admin" : "cliente"}
+                      onFinalizada={alFinalizarAccion}
+                    />
+                  )}
                 </div>
               ))}
             </div>

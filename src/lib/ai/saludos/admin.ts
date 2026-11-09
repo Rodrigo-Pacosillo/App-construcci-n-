@@ -4,15 +4,18 @@ export async function construirSaludoAdmin(datos: { nombre: string }) {
   const pendientes = await obtenerPendientes();
 
   const lines: string[] = [];
-  lines.push(`Hola, \`${datos.nombre}\`. Soy el asistente del panel.`);
+  lines.push(`Hola, ${datos.nombre}. Soy el asistente del panel.`);
   const partes = [];
   if (pendientes.cotizacionesNuevas > 0) {
-    partes.push(`\`${pendientes.cotizacionesNuevas}\` cotizaciones nuevas${pendientes.cotizacionMasAntiguaDias !== null ? ` (la más antigua, hace \`${pendientes.cotizacionMasAntiguaDias}\` días)` : ""}`);
+    const antigua = pendientes.cotizacionMasAntiguaDias !== null
+      ? ` (la más antigua, hace ${pendientes.cotizacionMasAntiguaDias} días)`
+      : "";
+    partes.push(`${pendientes.cotizacionesNuevas} cotizaciones nuevas${antigua}`);
   }
-  if (pendientes.eventosHoy > 0) partes.push(`\`${pendientes.eventosHoy}\` eventos hoy`);
-  if (pendientes.obrasEnCurso > 0) partes.push(`\`${pendientes.obrasEnCurso}\` obras en curso`);
-  if (pendientes.materialesBajoStock > 0) partes.push(`\`${pendientes.materialesBajoStock}\` materiales bajo stock`);
-  if (pendientes.herramientasSinDevolver > 0) partes.push(`\`${pendientes.herramientasSinDevolver}\` herramientas sin devolver`);
+  if (pendientes.eventosHoy > 0) partes.push(`${pendientes.eventosHoy} eventos hoy`);
+  if (pendientes.obrasEnCurso > 0) partes.push(`${pendientes.obrasEnCurso} obras en curso`);
+  if (pendientes.materialesBajoStock > 0) partes.push(`${pendientes.materialesBajoStock} materiales bajo stock`);
+  if (pendientes.herramientasSinDevolver > 0) partes.push(`${pendientes.herramientasSinDevolver} herramientas sin devolver`);
   if (partes.length > 0) {
     lines.push("Pendientes ahora: " + partes.join(" · ") + ".");
   } else {

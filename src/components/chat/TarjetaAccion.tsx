@@ -28,6 +28,7 @@ interface AccionUI {
 
 interface TarjetaAccionProps {
   accion: AccionUI;
+  agente: "cliente" | "admin";  // NUEVO
   onFinalizada: (accionId: string, exito: boolean, mensaje?: string) => void;
 }
 
@@ -47,7 +48,7 @@ const COLORES_ESTADO: Record<string, string> = {
   expirada: "bg-neutral-100 dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700",
 };
 
-export function TarjetaAccion({ accion, onFinalizada }: TarjetaAccionProps) {
+export function TarjetaAccion({ accion, agente, onFinalizada }: TarjetaAccionProps) {
   const [confirmando, setConfirmando] = useState(false);
   const [rechazando, setRechazando] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -62,7 +63,8 @@ export function TarjetaAccion({ accion, onFinalizada }: TarjetaAccionProps) {
     setConfirmando(true);
     setError(null);
     try {
-      const res = await fetch(`/api/chat-acciones/${accion.accionId}/confirmar`, {
+      const base = agente === "admin" ? "/api/admin/chat-acciones" : "/api/chat-acciones";
+      const res = await fetch(`${base}/${accion.accionId}/confirmar`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
@@ -80,7 +82,8 @@ export function TarjetaAccion({ accion, onFinalizada }: TarjetaAccionProps) {
     setRechazando(true);
     setError(null);
     try {
-      const res = await fetch(`/api/chat-acciones/${accion.accionId}/rechazar`, {
+      const base = agente === "admin" ? "/api/admin/chat-acciones" : "/api/chat-acciones";
+      const res = await fetch(`${base}/${accion.accionId}/rechazar`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });

@@ -4,12 +4,16 @@ export async function construirSaludoCliente(datos: { clienteId: string }) {
   const resumen = await obtenerResumenCliente(datos.clienteId);
 
   const lines: string[] = [];
-  lines.push(`¡Hola, \`${resumen.nombre}\`! Soy el asistente de su cuenta en Constr-art.`);
+  lines.push(`¡Hola, ${resumen.nombre}! Soy el asistente de su cuenta en Constr-art.`);
   if (resumen.obraPrincipal) {
-    lines.push(`Su obra \`${resumen.obraPrincipal.nombre}\` está \`${resumen.obraPrincipal.estadoLabel}\` al \`${resumen.obraPrincipal.progreso}%\`.`);
+    lines.push(
+      `Su obra ${resumen.obraPrincipal.nombre} está ${resumen.obraPrincipal.estadoLabel} al ${resumen.obraPrincipal.progreso}%.`
+    );
   }
   if (resumen.proximoEvento) {
-    lines.push(`Su próximo evento: \`${resumen.proximoEvento.titulo}\` el \`${resumen.proximoEvento.fecha}\`.`);
+    lines.push(
+      `Su próximo evento: ${resumen.proximoEvento.titulo} el ${resumen.proximoEvento.fecha}.`
+    );
   }
   lines.push("Puedo ayudarle a: ver el avance de su obra, revisar sus cotizaciones, pagos y documentos, consultar su calendario, agregar una nota a su calendario y resolver dudas sobre su construcción.");
   const sugerencias = resumen.obraPrincipal

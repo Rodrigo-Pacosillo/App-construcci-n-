@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { streamText, createUIMessageStreamResponse, stepCountIs } from "ai";
 import { prisma } from "@/lib/db";
+import { Prisma } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { nvidiaProvider, requireNvidiaKey } from "@/lib/ai/providers";
 import type { AgenteId } from "@/lib/ai/agents";
@@ -52,7 +53,8 @@ async function persistirRespuestaAsistente(
   sesionId: string,
   textoCrudo: string,
   contexto: string,
-  herramientasUsadas: HerramientaUsada[] = []
+  herramientasUsadas: HerramientaUsada[] = [],
+  accionIds: string[] = []
 ): Promise<void> {
   try {
     const textoLimpio = limpiarRespuestaIA(textoCrudo, contexto);
@@ -60,14 +62,15 @@ async function persistirRespuestaAsistente(
       console.error(`[CHAT ${contexto}] el stream terminó sin texto`);
       return;
     }
+    const metadatos: Prisma.InputJsonValue = {};
+    if (herramientasUsadas.length > 0) (metadatos as Record<string, unknown>).herramientasUsadas = herramientasUsadas;
+    if (accionIds.length > 0) (metadatos as Record<string, unknown>).accionIds = accionIds;
     await prisma.chatMensaje.create({
       data: {
         sesionId,
         rol: "assistant",
         contenido: textoLimpio,
-        ...(herramientasUsadas.length > 0
-          ? { metadatos: { herramientasUsadas } }
-          : {}),
+        ...(Object.keys(metadatos as Record<string, unknown>).length > 0 ? { metadatos } : {}),
       },
     });
     await prisma.chatSesion.update({
@@ -200,12 +203,30 @@ export async function POST(req: NextRequest) {
       }
       
       const agente = body.agente as "cliente" | "admin";
-      const sesion = await crearSesion({ usuarioId: session.user.id, agente });
+      
+      // Resolver clienteId real del usuario (necesario para que las tools del cliente funcionen)
+      let clienteId: string | undefined;
+      if (agente === "cliente") {
+        const usuario = await prisma.usuario.findUnique({
+          where: { id: session.user.id },
+          select: { clienteId: true },
+        });
+        clienteId = usuario?.clienteId ?? undefined;
+        if (!clienteId) {
+          return errorResponse(
+            "Su usuario no tiene un cliente asociado. Contacte al administrador.",
+            "NO_AUTORIZADO",
+            403
+          );
+        }
+      }
+      
+      const sesion = await crearSesion({ usuarioId: session.user.id, agente, clienteId });
       
       // Obtener saludo según el agente
       const saludo = agente === "admin"
         ? await construirSaludoAdmin({ nombre: session.user.name ?? "Admin" })
-        : await construirSaludoCliente({ clienteId: session.user.id });
+        : await construirSaludoCliente({ clienteId: clienteId! });
       
       // Persistir saludo
       await prisma.chatMensaje.create({
@@ -333,7 +354,13 @@ export async function POST(req: NextRequest) {
           herramienta: r.toolName,
           resultado: JSON.stringify(r.output ?? {}).slice(0, 600),
         }));
-        await persistirRespuestaAsistente(sesion.id, text, "MENSAJE", usadas);
+        const accionIds = (toolResults ?? [])
+          .map((r) => {
+            const out = r.output as { accionId?: string } | undefined;
+            return out?.accionId;
+          })
+          .filter((x): x is string => Boolean(x));
+        await persistirRespuestaAsistente(sesion.id, text, "MENSAJE", usadas, accionIds);
       },
     });
 

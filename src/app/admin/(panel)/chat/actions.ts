@@ -5,7 +5,7 @@ import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth-utils";
-import { ejecutarChatAccion } from "@/lib/ai/ejecutar-accion";
+import { ejecutarChatAccion } from "@/lib/ai/acciones/ejecutar";
 
 export async function getChatAccionesPendientes() {
   await requireAdmin();
@@ -63,8 +63,7 @@ const confirmarSchema = z.object({ id: z.string().cuid() });
 
 /**
  * Confirma y EJECUTA de verdad la acción propuesta por el agente admin.
- * Usa el MISMO ejecutor que la API (/api/admin/chat-acciones/[id]/confirmar):
- * src/lib/ai/ejecutar-accion.ts. Marcar "ejecutada" sin ejecutar era el bug C3.
+ * Usa el ejecutor unificado (BAD executor) que carga, valida, claima y ejecuta.
  */
 export async function confirmarChatAccion(formData: FormData) {
   const session = await requireAdmin();
@@ -77,59 +76,20 @@ export async function confirmarChatAccion(formData: FormData) {
   }
   const id = valid.data.id;
 
-  const accion = await prisma.chatAccion.findUnique({ where: { id } });
-  if (!accion) {
-    return { success: false, error: "Acción no encontrada" };
-  }
-  if (accion.estado !== "pendiente") {
-    return { success: false, error: "La acción ya no está pendiente" };
+  // El BAD executor ya carga, valida, claima, ejecuta y actualiza.
+  const result = await ejecutarChatAccion({
+    accionId: id,
+    actor: { usuarioId: adminId, rol: "admin" },
+  });
+
+  if (!result.ok) {
+    return { success: false, error: result.mensaje };
   }
 
-  try {
-    // 1. Ejecutar la acción de negocio (valida argumentos con Zod dentro).
-    const resultado = await ejecutarChatAccion(
-      accion.herramienta,
-      accion.argumentos,
-      adminId
-    );
-
-    // 2. Recién ahora marcar como ejecutada, guardando qué se ejecutó.
-    await prisma.chatAccion.update({
-      where: { id },
-      data: {
-        estado: "ejecutada",
-        ejecutadoEn: new Date(),
-        confirmadaPorUsuarioId: adminId,
-        resultado: resultado as unknown as Prisma.InputJsonObject,
-      },
-    });
-
-    revalidatePath("/admin/chat");
-    revalidatePath("/admin");
-    revalidatePath("/admin/cotizaciones");
-    return { success: true, resultado };
-  } catch (error) {
-    const mensajeError =
-      error instanceof Error ? error.message : "Error desconocido al ejecutar";
-    console.error("Error confirmando acción:", error);
-    // Trazabilidad: la acción queda "fallida" con el motivo, no "ejecutada" mentirosa.
-    try {
-      await prisma.chatAccion.update({
-        where: { id },
-        data: {
-          estado: "fallida",
-          error: mensajeError,
-          confirmadaPorUsuarioId: adminId,
-        },
-      });
-    } catch {
-      // si ni eso sale, el log de arriba ya quedó
-    }
-    return {
-      success: false,
-      error: `La acción no pudo ejecutarse: ${mensajeError}`,
-    };
-  }
+  revalidatePath("/admin/chat");
+  revalidatePath("/admin");
+  revalidatePath("/admin/cotizaciones");
+  return { success: true, resultado: result };
 }
 
 const rechazarSchema = z.object({ id: z.string().cuid() });
