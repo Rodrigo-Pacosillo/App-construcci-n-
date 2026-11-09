@@ -102,36 +102,29 @@ export default async function ProyectoPage({
           {proyecto.titulo}
         </h1>
 
-        <div className="mt-6 flex flex-wrap gap-6 text-sm text-ink-muted">
-          <div>
-            <span className="section-label block text-ink-faint">UBICACION</span>
-            {proyecto.ubicacion}
-          </div>
-          <div>
-            <span className="section-label block text-ink-faint">SUPERFICIE</span>
-            {(proyecto.m2Construidos ?? "—")}m2
-          </div>
-          <div>
-            <span className="section-label block text-ink-faint">PLAZO</span>
-            {(proyecto.diasEjecucion ?? "—")} días
-          </div>
+        <div className="mt-6 flex flex-wrap items-center gap-4 text-sm text-ink-muted">
+          <span className="inline-block rounded bg-accent/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-accent-strong">
+            Bolivia
+          </span>
         </div>
 
         {proyecto.portadaUrl && (
-          <figure className="relative mt-8 aspect-[16/9] overflow-hidden rounded-xl border border-border">
+          <figure className="relative mt-8 aspect-[16/9] overflow-hidden rounded-xl border border-border bg-surface shadow-lg">
             <Image
               src={cloudSrc(proyecto.portadaUrl, { w: 1600, ar: "16:9" })}
               alt={proyecto.titulo}
               fill
               priority
               sizes="(max-width: 896px) 100vw, 896px"
-              className="object-cover"
+              className="object-cover transition-transform duration-700 motion-safe:hover:scale-105"
             />
           </figure>
         )}
 
-        <div className="mt-12">
-          <p className="section-label mb-2 text-ink-faint">VIDEO DE OBRA</p>
+        <GaleriaProyecto urls={proyecto.galeriaUrls ?? []} titulo={proyecto.titulo} />
+
+        <div className="mt-12 rounded-xl border border-border bg-surface p-6 shadow-sm">
+          <p className="section-label mb-4 text-ink-faint">VIDEO DE OBRA</p>
           {proyecto.videoUrl ? (
             proyecto.videoUrl.includes("res.cloudinary.com") ? (
               <CloudinaryVideoPlayer
@@ -150,8 +143,6 @@ export default async function ProyectoPage({
             <VideoSlot />
           )}
         </div>
-
-        <GaleriaProyecto urls={proyecto.galeriaUrls ?? []} titulo={proyecto.titulo} />
 
         <div className="mt-12 text-center">
           <Link

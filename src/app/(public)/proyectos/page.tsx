@@ -54,12 +54,12 @@ export default async function ProyectosPage() {
           destacados y descubra cómo transformamos espacios.
         </p>
 
-        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {proyectos.map((proyecto, i) => (
             <Link
               key={proyecto.id}
               href={`/proyectos/${proyecto.slug}`}
-              className="group relative overflow-hidden rounded border border-border bg-surface"
+              className="group relative overflow-hidden rounded-lg border border-border bg-surface shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
             >
               <div className="aspect-[4/3] relative">
                 {proyecto.portadaUrl ? (
@@ -75,22 +75,17 @@ export default async function ProyectosPage() {
                   <div className="absolute inset-0 bg-white/5" />
                 )}
               </div>
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-              <div className="absolute bottom-0 left-0 p-6">
-                <p className="section-label text-accent">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 p-6">
+                <span className="inline-block rounded bg-accent/90 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
                   {(proyecto.tipoConstruccion ?? "no_sabe") === "seco"
-                    ? "STEEL FRAME"
+                    ? "Steel Frame"
                     : (proyecto.tipoConstruccion ?? "no_sabe").toUpperCase()}
-                </p>
-                <h2 className="mt-1 font-heading text-xl font-bold text-white">
+                </span>
+                <h2 className="mt-2 font-heading text-xl font-bold text-white drop-shadow-md">
                   {proyecto.titulo}
                 </h2>
-                <div className="mt-2 flex gap-4 text-xs text-white/40">
-                  <span>{(proyecto.m2Construidos ?? "—")}m2</span>
-                  <span>{(proyecto.diasEjecucion ?? "—")} días</span>
-                  <span>{proyecto.ubicacion}</span>
-                </div>
-                <span className="mt-2 inline-flex items-center gap-1 text-xs text-accent opacity-0
+                <span className="mt-3 inline-flex items-center gap-1 text-xs text-accent opacity-0
                              transition-opacity duration-300 group-hover:opacity-100">
                   Ver proyecto →
                 </span>

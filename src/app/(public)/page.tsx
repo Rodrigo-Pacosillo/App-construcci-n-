@@ -3,7 +3,6 @@ import HomeIntro from "@/components/intro/HomeIntro";
 import { Marquee } from "@/components/sections/Marquee";
 import { ServiciosSection } from "@/components/sections/ServiciosSection";
 import { ProyectosSection } from "@/components/sections/ProyectosSection";
-import { CertificacionesSection } from "@/components/sections/CertificacionesSection";
 import { TestimoniosSection } from "@/components/sections/TestimoniosSection";
 import { NumerosSection } from "@/components/sections/NumerosSection";
 import type { Metadata } from "next";
@@ -34,7 +33,7 @@ export default function Home() {
       <Marquee />
       <ServiciosSection />
       
-      <CertificacionesSection />
+      <ProyectosSection />
       <TestimoniosSection />
       <NumerosSection />
     </>

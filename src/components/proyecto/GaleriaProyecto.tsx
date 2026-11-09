@@ -20,17 +20,19 @@ export function GaleriaProyecto({ urls, titulo }: { urls: string[]; titulo: stri
 
   return (
     <section className="mt-12">
-      <p className="section-label mb-2 text-ink-faint">
-        GALERÍA <span className="ml-1 text-ink-faint/60">({urls.length} FOTOS)</span>
-      </p>
+      <div className="mb-4 flex items-center justify-between">
+        <p className="section-label text-ink-faint">
+          GALERÍA <span className="ml-1 text-ink-faint/60">({urls.length} FOTOS)</span>
+        </p>
+      </div>
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {urls.map((url, i) => (
           <button
             key={url}
             onClick={() => setAbierta(i)}
             aria-label={`Abrir foto ${i + 1} de ${titulo}`}
-            className="group relative aspect-[4/3] cursor-zoom-in overflow-hidden rounded bg-surface"
+            className="group relative aspect-[4/3] cursor-zoom-in overflow-hidden rounded-lg bg-surface shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5"
           >
             <Image
               src={cloudSrc(url, { w: 900, ar: "4:3" })}
@@ -38,7 +40,7 @@ export function GaleriaProyecto({ urls, titulo }: { urls: string[]; titulo: stri
               fill
               sizes="(max-width: 640px) 50vw, (max-width: 1280px) 33vw, 384px"
               loading={i < 6 ? "eager" : "lazy"}
-              className="object-cover transition-transform duration-300 motion-safe:group-hover:scale-[1.04]"
+              className="object-cover transition-transform duration-300 motion-safe:group-hover:scale-105"
             />
           </button>
         ))}

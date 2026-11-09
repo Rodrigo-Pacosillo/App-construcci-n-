@@ -37,7 +37,7 @@ export async function ProyectosSection() {
             <Link
               key={proyecto.id}
               href={`/proyectos/${proyecto.slug}`}
-              className="group relative overflow-hidden rounded border border-border bg-surface"
+              className="group relative overflow-hidden rounded-lg border border-border bg-surface shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
             >
               <div className="aspect-[4/3] relative">
                 {proyecto.portadaUrl ? (
@@ -53,17 +53,14 @@ export async function ProyectosSection() {
                   <div className="absolute inset-0 bg-white/5" />
                 )}
               </div>
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-              <div className="absolute bottom-0 left-0 p-6">
-                <p className="section-label text-accent">
-                  {(proyecto.tipoConstruccion ?? "no_sabe") === "seco" ? "STEEL FRAME" : (proyecto.tipoConstruccion ?? "no_sabe").toUpperCase()}
-                </p>
-                <h3 className="mt-1 font-heading text-xl font-bold text-white">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 p-6">
+                <span className="inline-block rounded bg-accent/90 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
+                  {(proyecto.tipoConstruccion ?? "no_sabe") === "seco" ? "Steel Frame" : (proyecto.tipoConstruccion ?? "no_sabe").toUpperCase()}
+                </span>
+                <h3 className="mt-2 font-heading text-xl font-bold text-white drop-shadow-md">
                   {proyecto.titulo}
                 </h3>
-                <p className="mt-1 text-sm text-white/50">
-                  {(proyecto.m2Construidos ?? "—")}m2 · {(proyecto.diasEjecucion ?? "—")} días
-                </p>
               </div>
             </Link>
           ))}
