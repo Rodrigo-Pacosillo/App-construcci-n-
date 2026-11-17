@@ -6,6 +6,7 @@ import { auth } from "@/lib/auth";
 import { cotizacionFormSchema } from "@/lib/validators";
 import { uploadFile, deleteFile } from "@/lib/cloudinary";
 import { generarChatToken } from "@/lib/tokens";
+import { VENTANA_PUBLICA_HORAS } from "@/lib/ai/config";
 
 /**
  * Crea una nueva cotización desde el formulario público
@@ -148,7 +149,11 @@ export async function createCotizacion(formData: FormData) {
       },
     });
 
-    const chatToken = generarChatToken(cotizacion.id);
+    // Ventana única: el token vence al mismo tiempo que la conversación pública.
+    const chatExpiraEn = new Date(
+      Date.now() + VENTANA_PUBLICA_HORAS * 60 * 60 * 1000
+    );
+    const chatToken = generarChatToken(cotizacion.id, chatExpiraEn);
 
     // Invalidar caché para actualizar vistas
     revalidatePath("/cotizacion");

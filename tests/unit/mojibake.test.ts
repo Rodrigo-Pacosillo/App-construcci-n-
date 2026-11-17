@@ -19,8 +19,6 @@ test("no mojibake en src/lib/ai", () => {
     "saludos/admin.ts",
     "prompts/base.ts",
     "prompts/publico.ts",
-    "prompts/cliente.ts",
-    "prompts/admin.ts",
   ];
   for (const f of files) {
     const count = checkFile(join(aiDir, f));
@@ -80,8 +78,6 @@ test("tildes en lib/ai/prompts y saludos", () => {
     "saludos/admin.ts",
     "prompts/base.ts",
     "prompts/publico.ts",
-    "prompts/cliente.ts",
-    "prompts/admin.ts",
   ];
   for (const f of files) {
     const content = readFileSync(join(aiDir, f), "utf-8");

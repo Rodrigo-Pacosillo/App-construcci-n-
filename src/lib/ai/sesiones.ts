@@ -1,20 +1,33 @@
 import { prisma } from "@/lib/db";
-import { SESION_PUBLICA_VIGENCIA_HORAS } from "./config";
+import { RETENCION_PUBLICA_DIAS } from "./config";
 
-export async function obtenerOCrearSesionPublica(cotizacionId: string) {
-  const ahora = new Date();
+/**
+ * Una cotización tiene UNA sola conversación pública.
+ *
+ * La ventana la fija el token (misma fecha de expiración). Si la sesión ya
+ * existe, se devuelve tal cual: no se extiende ni se reemplaza. Así recargar
+ * la página o reabrir el enlace no reinicia el tiempo ni el cupo.
+ */
+export async function obtenerOCrearSesionPublica(
+  cotizacionId: string,
+  expiraEn: Date
+) {
   const existente = await prisma.chatSesion.findFirst({
-    where: { cotizacionId, agente: "publico", estado: "activa" },
+    where: { cotizacionId, agente: "publico" },
     orderBy: { creadoEn: "desc" },
   });
+
   if (existente) {
-    if (existente.expiraEn && existente.expiraEn < ahora) {
-      await prisma.chatSesion.update({ where: { id: existente.id }, data: { estado: "cerrada" } });
-    } else {
-      return existente;
+    // Sesiones antiguas sin fecha: se les fija la ventana del token una vez.
+    if (!existente.expiraEn) {
+      return prisma.chatSesion.update({
+        where: { id: existente.id },
+        data: { expiraEn },
+      });
     }
+    return existente;
   }
-  const expiraEn = new Date(ahora.getTime() + SESION_PUBLICA_VIGENCIA_HORAS * 60 * 60 * 1000);
+
   return prisma.chatSesion.create({
     data: {
       sessionId: crypto.randomUUID(),
@@ -26,16 +39,50 @@ export async function obtenerOCrearSesionPublica(cotizacionId: string) {
   });
 }
 
-export async function crearSesion(params: { usuarioId: string; agente: "cliente" | "admin"; clienteId?: string; cotizacionId?: string; titulo?: string }) {
+/** Mensajes del visitante en TODAS las sesiones publicas de la cotizacion. */
+export async function contarMensajesPublicos(
+  cotizacionId: string
+): Promise<number> {
+  return prisma.chatMensaje.count({
+    where: {
+      rol: "user",
+      sesion: { cotizacionId, agente: "publico" },
+    },
+  });
+}
+
+/**
+ * Borra conversaciones publicas vencidas hace mas de RETENCION_PUBLICA_DIAS.
+ * El chat publico es efimero: si se vence, no queda para siempre en la BD.
+ */
+export async function purgarConversacionesPublicas(): Promise<number> {
+  const corte = new Date(
+    Date.now() - RETENCION_PUBLICA_DIAS * 24 * 60 * 60 * 1000
+  );
+  const { count } = await prisma.chatSesion.deleteMany({
+    where: { agente: "publico", expiraEn: { lt: corte } },
+  });
+  return count;
+}
+
+export async function crearSesion(params: {
+  usuarioId: string;
+  agente: "cliente" | "admin";
+  clienteId?: string;
+  cotizacionId?: string;
+  titulo?: string;
+}) {
   const ahora = new Date();
-  const tituloAuto = params.titulo ?? `Chat ${ahora.toLocaleString("es-BO", { 
-    timeZone: "America/La_Paz", 
-    day: "2-digit", 
-    month: "2-digit", 
-    year: "numeric", 
-    hour: "2-digit", 
-    minute: "2-digit" 
-  })}`;
+  const tituloAuto =
+    params.titulo ??
+    `Chat ${ahora.toLocaleString("es-BO", {
+      timeZone: "America/La_Paz",
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })}`;
   return prisma.chatSesion.create({
     data: {
       sessionId: crypto.randomUUID(),
@@ -49,7 +96,11 @@ export async function crearSesion(params: { usuarioId: string; agente: "cliente"
   });
 }
 
-export async function listarSesiones(usuarioId: string, agente: "cliente" | "admin", cursor?: string) {
+export async function listarSesiones(
+  usuarioId: string,
+  agente: "cliente" | "admin",
+  cursor?: string
+) {
   return prisma.chatSesion.findMany({
     where: { usuarioId, agente, estado: { not: "archivada" } },
     orderBy: { ultimoMensajeEn: "desc" },

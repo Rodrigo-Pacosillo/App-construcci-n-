@@ -63,6 +63,7 @@ export type VistaCotizacionPublica = {
   plazoInicio: string;
   ubicacionObra: string | null;
   requerimiento: string | null;
+  tieneFoto: boolean;
 };
 
 export type ResumenClienteDTO = {

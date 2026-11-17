@@ -1,7 +1,11 @@
 import { createHmac, timingSafeEqual } from "crypto";
 
 const CHAT_TOKEN_SECRET: string | undefined = process.env.CHAT_TOKEN_SECRET;
-const CHAT_TOKEN_TIEMPO_EXPIRACION_MS = 14 * 24 * 60 * 60 * 1000; // 14 días
+
+export type ChatTokenPayload = {
+  cotizacionId: string;
+  expiraEn: Date;
+};
 
 export function requireChatTokenSecret(): string {
   if (!CHAT_TOKEN_SECRET) {
@@ -13,12 +17,14 @@ export function requireChatTokenSecret(): string {
 }
 
 /**
- * Genera un token firmado de corta vida para el chat público.
+ * Genera un token firmado para el chat público.
+ * La expiración la decide quien llama (la misma ventana que usa la sesión),
+ * para que token y conversación venzan juntos.
  * Formato: base64url(cotizacionId.exp.firma)
  */
-export function generarChatToken(cotizacionId: string): string {
+export function generarChatToken(cotizacionId: string, expiraEn: Date): string {
   const secret = requireChatTokenSecret();
-  const exp = Date.now() + CHAT_TOKEN_TIEMPO_EXPIRACION_MS;
+  const exp = expiraEn.getTime();
   const payload = `${cotizacionId}.${exp}`;
   const firma = createHmac("sha256", secret)
     .update(payload)
@@ -27,10 +33,10 @@ export function generarChatToken(cotizacionId: string): string {
 }
 
 /**
- * Verifica un token de chat público y devuelve el cotizacionId si es válido.
+ * Verifica un token de chat público y devuelve su contenido si es válido.
  * Lanza error si el token es inválido o expiró.
  */
-export function verificarChatToken(token: string): string {
+export function verificarChatToken(token: string): ChatTokenPayload {
   const secret = requireChatTokenSecret();
   let decodificado: string;
   try {
@@ -71,5 +77,5 @@ export function verificarChatToken(token: string): string {
     throw new Error("TOKEN_INVALIDO");
   }
 
-  return cotizacionId;
+  return { cotizacionId, expiraEn: new Date(exp) };
 }

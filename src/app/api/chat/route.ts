@@ -8,9 +8,24 @@ import type { AgenteId } from "@/lib/ai/agents";
 import { chatMensajeSchema } from "@/lib/validators/chat";
 import { toolsPara } from "@/lib/ai/tools";
 import { buildToolContext } from "@/lib/ai/contexto";
-import { obtenerOCrearSesionPublica, crearSesion } from "@/lib/ai/sesiones";
-import { RATE_LIMIT_POR_HORA } from "@/lib/ai/config";
-import { obtenerConocimiento, type CategoriaConocimiento } from "@/lib/ai/conocimiento";
+import {
+  obtenerOCrearSesionPublica,
+  crearSesion,
+  contarMensajesPublicos,
+  purgarConversacionesPublicas,
+} from "@/lib/ai/sesiones";
+import {
+  LIMITE_MENSAJES,
+  RATE_LIMIT_POR_HORA,
+  VENTANA_HISTORIAL,
+  URL_SITIO,
+} from "@/lib/ai/config";
+import {
+  obtenerConocimiento,
+  type CategoriaConocimiento,
+} from "@/lib/ai/conocimiento";
+import { mapearCotizacionPublica } from "@/lib/ai/datos/cotizacionPublica";
+import { generarChatToken, verificarChatToken } from "@/lib/tokens";
 import { construirSaludoCliente } from "@/lib/ai/saludos/cliente";
 import { construirSaludoAdmin } from "@/lib/ai/saludos/admin";
 
@@ -81,11 +96,9 @@ async function persistirRespuestaAsistente(
       },
     });
   } catch (persistError) {
-    console.error(`[CHAT ${contexto}] Error persisting assistant message:`, persistError);
+    console.error(`[CHAT ${contexto}] Error persisting assistant message:`, persistError instanceof Error ? persistError.message : persistError);
   }
 }
-
-const MENSAJES_CONTEXTO = 12;
 
 function obtenerToken(req: NextRequest, body?: Record<string, unknown>): string | undefined {
   const { searchParams } = new URL(req.url);
@@ -95,18 +108,21 @@ function obtenerToken(req: NextRequest, body?: Record<string, unknown>): string 
 
 async function validarSesionPublica(req: NextRequest, sessionId: string, token?: string | null) {
   if (!token) return errorResponse("Token requerido", "TOKEN_INVALIDO", 401);
+
   let cotizacionId: string;
   try {
-    cotizacionId = (await import("@/lib/tokens")).verificarChatToken(token);
+    cotizacionId = verificarChatToken(token).cotizacionId;
   } catch {
     return errorResponse("Token inválido o expirado", "TOKEN_INVALIDO", 401);
   }
+
   const sesion = await prisma.chatSesion.findUnique({ where: { sessionId } });
   if (!sesion) return errorResponse("Sesión de chat no encontrada", "SESION_NO_ENCONTRADA", 404);
-  // Si el token no coincide con la sesión actual, buscar la sesión correcta para este token
+
+  // Si el token no coincide con la sesión actual, buscar la única sesión de esa cotización.
   if (sesion.cotizacionId !== cotizacionId) {
     const sesionCorrecta = await prisma.chatSesion.findFirst({
-      where: { cotizacionId, agente: "publico", estado: "activa" },
+      where: { cotizacionId, agente: "publico" },
       orderBy: { creadoEn: "desc" },
     });
     if (sesionCorrecta) {
@@ -130,19 +146,18 @@ async function validarSesionPrivada(sesion: { usuarioId?: string | null; agente:
   return sesion;
 }
 
-async function validarExpiracionYPropiedad(sesion: { id: string; agente: string; expiraEn?: Date | null; cotizacionId?: string | null; usuarioId?: string | null }, req: NextRequest, token?: string | null) {
+async function validarExpiracionYPropiedad(sesion: { id: string; sessionId: string; agente: string; expiraEn?: Date | null; cotizacionId?: string | null; usuarioId?: string | null }, req: NextRequest, token?: string | null) {
   if (sesion.agente === "publico" && sesion.expiraEn && sesion.expiraEn < new Date()) {
-    await prisma.chatSesion.update({ where: { sessionId: sesion.id }, data: { estado: "cerrada" } });
+    await prisma.chatSesion.update({ where: { id: sesion.id }, data: { estado: "cerrada" } });
     return errorResponse("Esta conversación ha finalizado. Escríbanos por WhatsApp o envíe otra cotización.", "SESION_EXPIRADA", 410);
   }
-  if (sesion.agente === "publico") return validarSesionPublica(req, sesion.id, token);
+  if (sesion.agente === "publico") return validarSesionPublica(req, sesion.sessionId, token);
   if (sesion.usuarioId) return validarSesionPrivada(sesion, req);
   return errorResponse("No autorizado para esta sesión", "NO_AUTORIZADO", 403);
 }
 
 export async function POST(req: NextRequest) {
   try {
-    requireNvidiaKey();
     const body = await req.json();
 
     // ── Caso 1: __INICIO__ (saludo sin LLM) → responde JSON InicioResponse ──
@@ -150,11 +165,21 @@ export async function POST(req: NextRequest) {
       const tokenPublico = obtenerToken(req, body);
       if (!tokenPublico) return errorResponse("Token requerido para chat público", "TOKEN_INVALIDO", 401);
 
-      let cotizacionId: string;
-      try { cotizacionId = (await import("@/lib/tokens")).verificarChatToken(tokenPublico); }
-      catch { return errorResponse("Token inválido o expirado", "TOKEN_INVALIDO", 401); }
+      let payload: { cotizacionId: string; expiraEn: Date };
+      try {
+        payload = verificarChatToken(tokenPublico);
+      } catch {
+        return errorResponse("Token inválido o expirado", "TOKEN_INVALIDO", 401);
+      }
 
-      const sesion = await obtenerOCrearSesionPublica(cotizacionId);
+      // Best effort: el chat público es efímero, no se acumula en la BD.
+      try {
+        await purgarConversacionesPublicas();
+      } catch (purgaError) {
+        console.error("[CHAT] No se pudo purgar conversaciones públicas vencidas:", purgaError instanceof Error ? purgaError.message : purgaError);
+      }
+
+      const sesion = await obtenerOCrearSesionPublica(payload.cotizacionId, payload.expiraEn);
       if (sesion.expiraEn && sesion.expiraEn < new Date()) {
         await prisma.chatSesion.update({ where: { id: sesion.id }, data: { estado: "cerrada" } });
         return errorResponse("Esta conversación ha finalizado. Escríbanos por WhatsApp o envíe otra cotización.", "SESION_EXPIRADA", 410);
@@ -162,9 +187,39 @@ export async function POST(req: NextRequest) {
 
       // Obtener saludo y sugerencias
       const { construirSaludoPublico } = await import("@/lib/ai/saludos/publico");
-      const cot = await prisma.cotizacion.findUnique({ where: { id: cotizacionId }, include: { cliente: { select: { nombre: true } } } });
+
+      // Si la conversación ya tiene historial (recarga de página), se devuelve tal
+      // cual: no se duplica el saludo ni se abre otra sesión.
+      const mensajesPrevios = await prisma.chatMensaje.findMany({
+        where: { sesionId: sesion.id },
+        orderBy: { creadoEn: "asc" },
+        take: 50,
+      });
+      if (mensajesPrevios.length > 0) {
+        const metaSaludo = mensajesPrevios[0].metadatos as { sugerencias?: string[] } | undefined;
+        const sugerenciasPrevias = metaSaludo?.sugerencias ?? [];
+        return NextResponse.json({
+          sessionId: sesion.sessionId,
+          agente: { id: "publico", etiqueta: "Asistente de cotización", descripcion: "Resuelve dudas sobre su cotización" },
+          mensajes: mensajesPrevios.map((m) => ({
+            id: m.id,
+            rol: m.rol,
+            contenido: m.contenido,
+            creadoEn: m.creadoEn.toISOString(),
+            sugerencias: (m.metadatos as { sugerencias?: string[] } | undefined)?.sugerencias,
+          })),
+          acciones: [],
+          sugerencias: sugerenciasPrevias,
+          expiraEn: sesion.expiraEn?.toISOString() ?? null,
+        });
+      }
+
+      const cot = await prisma.cotizacion.findUnique({
+        where: { id: payload.cotizacionId },
+        select: { cliente: { select: { nombre: true } } },
+      });
       const saludo = await construirSaludoPublico({
-        cotizacionId: cotizacionId,
+        cotizacionId: payload.cotizacionId,
         nombre: cot?.cliente?.nombre ?? "Cliente",
       });
 
@@ -194,16 +249,16 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Caso 2: mensaje normal O creación de sesión (cliente/admin) ──
-    
+
     // Si no hay sessionId pero sí agente (cliente/admin), crear sesión nueva
     if (!body.sessionId && (body.agente === "cliente" || body.agente === "admin")) {
       const session = await auth();
       if (!session || !session.user) {
         return errorResponse("No autorizado para crear sesión", "NO_AUTORIZADO", 403);
       }
-      
+
       const agente = body.agente as "cliente" | "admin";
-      
+
       // Resolver clienteId real del usuario (necesario para que las tools del cliente funcionen)
       let clienteId: string | undefined;
       if (agente === "cliente") {
@@ -220,14 +275,14 @@ export async function POST(req: NextRequest) {
           );
         }
       }
-      
+
       const sesion = await crearSesion({ usuarioId: session.user.id, agente, clienteId });
-      
+
       // Obtener saludo según el agente
       const saludo = agente === "admin"
         ? await construirSaludoAdmin({ nombre: session.user.name ?? "Admin" })
         : await construirSaludoCliente({ clienteId: clienteId! });
-      
+
       // Persistir saludo
       await prisma.chatMensaje.create({
         data: {
@@ -245,10 +300,10 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json({
         sessionId: sesion.sessionId,
-        agente: { 
-          id: agente, 
-          etiqueta: agente === "admin" ? "Asistente del panel" : "Asistente de su cuenta", 
-          descripcion: agente === "admin" ? "Gestión del negocio con confirmación humana" : "Consulta sus datos y gestiona su cuenta" 
+        agente: {
+          id: agente,
+          etiqueta: agente === "admin" ? "Asistente del panel" : "Asistente de su cuenta",
+          descripcion: agente === "admin" ? "Gestión del negocio con confirmación humana" : "Consulta sus datos y gestiona su cuenta"
         },
         mensajes: [{ id: "saludo", rol: "assistant", contenido: saludo.texto, creadoEn: new Date().toISOString(), sugerencias: saludo.sugerencias }],
         acciones: [],
@@ -285,7 +340,23 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    if (agenteConfig.limiteMensajesSesion !== null && sesion.mensajeCount >= agenteConfig.limiteMensajesSesion) {
+    if (sesion.agente === "publico") {
+      // Cupo por cotización: reabrir la conversación no regala mensajes nuevos.
+      if (!sesion.cotizacionId) {
+        return errorResponse("Sesión sin cotización asociada", "SESION_NO_ENCONTRADA", 404);
+      }
+      const usados = await contarMensajesPublicos(sesion.cotizacionId);
+      if (usados >= LIMITE_MENSAJES.publico) {
+        return errorResponse(
+          `Ha alcanzado el límite de ${LIMITE_MENSAJES.publico} mensajes para esta cotización. Escríbanos por WhatsApp para continuar.`,
+          "SESION_LIMITE",
+          429
+        );
+      }
+    } else if (
+      agenteConfig.limiteMensajesSesion !== null &&
+      sesion.mensajeCount >= agenteConfig.limiteMensajesSesion
+    ) {
       return errorResponse("Has alcanzado el límite de mensajes para esta sesión.", "SESION_LIMITE", 429);
     }
 
@@ -296,7 +367,7 @@ export async function POST(req: NextRequest) {
     const historialPrevio = await prisma.chatMensaje.findMany({
       where: { sesionId: sesion.id },
       orderBy: { creadoEn: "desc" },
-      take: MENSAJES_CONTEXTO,
+      take: VENTANA_HISTORIAL,
     });
     const mensajesHistorial = historialPrevio
       .slice()
@@ -308,22 +379,52 @@ export async function POST(req: NextRequest) {
       categorias: agenteConfig.categoriasConocimiento as CategoriaConocimiento[],
     });
 
+    // Solo campos públicos: nunca notas internas, montos ni identificadores.
     const cotizacionData = sesion.cotizacionId
-      ? await prisma.cotizacion.findUnique({ where: { id: sesion.cotizacionId } })
+      ? await prisma.cotizacion.findUnique({
+          where: { id: sesion.cotizacionId },
+          select: {
+            tipoObra: true,
+            tipoConstruccion: true,
+            rangoM2: true,
+            plazoInicio: true,
+            ubicacionObra: true,
+            requerimiento: true,
+            fotoLoteUrl: true,
+            cliente: { select: { nombre: true } },
+          },
+        })
       : null;
 
-    const clienteNombre = sesion.clienteId
-      ? (await prisma.cliente.findUnique({ where: { id: sesion.clienteId }, select: { nombre: true } }))?.nombre ?? "Cliente"
-      : "Cliente";
+    // Las sesiones públicas no tienen clienteId: el nombre sale de la cotización.
+    const clienteNombre =
+      (sesion.clienteId
+        ? (
+            await prisma.cliente.findUnique({
+              where: { id: sesion.clienteId },
+              select: { nombre: true },
+            })
+          )?.nombre
+        : null) ??
+      cotizacionData?.cliente?.nombre ??
+      "Cliente";
+
+    const sitioWeb = URL_SITIO;
 
     const systemPrompt = await agenteConfig.sistemaPromptBuilder({
       datosContexto: {
-        cotizacion: cotizacionData,
+        cotizacion:
+          sesion.agente === "publico" && cotizacionData
+            ? mapearCotizacionPublica(cotizacionData)
+            : cotizacionData,
         clienteNombre,
-        sitioWeb: req.headers.get("origin") ?? process.env.NEXT_PUBLIC_SITE_URL ?? undefined,
+        sitioWeb,
       },
       conocimiento,
     });
+
+    // Recién acá se necesita el proveedor de IA: el saludo (__INICIO__) no lo usa.
+    requireNvidiaKey();
 
     const herramientas = toolsPara(
       sesion.agente as "publico" | "cliente" | "admin",
@@ -332,7 +433,7 @@ export async function POST(req: NextRequest) {
         clienteId: sesion.clienteId || undefined,
         rol: sesion.agente as "publico" | "cliente" | "admin",
         sesionId: sesion.id,
-        sitioWeb: req.headers.get("origin") ?? process.env.NEXT_PUBLIC_SITE_URL ?? undefined,
+        sitioWeb,
       })
     );
 
@@ -348,7 +449,7 @@ export async function POST(req: NextRequest) {
       tools: herramientas,
       stopWhen: stepCountIs(sesion.agente === "publico" ? 3 : sesion.agente === "cliente" ? 5 : 8),
       abortSignal: req.signal,
-      onError: (err) => console.error("[CHAT STREAM ERROR]", err),
+      onError: (err) => console.error("[CHAT STREAM ERROR]", err instanceof Error ? err.message : err),
       onFinish: async ({ text, toolResults }) => {
         const usadas = (toolResults ?? []).map((r) => ({
           herramienta: r.toolName,
@@ -366,8 +467,10 @@ export async function POST(req: NextRequest) {
 
     return createUIMessageStreamResponse({ stream: result.toUIMessageStream() });
   } catch (error) {
-    console.error("[CHAT] Error inesperado:", error);
     const mensaje = error instanceof Error ? error.message : "Error desconocido";
+    // Se registra el stack como texto: formatear el objeto Error dispara el
+    // renderizador de marcos de código del servidor de desarrollo.
+    console.error("[CHAT] Error inesperado:", mensaje, error instanceof Error ? error.stack : "");
     if (mensaje === "TOKEN_INVALIDO") return errorResponse("Token inválido o expirado", "TOKEN_INVALIDO", 401);
     if (mensaje === "NO_AUTORIZADO") return errorResponse("No autorizado", "NO_AUTORIZADO", 403);
     if (mensaje.startsWith("NVIDIA_API_KEY")) return errorResponse("El servicio de IA no está configurado.", "PROVEEDOR_IA", 503);
@@ -428,7 +531,7 @@ export async function GET(req: NextRequest) {
       expiraEn: sesion.expiraEn?.toISOString() ?? null,
     });
   } catch (error) {
-    console.error("[CHAT GET] Error:", error);
+    console.error("[CHAT GET] Error:", error instanceof Error ? error.message : error, error instanceof Error ? error.stack : "");
     return errorResponse("Lo siento, tuve un problema técnico.", "DESCONOCIDO", 500);
   }
 }

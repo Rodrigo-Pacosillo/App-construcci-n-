@@ -1,7 +1,7 @@
 import type { Tool } from "ai";
-import { tool } from "ai";
 import type { ToolContext } from "@/lib/ai/contexto";
-import { buscarConocimientoTool } from "./publico/conocimiento";
+import { limpiarParaModelo } from "@/lib/ai/datos/seguridad";
+import { buscarConocimientoTool } from "./conocimiento";
 import { miResumenTool } from "./cliente/mi_resumen";
 import { misCotizacionesTool } from "./cliente/mis_cotizaciones";
 import { miObraTool } from "./cliente/mi_obra";
@@ -9,7 +9,6 @@ import { misPagosTool } from "./cliente/mis_pagos";
 import { misDocumentosTool } from "./cliente/mis_documentos";
 import { miCalendarioTool } from "./cliente/mi_calendario";
 import { proponerNotaCalendarioTool } from "./cliente/proponer_nota_calendario";
-import { buscarConocimientoClienteTool } from "./cliente/buscar_conocimiento";
 import { buscarClientesTool } from "./admin/buscar_clientes";
 import { fichaClienteTool } from "./admin/ficha_cliente";
 import { listarCotizacionesTool } from "./admin/listar_cotizaciones";
@@ -22,11 +21,11 @@ import { equipoObraTool } from "./admin/equipo_obra";
 import { pendientesTool } from "./admin/pendientes";
 import { proponerCambioEstadoCotizacionTool } from "./admin/proponer_cambio_estado_cotizacion";
 import { proponerEventoCalendarioTool } from "./admin/proponer_evento_calendario";
-import { buscarConocimientoAdminTool } from "./admin/buscar_conocimiento";
 
 /**
- * Compacta la salida para el modelo: elimina claves con forma de ID y campos de UI.
- * La salida completa (con accionId, ui, etc.) sigue llegando a la UI.
+ * Salida de herramientas: se compacta para el modelo y se limpia con la red de
+ * seguridad (ids, tokens, hashes y, para no-admin, notas internas y montos).
+ * La salida completa sigue disponible para la UI por su propio canal.
  */
 function compactarParaModelo(valor: unknown): unknown {
   if (Array.isArray(valor)) return valor.map(compactarParaModelo);
@@ -41,18 +40,22 @@ function compactarParaModelo(valor: unknown): unknown {
   return valor;
 }
 
-function envolver(toolOriginal: Tool): Tool {
+function envolver(toolOriginal: Tool, rol: ToolContext["rol"]): Tool {
   return {
     ...toolOriginal,
     toModelOutput: async ({ output }) => ({
       type: "json",
-      value: compactarParaModelo(output),
+      value: limpiarParaModelo(compactarParaModelo(output), rol),
     }),
   } as Tool;
 }
 
-export function toolsPara(agente: "publico" | "cliente" | "admin", ctx: ToolContext): Record<string, Tool> {
+export function toolsPara(
+  agente: "publico" | "cliente" | "admin",
+  ctx: ToolContext
+): Record<string, Tool> {
   let base: Record<string, Tool>;
+
   if (agente === "publico") {
     base = {
       buscar_conocimiento: buscarConocimientoTool(ctx),
@@ -66,7 +69,7 @@ export function toolsPara(agente: "publico" | "cliente" | "admin", ctx: ToolCont
       mis_documentos: misDocumentosTool(ctx),
       mi_calendario: miCalendarioTool(ctx),
       proponer_nota_calendario: proponerNotaCalendarioTool(ctx),
-      buscar_conocimiento: buscarConocimientoClienteTool(ctx),
+      buscar_conocimiento: buscarConocimientoTool(ctx),
     };
   } else {
     base = {
@@ -82,12 +85,13 @@ export function toolsPara(agente: "publico" | "cliente" | "admin", ctx: ToolCont
       pendientes: pendientesTool(ctx),
       proponer_cambio_estado_cotizacion: proponerCambioEstadoCotizacionTool(ctx),
       proponer_evento_calendario: proponerEventoCalendarioTool(ctx),
-      buscar_conocimiento: buscarConocimientoAdminTool(ctx),
+      buscar_conocimiento: buscarConocimientoTool(ctx),
     };
   }
+
   const out: Record<string, Tool> = {};
   for (const [k, v] of Object.entries(base)) {
-    out[k] = envolver(v);
+    out[k] = envolver(v, agente);
   }
   return out;
 }

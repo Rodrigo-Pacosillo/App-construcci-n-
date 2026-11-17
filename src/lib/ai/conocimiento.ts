@@ -11,6 +11,16 @@ export type CategoriaConocimiento =
 
 export type AudienciaConocimiento = "publico" | "cliente" | "admin";
 
+/** Categorias que puede ver el publico (y que el cliente hereda). */
+export const CATEGORIAS_SITIO: CategoriaConocimiento[] = [
+  "sitio_web",
+  "servicios",
+  "faq",
+  "tecnico",
+  "proceso",
+  "politica",
+];
+
 export interface DocConocimiento {
   id: string;
   titulo: string;
@@ -34,9 +44,8 @@ export async function obtenerConocimiento(opts: {
     donde.audiencia = "publico";
   } else if (audiencia === "cliente") {
     donde.OR = [{ audiencia: "publico" }, { audiencia: "cliente" }];
-  } else {
-    // admin puede leer todo
   }
+  // admin puede leer todo
 
   if (categorias && categorias.length > 0) {
     donde.categoria = { in: categorias };
@@ -45,44 +54,6 @@ export async function obtenerConocimiento(opts: {
   const docs = await prisma.conocimiento.findMany({
     where: donde,
     orderBy: [{ categoria: "asc" }, { titulo: "asc" }],
-  });
-
-  return docs.map((d) => ({
-    id: d.id,
-    titulo: d.titulo,
-    categoria: d.categoria as CategoriaConocimiento,
-    audiencia: d.audiencia as AudienciaConocimiento,
-    contenido: d.contenido,
-    activo: d.activo,
-  }));
-}
-
-export async function buscarConocimiento(opts: {
-  termino: string;
-  audiencia: AudienciaConocimiento;
-  categoria?: CategoriaConocimiento;
-}): Promise<DocConocimiento[]> {
-  const { termino, audiencia, categoria } = opts;
-
-  const donde: Record<string, unknown> = {
-    activo: true,
-    contenido: { contains: termino, mode: "insensitive" },
-  };
-
-  if (audiencia === "publico") {
-    donde.audiencia = "publico";
-  } else if (audiencia === "cliente") {
-    donde.OR = [{ audiencia: "publico" }, { audiencia: "cliente" }];
-  }
-
-  if (categoria) {
-    donde.categoria = categoria;
-  }
-
-  const docs = await prisma.conocimiento.findMany({
-    where: donde,
-    orderBy: [{ titulo: "asc" }],
-    take: 10,
   });
 
   return docs.map((d) => ({

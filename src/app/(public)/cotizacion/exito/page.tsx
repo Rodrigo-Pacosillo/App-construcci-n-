@@ -60,7 +60,7 @@ export default async function ExitoPage({
   // Verificar token HMAC
   let cotizacionIdVerificado: string;
   try {
-    cotizacionIdVerificado = verificarChatToken(t);
+    cotizacionIdVerificado = verificarChatToken(t).cotizacionId;
   } catch {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white dark:bg-neutral-950">
