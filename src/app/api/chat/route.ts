@@ -145,6 +145,13 @@ async function validarSesionPrivada(sesion: { usuarioId?: string | null; agente:
 }
 
 async function validarExpiracionYPropiedad(sesion: { id: string; sessionId: string; agente: string; expiraEn?: Date | null; cotizacionId?: string | null; usuarioId?: string | null }, req: NextRequest, token?: string | null) {
+  // El admin puede LEER cualquier conversación desde el panel (incluidas las
+  // públicas, que no tienen token y pueden estar vencidas). Escritura sigue
+  // sujeta a las reglas de sesión pública.
+  if (req.method === "GET") {
+    const sesionAuth = await auth();
+    if (sesionAuth?.user?.role === "admin") return sesion;
+  }
   if (sesion.agente === "publico" && sesion.expiraEn && sesion.expiraEn < new Date()) {
     await prisma.chatSesion.update({ where: { id: sesion.id }, data: { estado: "cerrada" } });
     return errorResponse("Esta conversación ha finalizado. Escríbanos por WhatsApp o envíe otra cotización.", "SESION_EXPIRADA", 410);

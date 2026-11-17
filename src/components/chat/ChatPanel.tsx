@@ -56,7 +56,6 @@ type OpcionesUI = {
 
 interface ChatPanelProps {
   agente: "publico" | "cliente" | "admin";
-  sessionId?: string | null;
   chatToken?: string;
   cotizacionId?: string;
   clienteId?: string;
@@ -151,7 +150,7 @@ function extraerOpcionesUI(output: unknown): unknown | null {
 export function ChatPanel(props: ChatPanelProps) {
   const {
     agente,
-    sessionId: initialSessionId,
+    initialSessionId,
     chatToken,
     cotizacionId,
     clienteId: propsClienteId,
@@ -188,6 +187,9 @@ export function ChatPanel(props: ChatPanelProps) {
 
   // Ref para evitar cargarHistorial al crear sesión nueva (race condition)
   const sessionJustCreated = useRef(false);
+
+  // Contenedor de mensajes: mantiene la vista al final de la conversación.
+  const mensajesRef = useRef<HTMLDivElement>(null);
 
   // Clave de storage
   const sessionStorageKey = storageKey;
@@ -546,6 +548,17 @@ export function ChatPanel(props: ChatPanelProps) {
     );
   }, [mostrarSugerencias, sugerencias, enviarTexto]);
 
+  // Auto-scroll al cargar historial, al llegar un mensaje o al aparecer el loader.
+  useEffect(() => {
+    const contenedor = mensajesRef.current;
+    if (!contenedor) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    contenedor.scrollTo({
+      top: contenedor.scrollHeight,
+      behavior: reduce ? "auto" : "smooth",
+    });
+  }, [mensajes, loading, opcionesUI]);
+
   // Cargar sesión existente al cambiar sessionId
   useEffect(() => {
     if (!sessionId) return;
@@ -613,7 +626,7 @@ export function ChatPanel(props: ChatPanelProps) {
       </div>
 
       {/* Mensajes */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div ref={mensajesRef} data-testid="chat-mensajes" className="flex-1 overflow-y-auto p-4 space-y-4">
         {renderSugerencias}
         {mensajes.map((msg) => (
           <div key={msg.id} className={`flex ${msg.rol === "user" ? "justify-end" : "justify-start"}`}>

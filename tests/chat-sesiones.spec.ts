@@ -62,6 +62,13 @@ async function verificarChat(
     // La sesión aparece en la lista lateral con su título, aunque falle el proveedor de IA.
     await expect(page.getByRole("button", { name: mensaje })).toBeVisible();
     await expect(page.getByText(/Hoy es \d/)).toHaveCount(0);
+
+    // Reabrir desde el historial debe cargar los mensajes guardados, no solo el saludo.
+    const historial = page.getByTestId("chat-mensajes");
+    await page.getByRole("button", { name: "Nuevo chat" }).click();
+    await expect(historial.getByText(mensaje, { exact: true })).toHaveCount(0);
+    await page.getByRole("button", { name: mensaje }).click();
+    await expect(historial.getByText(mensaje, { exact: true })).toBeVisible();
   } finally {
     const creadas = await sesionesDePrueba();
     await prisma.chatSesion.deleteMany({

@@ -14,6 +14,18 @@ interface SesionRow {
   cotizacion?: { cliente?: { nombre?: string | null } | null } | null;
 }
 
+const AGENTE_LABELS: Record<string, string> = {
+  publico: "Cotización",
+  cliente: "Mi cuenta",
+  admin: "Panel",
+};
+
+const ESTADO_LABELS: Record<string, string> = {
+  activa: "Activa",
+  cerrada: "Cerrada",
+  archivada: "Archivada",
+};
+
 export function SesionesTabla({ sesiones }: { sesiones: SesionRow[] }) {
   const [openSessionId, setOpenSessionId] = useState<string | null>(null);
 
@@ -67,7 +79,7 @@ export function SesionesTabla({ sesiones }: { sesiones: SesionRow[] }) {
                       }`}
                     >
                       <td className="px-4 py-3 font-medium">
-                        {s.agente}
+                        {AGENTE_LABELS[s.agente] ?? s.agente}
                       </td>
                       <td className="px-4 py-3">
                         <span
@@ -75,7 +87,7 @@ export function SesionesTabla({ sesiones }: { sesiones: SesionRow[] }) {
                             s.estado
                           )}`}
                         >
-                          {s.estado}
+                          {ESTADO_LABELS[s.estado] ?? s.estado}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-ink-muted">
