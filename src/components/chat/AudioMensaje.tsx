@@ -1,44 +1,44 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
-import { Copy, Play, Pause, Settings, Check } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Check, Copy, Pause, Play, Settings } from "lucide-react";
+import { useHidratado } from "@/lib/chat/useHidratado";
+import { textoParaLeer, useTextToSpeech } from "@/lib/chat/useTextToSpeech";
 
-interface AudioMensajeProps {
+type AudioMensajeProps = {
+  mensajeId: string;
   texto: string;
-  estaActivo: boolean;
-  estaPausado: boolean;
-  ttsRate: number;
-  ttsVoiceName: string | null;
-  voices: SpeechSynthesisVoice[];
-  onTogglePlay: () => void;
-  onCopiar: () => void;
-  onAbrirConfig: (e: React.MouseEvent) => void;
-  onRateChange: (rate: number) => void;
-  onVoiceChange: (voiceName: string | null) => void;
-}
+};
 
-export function AudioMensaje({
-  texto,
-  estaActivo,
-  estaPausado,
-  ttsRate,
-  ttsVoiceName,
-  voices,
-  onTogglePlay,
-  onCopiar,
-  onAbrirConfig,
-  onRateChange,
-  onVoiceChange,
-}: AudioMensajeProps) {
+/**
+ * Acciones de un mensaje del asistente: copiar el texto y leerlo en voz alta.
+ *
+ * La fila se renderiza solo después de la hidratación porque `speechSynthesis`
+ * no existe en el servidor; así el HTML del servidor y el del cliente coinciden.
+ */
+export function AudioMensaje({ mensajeId, texto }: AudioMensajeProps) {
+  const hidratado = useHidratado();
   const [copiado, setCopiado] = useState(false);
   const [configAbierto, setConfigAbierto] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);
 
-  // Cerrar popover al hacer clic fuera
+  const textoPlano = textoParaLeer(texto);
+  const {
+    activo,
+    pausado,
+    ttsRate,
+    ttsVoiceName,
+    voices,
+    alternar,
+    cambiarVelocidad,
+    cambiarVoz,
+  } = useTextToSpeech(mensajeId, textoPlano);
+
+  // Cerrar el popover al hacer clic fuera.
   useEffect(() => {
     if (!configAbierto) return;
-    const manejarClickFuera = (e: MouseEvent) => {
-      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
+    const manejarClickFuera = (evento: MouseEvent) => {
+      if (popoverRef.current && !popoverRef.current.contains(evento.target as Node)) {
         setConfigAbierto(false);
       }
     };
@@ -47,119 +47,118 @@ export function AudioMensaje({
   }, [configAbierto]);
 
   const manejarCopiar = useCallback(async () => {
+    if (!textoPlano) return;
     try {
-      await navigator.clipboard.writeText(texto);
+      await navigator.clipboard.writeText(textoPlano);
       setCopiado(true);
       setTimeout(() => setCopiado(false), 2000);
-      onCopiar();
     } catch {
-      // silencioso: el navegador puede bloquear clipboard sin gesto de usuario
+      // El navegador puede bloquear el portapapeles sin gesto de usuario.
     }
-  }, [texto, onCopiar]);
+  }, [textoPlano]);
 
-  const toggleConfig = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
-      onAbrirConfig(e);
-    },
-    [onAbrirConfig]
-  );
+  if (!hidratado) return null;
+
+  const audioDisponible =
+    typeof window !== "undefined" && "speechSynthesis" in window;
+  const reproduciendo = activo && !pausado;
 
   return (
-    <div className="flex items-center gap-2 mt-2 ml-3 relative">
-      {/* Icono 1: Copiar */}
+    <div className="relative mt-2 flex items-center gap-1 -ml-1">
       <button
+        type="button"
         onClick={manejarCopiar}
-        className="p-1.5 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 transition text-neutral-500"
-        title="Copiar texto"
-        aria-label="Copiar mensaje"
+        className="rounded p-1.5 text-neutral-500 transition-colors hover:bg-neutral-200/70 hover:text-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-100"
+        title="Copiar mensaje"
+        aria-label={copiado ? "Mensaje copiado" : "Copiar mensaje"}
       >
         {copiado ? (
-          <Check className="w-4 h-4 text-green-600" />
+          <Check className="h-4 w-4 text-green-600 dark:text-green-400" />
         ) : (
-          <Copy className="w-4 h-4" />
+          <Copy className="h-4 w-4" />
         )}
       </button>
 
-      {/* Icono 2: Reproducir / Pausar (toggle) */}
-      <button
-        onClick={onTogglePlay}
-        className="p-1.5 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 transition text-neutral-500"
-        title={estaPausado ? "Reanudar" : estaActivo ? "Pausar" : "Reproducir"}
-        aria-label={
-          estaPausado
-            ? "Reanudar audio"
-            : estaActivo
-              ? "Pausar audio"
-              : "Reproducir audio"
-        }
-      >
-        {estaActivo && !estaPausado ? (
-          <Pause className="w-4 h-4" />
-        ) : (
-          <Play className="w-4 h-4" />
-        )}
-      </button>
-
-      {/* Icono 3: Config con popover */}
-      <div
-        className="relative"
-        onClick={(e) => e.stopPropagation()}
-      >
+      {audioDisponible && (
         <button
-          onClick={toggleConfig}
-          className="p-1.5 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 transition text-neutral-500"
-          title="Configuración de audio"
-          aria-label="Configuración de audio"
+          type="button"
+          onClick={alternar}
+          className="rounded p-1.5 text-neutral-500 transition-colors hover:bg-neutral-200/70 hover:text-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-100"
+          title={pausado ? "Reanudar audio" : reproduciendo ? "Pausar audio" : "Reproducir audio"}
+          aria-label={
+            pausado ? "Reanudar audio" : reproduciendo ? "Pausar audio" : "Reproducir audio"
+          }
         >
-          <Settings className="w-4 h-4" />
+          {reproduciendo ? (
+            <Pause className="h-4 w-4" />
+          ) : (
+            <Play className="h-4 w-4" />
+          )}
         </button>
+      )}
 
-        {configAbierto && (
-          <div
-            ref={popoverRef}
-            className="absolute right-0 mt-2 w-64 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg shadow-lg p-3 z-50"
+      {audioDisponible && voices.length > 0 && (
+        <div className="relative" onClick={(evento) => evento.stopPropagation()}>
+          <button
+            type="button"
+            onClick={(evento) => {
+              evento.stopPropagation();
+              setConfigAbierto((abierto) => !abierto);
+            }}
+            className="rounded p-1.5 text-neutral-500 transition-colors hover:bg-neutral-200/70 hover:text-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-100"
+            title="Configuración de audio"
+            aria-label="Configuración de audio"
+            aria-expanded={configAbierto}
           >
-            {/* 5.1 Velocidad */}
-            <div className="flex items-center justify-between mb-3">
-              <label className="text-xs font-medium text-neutral-600 dark:text-neutral-300 uppercase tracking-wider">
-                Velocidad
-              </label>
-              <span className="text-xs font-mono text-neutral-900 dark:text-white">
-                {ttsRate.toFixed(1)}x
-              </span>
-            </div>
-            <input
-              type="range"
-              min="0.5"
-              max="2.0"
-              step="0.1"
-              value={ttsRate}
-              onChange={(e) => onRateChange(parseFloat(e.target.value))}
-              className="w-full accent-amber-500 cursor-pointer"
-            />
+            <Settings className="h-4 w-4" />
+          </button>
 
-            {/* 5.2 Voz */}
-            <div className="mt-4">
-              <label className="text-xs font-medium text-neutral-600 dark:text-neutral-300 uppercase tracking-wider block mb-2">
-                Voz
-              </label>
-              <select
-                value={ttsVoiceName ?? ""}
-                onChange={(e) => onVoiceChange(e.target.value || null)}
-                className="w-full bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded px-2 py-1.5 text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer"
-              >
-                <option value="">Sistema (predeterminada)</option>
-                {voices.map((v) => (
-                  <option key={v.voiceURI} value={v.name}>
-                    {v.name} - {v.lang}
-                  </option>
-                ))}
-              </select>
+          {configAbierto && (
+            <div
+              ref={popoverRef}
+              className="absolute bottom-full right-0 z-50 mb-2 w-64 rounded-lg border border-neutral-200 bg-white p-3 shadow-lg dark:border-neutral-700 dark:bg-neutral-800"
+            >
+              <div className="mb-3 flex items-center justify-between">
+                <span className="text-xs font-medium uppercase tracking-wider text-neutral-600 dark:text-neutral-300">
+                  Velocidad
+                </span>
+                <span className="font-mono text-xs text-neutral-900 dark:text-white">
+                  {ttsRate.toFixed(1)}x
+                </span>
+              </div>
+              <input
+                type="range"
+                min="0.5"
+                max="2.0"
+                step="0.1"
+                value={ttsRate}
+                onChange={(evento) => cambiarVelocidad(parseFloat(evento.target.value))}
+                aria-label="Velocidad de lectura"
+                className="w-full cursor-pointer accent-amber-500"
+              />
+
+              <div className="mt-4">
+                <label className="mb-2 block text-xs font-medium uppercase tracking-wider text-neutral-600 dark:text-neutral-300">
+                  Voz
+                </label>
+                <select
+                  value={ttsVoiceName ?? ""}
+                  onChange={(evento) => cambiarVoz(evento.target.value || null)}
+                  aria-label="Voz de lectura"
+                  className="w-full cursor-pointer rounded border border-neutral-200 bg-neutral-50 px-2 py-1.5 text-sm text-neutral-900 focus:outline-none focus:ring-2 focus:ring-amber-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white"
+                >
+                  <option value="">Sistema (predeterminada)</option>
+                  {voices.map((voz) => (
+                    <option key={voz.voiceURI} value={voz.name}>
+                      {voz.name} - {voz.lang}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

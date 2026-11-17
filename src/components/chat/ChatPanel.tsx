@@ -8,6 +8,7 @@ import SendIcon from "./SendIcon";
 import BrickLoader from "./BrickLoader";
 import { TarjetaAccion } from "./TarjetaAccion";
 import { RenderTextoChat } from "./RenderTextoChat";
+import { AudioMensaje } from "./AudioMensaje";
 
 // ─── Tipos ─────────────────────────────────────────────────────────────────
 
@@ -575,6 +576,9 @@ export function ChatPanel(props: ChatPanelProps) {
                 : "bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 shadow-sm text-neutral-900 dark:text-white"}`}
             >
               <RenderTextoChat texto={msg.contenido} />
+              {msg.rol !== "user" && (
+                <AudioMensaje mensajeId={msg.id} texto={msg.contenido} />
+              )}
               {msg.accionIds?.map((id) => (
                 <div key={id} className="mt-2">
                   {acciones[id] && (
