@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createCotizacion } from "./actions";
 import {
@@ -9,12 +10,29 @@ import {
   RANGO_M2_LABELS,
   PLAZO_INICIO_LABELS,
 } from "@/lib/constants";
+import { useHidratado } from "@/lib/chat/useHidratado";
+import {
+  guardarSesionExito,
+  leerSesionExito,
+  tokenChatExpirado,
+} from "@/lib/chat/sesionPublicaExito";
 
 export default function CotizacionPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  // Si el visitante ya envió una cotización con el chat vigente, se lo ofrece
+  // arriba del formulario para que pueda retomar la conversación.
+  // Se lee después de la hidratación (no en el servidor) para evitar
+  // desajustes de HTML.
+  const hidratado = useHidratado();
+  const sesionGuardada = hidratado ? leerSesionExito() : null;
+  const sesionActiva =
+    sesionGuardada && !tokenChatExpirado(sesionGuardada.token)
+      ? sesionGuardada
+      : null;
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -27,6 +45,11 @@ export default function CotizacionPage() {
       const result = await createCotizacion(formData);
 
       if (result.success && result.data) {
+        guardarSesionExito({
+          cotizacionId: result.data.cotizacionId,
+          token: result.data.chatToken,
+        });
+
         const params = new URLSearchParams({
           cotizacionId: result.data.cotizacionId,
           t: result.data.chatToken,
@@ -62,6 +85,24 @@ export default function CotizacionPage() {
         <p className="mt-4 text-ink-muted">
           Complete el formulario y nos comunicamos con usted en 24 horas.
         </p>
+
+        {sesionActiva && (
+          <div className="mt-8 flex flex-col gap-3 rounded border border-accent/50 bg-accent/5 px-4 py-3 sm:flex-row sm:items-center">
+            <p className="flex-1 text-sm text-ink">
+              Tiene una cotización con el chat abierto. Puede retomar la
+              conversación donde la dejó.
+            </p>
+            <Link
+              href={`/cotizacion/exito?${new URLSearchParams({
+                cotizacionId: sesionActiva.cotizacionId,
+                t: sesionActiva.token,
+              }).toString()}`}
+              className="inline-flex items-center justify-center rounded border border-accent px-4 py-2 text-sm font-medium text-accent-strong transition-colors hover:bg-accent/10"
+            >
+              Continuar conversación
+            </Link>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="mt-12 space-y-6">
           <div className="grid gap-6 sm:grid-cols-2">

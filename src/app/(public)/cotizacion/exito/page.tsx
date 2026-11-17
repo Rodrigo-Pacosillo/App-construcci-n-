@@ -2,6 +2,8 @@ import { prisma } from "@/lib/db";
 import { ChatPanel } from "@/components/chat/ChatPanel";
 import { WHATSAPP_NUMERO } from "@/lib/constants";
 import { verificarChatToken } from "@/lib/tokens";
+import { RestaurarSesionExito } from "./RestaurarSesionExito";
+import { BotonNuevaCotizacion } from "./BotonNuevaCotizacion";
 
 const TIPO_OBRA_SHORT: Record<string, string> = {
   vivienda_nueva: "Vivienda nueva",
@@ -31,6 +33,26 @@ const PLAZO_INICIO_SHORT: Record<string, string> = {
   no_sabe: "Aún no definido",
 };
 
+// Estado de cierre para casos excepcionales de token o registro.
+// Siempre ofrece una salida hacia el formulario de cotización.
+function Aviso({ titulo, descripcion }: { titulo: string; descripcion: string }) {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-white px-4 dark:bg-neutral-950">
+      <div className="w-full max-w-md text-center">
+        <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">
+          {titulo}
+        </h1>
+        <p className="mt-3 text-neutral-600 dark:text-neutral-400">
+          {descripcion}
+        </p>
+        <div className="mt-8 flex justify-center">
+          <BotonNuevaCotizacion />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default async function ExitoPage({
   searchParams,
 }: {
@@ -42,19 +64,10 @@ export default async function ExitoPage({
 }) {
   const { cotizacionId, t } = await searchParams;
 
+  // Sin parámetros en la URL: se intenta recuperar la conversación guardada
+  // en el navegador antes de descartar la pantalla de éxito.
   if (!cotizacionId || !t) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-neutral-950">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">
-            Datos incompletos
-          </h1>
-          <p className="mt-2 text-neutral-600 dark:text-neutral-400">
-            Se requiere el identificador de cotización y el token de chat.
-          </p>
-        </div>
-      </div>
-    );
+    return <RestaurarSesionExito motivo="sin_parametros" />;
   }
 
   // Verificar token HMAC
@@ -62,32 +75,15 @@ export default async function ExitoPage({
   try {
     cotizacionIdVerificado = verificarChatToken(t).cotizacionId;
   } catch {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-neutral-950">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">
-            Token inválido
-          </h1>
-          <p className="mt-2 text-neutral-600 dark:text-neutral-400">
-            El token de chat no es válido o ha expirado.
-          </p>
-        </div>
-      </div>
-    );
+    return <RestaurarSesionExito motivo="token_invalido" />;
   }
 
   if (cotizacionIdVerificado !== cotizacionId) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-neutral-950">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">
-            Token no coincide
-          </h1>
-          <p className="mt-2 text-neutral-600 dark:text-neutral-400">
-            El token no pertenece a esta cotización.
-          </p>
-        </div>
-      </div>
+      <Aviso
+        titulo="Token no coincide"
+        descripcion="El token no pertenece a esta cotización."
+      />
     );
   }
 
@@ -106,23 +102,17 @@ export default async function ExitoPage({
 
   if (!cotizacion || !cotizacion.cliente) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-neutral-950">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">
-            No se encontró la cotización
-          </h1>
-          <p className="mt-2 text-neutral-600 dark:text-neutral-400">
-            Los datos proporcionados no coinciden con ningún registro.
-          </p>
-        </div>
-      </div>
+      <Aviso
+        titulo="No se encontró la cotización"
+        descripcion="Los datos proporcionados no coinciden con ningún registro."
+      />
     );
   }
 
   return (
     <div className="min-h-screen bg-white dark:bg-neutral-950">
       <div className="container mx-auto px-4 py-8 lg:py-16">
-        <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-8 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-8 items-start">
           <div className="lg:col-span-1">
             <div className="text-center lg:text-left mb-8">
               <div className="mx-auto inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 mb-6">
@@ -196,9 +186,16 @@ export default async function ExitoPage({
                 </div>
               </div>
             </div>
+
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                ¿Desea cotizar otro proyecto?
+              </p>
+              <BotonNuevaCotizacion />
+            </div>
           </div>
 
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 h-[70vh] min-h-[420px] lg:h-[620px]">
             <ChatPanel
               agente="publico"
               clienteId={cotizacion.cliente.id}
