@@ -5,21 +5,22 @@ import { CheckCircle, Loader2 } from "lucide-react";
 
 interface Opcion {
   etiqueta: string;
+  termino?: string;
 }
 
 interface TarjetaOpcionesProps {
   titulo: string;
-  opciones: { etiqueta: string }[];
-  onElegir: (etiqueta: string) => void;
+  opciones: Opcion[];
+  onElegir: (termino: string) => void;
 }
 
 export function TarjetaOpciones({ titulo, opciones, onElegir }: TarjetaOpcionesProps) {
   const [seleccionando, setSeleccionando] = useState<string | null>(null);
 
-  const manejarClick = async (etiqueta: string) => {
-    setSeleccionando(etiqueta);
+  const manejarClick = async (opcion: Opcion) => {
+    setSeleccionando(opcion.etiqueta);
     try {
-      await onElegir(etiqueta);
+      await onElegir(opcion.termino || opcion.etiqueta);
     } finally {
       setSeleccionando(null);
     }
@@ -32,7 +33,7 @@ export function TarjetaOpciones({ titulo, opciones, onElegir }: TarjetaOpcionesP
         {opciones.map((opcion, i) => (
           <button
             key={i}
-            onClick={() => manejarClick(opcion.etiqueta)}
+            onClick={() => manejarClick(opcion)}
             disabled={!!seleccionando}
             className="text-sm px-3 py-1.5 rounded-lg border border-amber-200 dark:border-amber-700 bg-white dark:bg-neutral-800 hover:bg-amber-50 dark:hover:bg-amber-900/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
           >

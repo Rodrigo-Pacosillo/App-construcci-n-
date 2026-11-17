@@ -160,10 +160,10 @@ Sistema web para un contratista independiente de construcción en seco
 | Flujo de personas / realidades   | `FLUJO DE PERSONAS.md` |
 | Tocar el modelo o queries        | `prisma/schema.prisma` + `DATABASE.md` |
 | Setup, estructura, convenciones  | `docs/arquitectura.md` |
-| UI, estilos o animaciones        | `docs/diseno-ui.md` |
+| UI, estilos o animaciones        | Sin documento dedicado: usar "Identidad visual" (abajo) — pendiente de crear |
 | Deploy, límites de tier gratis   | `docs/deploy-constraints.md` |
 
-## Identidad visual (resumen — detalle en `docs/diseno-ui.md`)
+## Identidad visual (resumen — sin documento de detalle)
 
 Estética "spec sheet / plano técnico": tema claro, hero y footer oscuros,
 acento naranja de obra, bordes de 1px en vez de sombras blandas, etiquetas en

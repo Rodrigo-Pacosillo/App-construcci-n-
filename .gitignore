@@ -62,7 +62,7 @@ skills-lock.json
 /docs/
 *.md
 !README.md
-!agents.md
+
 
 # Scripts de utilidad / migración (solo desarrollo local)
 /scripts/

@@ -3,7 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { Prisma } from "@prisma/client";
 import type { ToolContext } from "@/lib/ai/contexto";
-import { fechaNegocio, instanteNegocio } from "@/lib/ai/datos/formato";
+import { fechaNegocio, inicioDiaNegocio, instanteNegocio } from "@/lib/ai/datos/formato";
 import { resolverCliente } from "@/lib/ai/datos/resolvers/cliente";
 import { resolverObra } from "@/lib/ai/datos/resolvers/obra";
 import { ACCION_EXPIRACION_MIN } from "@/lib/ai/config";
@@ -58,7 +58,9 @@ export const proponerEventoCalendarioTool = (ctx: ToolContext) =>
       } catch (e) {
         return { estado: "fecha_invalida", mensaje: e instanceof Error ? e.message : "Fecha u hora inválida." };
       }
-      if (fechaInicio < new Date()) {
+      // Un evento de todo el dia de hoy sigue siendo válido; uno con hora pasada, no.
+      const limite = args.hora ? ctx.ahora : inicioDiaNegocio(ctx.ahora);
+      if (fechaInicio < limite) {
         return { estado: "fecha_pasada", mensaje: "La fecha indicada ya pasó. ¿Quiere otra fecha?" };
       }
 

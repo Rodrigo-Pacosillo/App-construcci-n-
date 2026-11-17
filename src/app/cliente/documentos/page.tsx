@@ -34,7 +34,7 @@ async function getDatos(obraId?: string) {
 
 function formatDate(date: Date | null | undefined) {
   if (!date) return "—";
-  return new Date(date).toLocaleDateString("es-AR", {
+  return new Date(date).toLocaleDateString("es-BO", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -88,7 +88,7 @@ export default async function ClienteDocumentosPage({
                 <p className="section-label text-ink-faint">CONTRATO PRINCIPAL</p>
                 <h3 className="mt-1 font-heading text-lg font-bold">Contrato de obra #{contrato.id.slice(0, 8)}</h3>
                 <p className="mt-1 text-sm text-ink-muted">
-                  Firmado el {formatDate(contrato.fechaFirma)} · Monto: ${Number(contrato.montoTotal).toLocaleString("es-AR")}
+                  Firmado el {formatDate(contrato.fechaFirma)} · Monto: ${Number(contrato.montoTotal).toLocaleString("es-BO")}
                 </p>
               </div>
               <div className="flex gap-3">

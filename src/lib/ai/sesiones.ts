@@ -65,6 +65,35 @@ export async function purgarConversacionesPublicas(): Promise<number> {
   return count;
 }
 
+/** Titulo que se genera solo con fecha: se reemplaza con el primer mensaje. */
+const TITULO_AUTO_RE = /^Chat \d{2}\/\d{2}\/\d{4}, \d{2}:\d{2}$/;
+
+/** Titulo corto y determinista derivado del primer mensaje del usuario. */
+export function generarTitulo(mensaje: string): string {
+  const limpio = mensaje.replace(/[`*_>#]/g, "").replace(/\s+/g, " ").trim();
+  if (!limpio) return "Conversacion";
+
+  const MAX = 42;
+  if (limpio.length <= MAX) return limpio;
+  const corte = limpio.lastIndexOf(" ", MAX);
+  return `${(corte > 20 ? limpio.slice(0, corte) : limpio.slice(0, MAX)).trim()}…`;
+}
+
+/**
+ * Genera el titulo de la sesion con el primer mensaje. Nunca pisa un titulo
+ * escrito a mano por el usuario; solo rellena ausencia o titulos de fecha vieja.
+ */
+export async function asegurarTitulo(
+  sesion: { id: string; titulo: string | null },
+  mensaje: string
+): Promise<void> {
+  if (sesion.titulo && !TITULO_AUTO_RE.test(sesion.titulo)) return;
+  await prisma.chatSesion.update({
+    where: { id: sesion.id },
+    data: { titulo: generarTitulo(mensaje) },
+  });
+}
+
 export async function crearSesion(params: {
   usuarioId: string;
   agente: "cliente" | "admin";
@@ -72,17 +101,6 @@ export async function crearSesion(params: {
   cotizacionId?: string;
   titulo?: string;
 }) {
-  const ahora = new Date();
-  const tituloAuto =
-    params.titulo ??
-    `Chat ${ahora.toLocaleString("es-BO", {
-      timeZone: "America/La_Paz",
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    })}`;
   return prisma.chatSesion.create({
     data: {
       sessionId: crypto.randomUUID(),
@@ -91,7 +109,7 @@ export async function crearSesion(params: {
       clienteId: params.clienteId ?? null,
       cotizacionId: params.cotizacionId ?? null,
       estado: "activa",
-      titulo: tituloAuto,
+      titulo: params.titulo ?? null,
     },
   });
 }
@@ -102,7 +120,13 @@ export async function listarSesiones(
   cursor?: string
 ) {
   return prisma.chatSesion.findMany({
-    where: { usuarioId, agente, estado: { not: "archivada" } },
+    where: {
+      usuarioId,
+      agente,
+      estado: { not: "archivada" },
+      // Una sesion sin mensajes del usuario es un borrador abandonado: no se muestra.
+      mensajes: { some: { rol: "user" } },
+    },
     orderBy: { ultimoMensajeEn: "desc" },
     take: 20,
     ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),

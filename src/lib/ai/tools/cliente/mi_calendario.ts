@@ -2,7 +2,7 @@ import { tool } from "ai";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import type { ToolContext } from "@/lib/ai/contexto";
-import { fechaNegocio } from "@/lib/ai/datos/formato";
+import { fechaNegocio, inicioDiaNegocio } from "@/lib/ai/datos/formato";
 
 export const miCalendarioTool = (ctx: ToolContext) =>
   tool({
@@ -17,7 +17,7 @@ export const miCalendarioTool = (ctx: ToolContext) =>
       const eventos = await prisma.eventoCalendario.findMany({
         where: {
           visibleCliente: true,
-          fechaInicio: { gte: ctx.ahora, lte: hasta },
+          fechaInicio: { gte: inicioDiaNegocio(ctx.ahora), lte: hasta },
           OR: [{ clienteId }, { obra: { clienteId } }],
         },
         orderBy: { fechaInicio: "asc" },

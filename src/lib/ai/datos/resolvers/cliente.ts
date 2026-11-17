@@ -3,7 +3,7 @@ import { normalizarTexto, normalizarTelefono, tokenizar, esCorreo } from "../nor
 
 export type Resolucion<T> =
   | { estado: "unico"; valor: T }
-  | { estado: "ambiguo"; opciones: { etiqueta: string }[]; sugerencia: string }
+  | { estado: "ambiguo"; opciones: { etiqueta: string; termino: string }[]; sugerencia: string }
   | { estado: "ninguno"; sugerencia: string };
 
 type ClienteRow = {
@@ -54,7 +54,10 @@ export async function resolverCliente(
     if (coincidentes.length > 1) {
       return {
         estado: "ambiguo",
-        opciones: coincidentes.slice(0, 5).map((c) => ({ etiqueta: etiquetaCliente(c as unknown as ClienteRow) })),
+        opciones: coincidentes.slice(0, 5).map((c) => ({
+          etiqueta: etiquetaCliente(c as unknown as ClienteRow),
+          termino: c.email || c.telefono,
+        })),
         sugerencia: "Hay varios clientes con ese telefono. Indique cual.",
       };
     }
@@ -97,7 +100,10 @@ export async function resolverCliente(
 
   return {
     estado: "ambiguo",
-    opciones: candidatos.slice(0, 5).map((c) => ({ etiqueta: etiquetaCliente(c) })),
+    opciones: candidatos.slice(0, 5).map((c) => ({
+      etiqueta: etiquetaCliente(c),
+      termino: c.email || c.telefono,
+    })),
     sugerencia: "Hay varios clientes que coinciden. Indique cual.",
   };
 }

@@ -15,6 +15,23 @@ export function fechaNegocio(fecha: Date | string | null | undefined): string {
   });
 }
 
+/** Fecha civil (YYYY-MM-DD) en la zona horaria del negocio. */
+function fechaLocalISO(fecha: Date): string {
+  const partes = new Intl.DateTimeFormat("es-BO", {
+    timeZone: TZ_NEGOCIO,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(fecha);
+  const valor = (tipo: string) => partes.find((p) => p.type === tipo)?.value ?? "";
+  return `${valor("year")}-${valor("month")}-${valor("day")}`;
+}
+
+/** Medianoche del dia actual en TZ_NEGOCIO (inclusive para consultar "hoy"). */
+export function inicioDiaNegocio(fecha: Date): Date {
+  return instanteNegocio(fechaLocalISO(fecha), "00:00");
+}
+
 /**
  * Convierte "YYYY-MM-DD" y opcional "HH:mm" (en TZ_NEGOCIO) a Date UTC.
  * Si no se pasa hora, devuelve mediodía UTC del día (para eventos de todo el día).

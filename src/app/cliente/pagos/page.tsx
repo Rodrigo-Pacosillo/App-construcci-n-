@@ -33,7 +33,7 @@ async function getDatos(obraId?: string) {
 
 function formatDate(date: Date | null | undefined) {
   if (!date) return "—";
-  return new Date(date).toLocaleDateString("es-AR", {
+  return new Date(date).toLocaleDateString("es-BO", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -77,7 +77,7 @@ export default async function ClientePagosPage({
         <h1 className="font-heading text-3xl font-bold">{obra.direccionObra}</h1>
         {contrato && (
           <p className="mt-2 text-sm text-ink-muted">
-            Monto contractual: <span className="font-bold text-accent-strong">${Number(contrato.montoTotal).toLocaleString("es-AR")}</span>
+            Monto contractual: <span className="font-bold text-accent-strong">Bs {Number(contrato.montoTotal).toLocaleString("es-BO")}</span>
           </p>
         )}
       </div>
@@ -97,7 +97,7 @@ export default async function ClientePagosPage({
                 </div>
                 <div className="text-right">
                   <p className="font-heading text-lg font-bold">
-                    ${Number(p.monto).toLocaleString("es-AR")}
+                    Bs {Number(p.monto).toLocaleString("es-BO")}
                   </p>
                   <span className="inline-flex items-center gap-1 text-xs text-ink-muted">
                     {p.estado === "confirmado" ? (

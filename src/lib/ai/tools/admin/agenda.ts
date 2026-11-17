@@ -2,7 +2,7 @@ import { tool } from "ai";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import type { ToolContext } from "@/lib/ai/contexto";
-import { fechaNegocio } from "@/lib/ai/datos/formato";
+import { fechaNegocio, inicioDiaNegocio } from "@/lib/ai/datos/formato";
 import { resolverCliente } from "@/lib/ai/datos/resolvers/cliente";
 
 export const agendaTool = (ctx: ToolContext) =>
@@ -14,7 +14,9 @@ export const agendaTool = (ctx: ToolContext) =>
     }),
     execute: async ({ cliente, dias }) => {
       const hasta = new Date(ctx.ahora.getTime() + (dias ?? 7) * 24 * 60 * 60 * 1000);
-      let where: Record<string, unknown> = { fechaInicio: { gte: ctx.ahora, lte: hasta } };
+      let where: Record<string, unknown> = {
+        fechaInicio: { gte: inicioDiaNegocio(ctx.ahora), lte: hasta },
+      };
       if (cliente && cliente.trim()) {
         const cr = await resolverCliente(cliente);
         if (cr.estado === "ninguno") return { estado: "ninguno", sugerencia: cr.sugerencia };

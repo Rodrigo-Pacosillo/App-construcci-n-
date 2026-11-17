@@ -23,6 +23,8 @@ export function ChatShell(props: ChatShellProps) {
   const agente = props.esAdmin ? "admin" : "cliente";
   const [sessions, setSessions] = useState<SesionItem[]>([]);
   const [activeId, setActiveId] = useState<string | null>(props.initialSessionId ?? null);
+  // key separada: crear la primera sesión resalta el item sin remontar el chat a mitad del stream.
+  const [panelKey, setPanelKey] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const cargar = useCallback(async () => {
@@ -44,22 +46,24 @@ export function ChatShell(props: ChatShellProps) {
     cargar();
   }, [cargar]);
 
-  const nuevoChat = async () => {
-    try {
-      const res = await fetch("/api/chat/sesiones", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ agente }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setActiveId(data.sessionId);
-        cargar();
-      }
-    } catch {
-      // ignorar
-    }
+  const seleccionar = (sid: string) => {
+    setActiveId(sid);
+    setPanelKey((k) => k + 1);
   };
+
+  // "Nuevo chat" entra en modo borrador: la sesión se crea al primer mensaje.
+  const nuevoChat = () => {
+    setActiveId(null);
+    setPanelKey((k) => k + 1);
+  };
+
+  const alCrearSesion = useCallback(
+    (sid: string) => {
+      setActiveId(sid);
+      cargar();
+    },
+    [cargar]
+  );
 
   return (
     <div className="flex h-full w-full">
@@ -75,7 +79,7 @@ export function ChatShell(props: ChatShellProps) {
           {sessions.map((s) => (
             <li key={s.sessionId} className="flex items-center gap-1">
               <button
-                onClick={() => setActiveId(s.sessionId)}
+                onClick={() => seleccionar(s.sessionId)}
                 className={`flex-1 text-left px-3 py-2 rounded-md text-sm truncate ${
                   activeId === s.sessionId ? "bg-muted font-medium" : "hover:bg-muted/50"
                 }`}
@@ -117,7 +121,7 @@ export function ChatShell(props: ChatShellProps) {
       </aside>
       <div className="flex-1 min-w-0">
         <ChatPanel
-          key={activeId ?? "none"}
+          key={panelKey}
           agente={agente}
           initialSessionId={activeId ?? undefined}
           clienteId={props.clienteId}
@@ -125,6 +129,8 @@ export function ChatShell(props: ChatShellProps) {
           clienteNombre={props.clienteNombre}
           whatsappNumero={props.whatsappNumero}
           chatToken={props.chatToken}
+          onSesionCreada={alCrearSesion}
+          onActividad={cargar}
         />
       </div>
     </div>

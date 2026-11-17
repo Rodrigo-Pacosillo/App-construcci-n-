@@ -1,7 +1,15 @@
-import { PrismaClient, Rol, TipoConstruccion, RangoM2, EstadoObra, EstadoPago, EstadoTestimonio, TipoEventoCalendario, AgenteChat, EstadoChatSesion, RolChatMensaje, EstadoChatAccion, AudienciaConocimiento } from "@prisma/client";
+import { PrismaClient, Rol, TipoConstruccion, TipoObra, RangoM2, PlazoInicio, EstadoCotizacion, EstadoContrato, EstadoObra, EstadoPago, EstadoTestimonio, TipoEventoCalendario, TipoMultimedia, AgenteChat, EstadoChatSesion, RolChatMensaje, EstadoChatAccion, AudienciaConocimiento } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
+
+/**
+ * Fecha a mediodía local. `new Date("YYYY-MM-DD")` es medianoche UTC y en
+ * Bolivia (UTC-4) se muestra como el día anterior en hitos, pagos y calendario.
+ */
+function fecha(iso: string): Date {
+  return new Date(`${iso}T12:00:00`);
+}
 
 async function main() {
   console.log("🌱 Limpiando datos existentes...");
@@ -51,7 +59,7 @@ async function main() {
       apellidos: "Pacosillo Calcina",
       telefono: "62511524",
       email: "rodrigo@gmail.com",
-      ciudad: "La Paz El Alto",
+      ciudad: "La Paz",
     },
   });
   console.log(`   ✅ Cliente creado: ${cliente.nombre} ${cliente.apellidos}`);
@@ -467,12 +475,34 @@ async function main() {
   });
   console.log(`   ✅ Usuario cliente creado: ${usuarioCliente.email}`);
 
+  // Cotización de demostración vinculada al contrato. Sin este registro el
+  // bloque "MI SOLICITUD" del portal /cliente queda vacío.
+  // NOTA: el monto de 36.000 Bs es un valor de demo deliberadamente bajo;
+  // no guarda relación con el precio por m² de una vivienda real.
+  const cotizacion = await prisma.cotizacion.create({
+    data: {
+      clienteId: cliente.id,
+      tipoObra: TipoObra.vivienda_nueva,
+      tipoConstruccion: TipoConstruccion.seco,
+      rangoM2: RangoM2.m100_200,
+      ubicacionObra: "Av. Busch 2450, Zona Miraflores, La Paz",
+      plazoInicio: PlazoInicio.lo_antes_posible,
+      estado: EstadoCotizacion.contratado,
+      requerimiento:
+        "Vivienda familiar unifamiliar en steel frame, con cerramientos, instalaciones y terminaciones completas.",
+      creadoEn: fecha("2026-05-10"),
+      actualizadoEn: fecha("2026-06-20"),
+    },
+  });
+  console.log(`   ✅ Cotización de Rodrigo creada (contratada)`);
+
   const contrato = await prisma.contrato.create({
     data: {
       clienteId: cliente.id,
-      cotizacionId: null,
-      montoTotal: 17500000,
-      fechaFirma: new Date("2026-06-20"),
+      cotizacionId: cotizacion.id,
+      estado: EstadoContrato.firmado,
+      montoTotal: 36000,
+      fechaFirma: fecha("2026-06-20"),
       observaciones:
         "Contrato llave en mano. Incluye estructura steel frame, cerramientos, instalaciones y terminaciones.",
     },
@@ -482,11 +512,12 @@ async function main() {
     data: {
       clienteId: cliente.id,
       contratoId: contrato.id,
-      direccionObra: "Av. Los Álamos 1450, Santa Cruz",
-      fechaInicio: new Date("2026-07-01"),
-      fechaFinEstimada: new Date("2026-11-30"),
+      nombreComercial: "Vivienda Familiar Pacosillo",
+      direccionObra: "Av. Busch 2450, Zona Miraflores, La Paz",
+      fechaInicio: fecha("2026-07-01"),
+      fechaFinEstimada: fecha("2027-02-27"),
       estado: EstadoObra.en_curso,
-      progreso: 45,
+      progreso: 80,
     },
   });
 
@@ -506,8 +537,8 @@ async function main() {
     }),
     prisma.testimonio.create({
       data: {
-        obraId: obra.id,
-        clienteId: cliente.id,
+        obraId: null,
+        clienteId: null,
         nombrePublico: "Laura F.",
         texto:
           "Necesitábamos ampliar sin demoler y cumplieron exactamente lo prometido. La ampliación se ve como si siempre hubiera estado ahí.",
@@ -518,8 +549,8 @@ async function main() {
     }),
     prisma.testimonio.create({
       data: {
-        obraId: obra.id,
-        clienteId: cliente.id,
+        obraId: null,
+        clienteId: null,
         nombrePublico: "Diego T.",
         texto:
           "El local quedó listo en 15 días, justo antes de la inauguración. Profesionales de primera.",
@@ -530,8 +561,8 @@ async function main() {
     }),
     prisma.testimonio.create({
       data: {
-        obraId: obra.id,
-        clienteId: cliente.id,
+        obraId: null,
+        clienteId: null,
         nombrePublico: "Roberto G.",
         texto:
           "Transformaron una quinta abandonada en una casa hermosa. Preservaron la fachada y modernizaron todo por dentro. Excelente trabajo.",
@@ -542,8 +573,8 @@ async function main() {
     }),
     prisma.testimonio.create({
       data: {
-        obraId: obra.id,
-        clienteId: cliente.id,
+        obraId: null,
+        clienteId: null,
         nombrePublico: "María L.",
         texto:
           "Contraté solo la cotización pero me sorprendió la profesionalidad y claridad del presupuesto. Muy recomendable.",
@@ -562,7 +593,7 @@ async function main() {
         titulo: "Replanteo y fundaciones",
         descripcion:
           "Nivelación del terreno, replanteo de ejes y ejecución de platea de fundación.",
-        fecha: new Date("2026-07-08"),
+        fecha: fecha("2026-07-08"),
         visibleCliente: true,
       },
     }),
@@ -572,7 +603,7 @@ async function main() {
         titulo: "Estructura steel frame",
         descripcion:
           "Montaje de paneles y perfiles galvanizados. Estructura completa y arriostrada.",
-        fecha: new Date("2026-07-28"),
+        fecha: fecha("2026-07-28"),
         visibleCliente: true,
       },
     }),
@@ -582,29 +613,51 @@ async function main() {
         titulo: "Cubierta y cerramientos",
         descripcion:
           "Colocación de chapa, aislación hidrófuga y cerramientos exteriores.",
-        fecha: new Date("2026-08-20"),
+        fecha: fecha("2026-08-20"),
         visibleCliente: true,
       },
     }),
     prisma.hitosObra.create({
       data: {
         obraId: obra.id,
-        titulo: "Instalaciones (en curso)",
+        titulo: "Instalaciones eléctricas y sanitarias",
         descripcion:
-          "Tendido de cañerías eléctricas y sanitarias. Previsto para septiembre.",
-        fecha: new Date("2026-09-15"),
+          "Tendido de cañerías eléctricas y sanitarias, y prueba final de las instalaciones domiciliarias.",
+        fecha: fecha("2026-10-05"),
+        visibleCliente: true,
+      },
+    }),
+    prisma.hitosObra.create({
+      data: {
+        obraId: obra.id,
+        titulo: "Terminaciones interiores",
+        descripcion:
+          "Colocación de placas de yeso, tabiques interiores, cielorrasos y revestimientos.",
+        fecha: fecha("2026-12-15"),
+        visibleCliente: true,
+      },
+    }),
+    prisma.hitosObra.create({
+      data: {
+        obraId: obra.id,
+        titulo: "Pintura y entrega final",
+        descripcion:
+          "Pintura general, revisión final de detalles y firma del acta de entrega.",
+        fecha: fecha("2027-02-20"),
         visibleCliente: false,
       },
     }),
   ]);
   console.log(`   ✅ ${hitos.length} hitos de obra creados`);
 
+  // Montos calculados sobre el total de Bs 36.000, con los mismos
+  // porcentajes del seed original: 30% / 25% / 20% / 25%.
   const pagos = await Promise.all([
     prisma.pagoObra.create({
       data: {
         obraId: obra.id,
-        monto: 5250000,
-        fecha: new Date("2026-06-25"),
+        monto: 10800,
+        fecha: fecha("2026-06-25"),
         concepto: "Anticipo 30% a la firma del contrato",
         estado: EstadoPago.confirmado,
       },
@@ -612,8 +665,8 @@ async function main() {
     prisma.pagoObra.create({
       data: {
         obraId: obra.id,
-        monto: 4375000,
-        fecha: new Date("2026-07-30"),
+        monto: 9000,
+        fecha: fecha("2026-07-30"),
         concepto: "Certificado de avance: estructura steel frame",
         estado: EstadoPago.confirmado,
       },
@@ -621,14 +674,121 @@ async function main() {
     prisma.pagoObra.create({
       data: {
         obraId: obra.id,
-        monto: 3500000,
-        fecha: new Date("2026-09-05"),
+        monto: 7200,
+        fecha: fecha("2026-09-05"),
         concepto: "Certificado de avance: cubierta y cerramientos",
+        estado: EstadoPago.confirmado,
+      },
+    }),
+    prisma.pagoObra.create({
+      data: {
+        obraId: obra.id,
+        monto: 9000,
+        fecha: fecha("2027-02-25"),
+        concepto: "Saldo 25% por terminaciones y entrega",
         estado: EstadoPago.registrado,
       },
     }),
   ]);
   console.log(`   ✅ ${pagos.length} pagos de obra creados`);
+
+  console.log("🗓️  Creando eventos de calendario de la obra...");
+  const eventos = await Promise.all([
+    prisma.eventoCalendario.create({
+      data: {
+        obraId: obra.id,
+        clienteId: cliente.id,
+        titulo: "Reunión de seguimiento de avance",
+        descripcion: "Reunión de seguimiento con el cliente sobre el estado de la obra.",
+        tipo: TipoEventoCalendario.reunion,
+        fechaInicio: fecha("2026-11-25"),
+        visibleCliente: true,
+        creadoPorUsuarioId: admin.id,
+      },
+    }),
+    prisma.eventoCalendario.create({
+      data: {
+        obraId: obra.id,
+        clienteId: cliente.id,
+        titulo: "Visita técnica de avance",
+        descripcion: "Revisión de avance de terminaciones con el cliente.",
+        tipo: TipoEventoCalendario.visita_tecnica,
+        fechaInicio: fecha("2026-12-03"),
+        visibleCliente: true,
+        creadoPorUsuarioId: admin.id,
+      },
+    }),
+    prisma.eventoCalendario.create({
+      data: {
+        obraId: obra.id,
+        clienteId: cliente.id,
+        titulo: "Inicio de etapa: terminaciones interiores",
+        descripcion: "Comienzo de tabiques, cielorrasos y revestimientos.",
+        tipo: TipoEventoCalendario.inicio_etapa,
+        fechaInicio: fecha("2026-12-15"),
+        visibleCliente: true,
+        creadoPorUsuarioId: admin.id,
+      },
+    }),
+    prisma.eventoCalendario.create({
+      data: {
+        obraId: obra.id,
+        clienteId: cliente.id,
+        titulo: "Recordatorio de saldo pendiente",
+        descripcion: "Recordatorio del último pago (25%) antes de la entrega.",
+        tipo: TipoEventoCalendario.recordatorio,
+        fechaInicio: fecha("2027-02-20"),
+        visibleCliente: true,
+        creadoPorUsuarioId: admin.id,
+      },
+    }),
+    prisma.eventoCalendario.create({
+      data: {
+        obraId: obra.id,
+        clienteId: cliente.id,
+        titulo: "Entrega estimada de obra",
+        descripcion: "Entrega llave en mano y firma del acta de recepción.",
+        tipo: TipoEventoCalendario.entrega,
+        fechaInicio: fecha("2027-02-27"),
+        visibleCliente: true,
+        creadoPorUsuarioId: admin.id,
+      },
+    }),
+  ]);
+  console.log(`   ✅ ${eventos.length} eventos de calendario creados`);
+
+  console.log("📷 Creando actualizaciones de obra con fotos...");
+  const actualizaciones = await Promise.all([
+    prisma.actualizacionObra.create({
+      data: {
+        obraId: obra.id,
+        tipo: TipoMultimedia.foto,
+        titulo: "Estructura steel frame completa",
+        descripcion: "Estructura galvanizada montada y arriostrada en su totalidad.",
+        urlArchivo:
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794205694/constr-art/proyectos/galeria/file_i9kk8z.jpg",
+        cloudinaryPublicId: "constr-art/proyectos/galeria/file_i9kk8z",
+        fechaReferencia: fecha("2026-08-05"),
+        visibleCliente: true,
+        subidoPorUsuarioId: admin.id,
+      },
+    }),
+    prisma.actualizacionObra.create({
+      data: {
+        obraId: obra.id,
+        tipo: TipoMultimedia.foto,
+        titulo: "Cubierta y cerramientos terminados",
+        descripcion: "Chapa colocada, aislación hidrófuga y cerramientos exteriores listos.",
+        urlArchivo:
+          "https://res.cloudinary.com/fjub0euv/image/upload/v1794205695/constr-art/proyectos/galeria/file_b5l2h4.jpg",
+        cloudinaryPublicId: "constr-art/proyectos/galeria/file_b5l2h4",
+        fechaReferencia: fecha("2026-09-10"),
+        visibleCliente: true,
+        subidoPorUsuarioId: admin.id,
+      },
+    }),
+  ]);
+  console.log(`   ✅ ${actualizaciones.length} actualizaciones de obra creadas`);
 
   console.log("🧠 Creando base de conocimiento para el chat...");
   const conocimientos = await Promise.all([
@@ -692,7 +852,7 @@ async function main() {
   console.log("\n🎉 ¡Seed completado exitosamente!");
   console.log(`   Usuarios: 2 (admin@gmail.com, rodrigo@gmail.com)`);
   console.log(`   Cliente: 1 (Rodrigo Pacosillo Calcina)`);
-  console.log(`   Cotizaciones: 0`);
+  console.log(`   Cotizaciones: 1 (contratada, vinculada al contrato)`);
   console.log(`   Proyectos portafolio: ${proyectosPortafolio.length}`);
   console.log(`   Testimonios: ${testimonios.length}`);
   console.log(`   Servicios: ${servicios.length}`);
@@ -700,8 +860,12 @@ async function main() {
   console.log(`   Certificaciones: ${certificaciones.length}`);
   console.log(`   Conocimiento: ${conocimientos.length}`);
   console.log(`   Obras activas: 1 (rodrigo@gmail.com / rodrigo55555)`);
-  console.log(`   Hitos: ${hitos.length} (3 visibles + 1 oculto)`);
+  console.log(
+    `   Hitos: ${hitos.length} (${hitos.filter((h) => h.visibleCliente).length} visibles + ${hitos.filter((h) => !h.visibleCliente).length} ocultos)`
+  );
   console.log(`   Pagos: ${pagos.length}`);
+  console.log(`   Eventos de calendario: ${eventos.length}`);
+  console.log(`   Actualizaciones de obra: ${actualizaciones.length}`);
 }
 
 main()

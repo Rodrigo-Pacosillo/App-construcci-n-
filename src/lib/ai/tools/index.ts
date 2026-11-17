@@ -41,13 +41,43 @@ function compactarParaModelo(valor: unknown): unknown {
 }
 
 function envolver(toolOriginal: Tool, rol: ToolContext["rol"]): Tool {
+  const executeOriginal = toolOriginal.execute;
+
+  // Los resultados ambiguos llevan una tarjeta clickeable con el termino que
+  // permite al resolver elegir una sola opcion sin volver a preguntar.
+  const execute = executeOriginal
+    ? async (input: unknown, options: unknown) => {
+        const salida = await (executeOriginal as (i: unknown, o: unknown) => unknown)(
+          input,
+          options
+        );
+        if (
+          salida &&
+          typeof salida === "object" &&
+          (salida as Record<string, unknown>).estado === "ambiguo" &&
+          Array.isArray((salida as Record<string, unknown>).opciones)
+        ) {
+          return {
+            ...(salida as Record<string, unknown>),
+            ui: {
+              tipo: "opciones",
+              titulo: "Varias coincidencias",
+              opciones: (salida as Record<string, unknown>).opciones,
+            },
+          };
+        }
+        return salida;
+      }
+    : undefined;
+
   return {
     ...toolOriginal,
-    toModelOutput: async ({ output }) => ({
+    ...(execute ? { execute } : {}),
+    toModelOutput: async ({ output }: { output: unknown }) => ({
       type: "json",
       value: limpiarParaModelo(compactarParaModelo(output), rol),
     }),
-  } as Tool;
+  } as unknown as Tool;
 }
 
 export function toolsPara(

@@ -9,6 +9,7 @@ import BrickLoader from "./BrickLoader";
 import { TarjetaAccion } from "./TarjetaAccion";
 import { RenderTextoChat } from "./RenderTextoChat";
 import { AudioMensaje } from "./AudioMensaje";
+import { TarjetaOpciones } from "./TarjetaOpciones";
 
 // ─── Tipos ─────────────────────────────────────────────────────────────────
 
@@ -46,6 +47,11 @@ type AccionUI = {
   expiraEn: string | null;
   resumen: AccionResumen;
   error?: string | null;
+};
+
+type OpcionesUI = {
+  titulo: string;
+  opciones: { etiqueta: string; termino?: string }[];
 };
 
 interface ChatPanelProps {
@@ -113,6 +119,7 @@ interface StreamUIResultado {
   mensajeId: string | null;
   error?: string;
   acciones: AccionUI[];
+  opciones: OpcionesUI | null;
 }
 
 /**
@@ -168,6 +175,7 @@ export function ChatPanel(props: ChatPanelProps) {
   const [sessionId, setSessionId] = useState<string | null>(initialSessionId ?? null);
   const [mensajes, setMensajes] = useState<Mensaje[]>([]);
   const [acciones, setAcciones] = useState<Record<string, AccionUI>>({});
+  const [opcionesUI, setOpcionesUI] = useState<OpcionesUI | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errorEsFatal, setErrorEsFatal] = useState(false);
@@ -189,12 +197,13 @@ export function ChatPanel(props: ChatPanelProps) {
   // Leer stream SSE
   async function leerStreamUI(response: Response): Promise<StreamUIResultado> {
     const reader = response.body?.getReader();
-    if (!reader) return { texto: "", mensajeId: null, error: "Sin reader", acciones: [] };
+    if (!reader) return { texto: "", mensajeId: null, error: "Sin reader", acciones: [], opciones: null };
 
     const decoder = new TextDecoder();
     let buffer = "";
     let texto = "";
     let mensajeId: string | null = null;
+    let opcionesResultado: OpcionesUI | null = null;
     const accionesResultado: AccionUI[] = [];
 
     try {
@@ -218,6 +227,8 @@ export function ChatPanel(props: ChatPanelProps) {
                 if (accion && !accionesResultado.some((a) => a.accionId === accion.accionId)) {
                   accionesResultado.push(accion);
                 }
+                const opciones = extraerOpcionesUI(data.output);
+                if (opciones) opcionesResultado = opciones as OpcionesUI;
               } else if (data.type === "tool-output-error" || data.type === "tool-input-error") {
                 console.warn("[CHAT] Tool error:", data.errorText);
               }
@@ -228,7 +239,7 @@ export function ChatPanel(props: ChatPanelProps) {
     } finally {
       reader.releaseLock();
     }
-    return { texto, mensajeId, acciones: accionesResultado };
+    return { texto, mensajeId, acciones: accionesResultado, opciones: opcionesResultado };
   }
 
   // Cargar historial
@@ -244,6 +255,7 @@ export function ChatPanel(props: ChatPanelProps) {
       const data = await res.json();
       setMensajes(data.mensajes || []);
       setAcciones({});
+      setOpcionesUI(null);
       (data.acciones || []).forEach((a: AccionUI) => { setAcciones((prev) => ({ ...prev, [a.accionId]: a })); });
       setSugerencias(data.sugerencias || []);
       setAgenteUI(data.agente || null);
@@ -318,48 +330,67 @@ export function ChatPanel(props: ChatPanelProps) {
       return;
     }
 
-    // Cliente/Admin: modo borrador → NO enviar mensaje, solo crear sesión
-    const res = await fetch("/api/chat", {
+    // Cliente/Admin: modo borrador. Mostrar el saludo SIN crear sesión ni
+    // persistir mensajes: abrir el chat no debe llenar el historial.
+    try {
+      const res = await fetch(`/api/chat/saludo?agente=${agente}`);
+      if (!res.ok) {
+        let mensaje = "No se pudo cargar el saludo";
+        try { const body = await res.json(); if (body.error?.message) mensaje = body.error.message as string; } catch {}
+        throw new Error(mensaje);
+      }
+      const data = await res.json();
+      setMensajes([
+        {
+          id: "saludo-local",
+          rol: "assistant",
+          contenido: data.saludo || "",
+          creadoEn: new Date().toISOString(),
+        },
+      ]);
+      setSugerencias(data.sugerencias || []);
+      setAgenteUI(data.agente || null);
+      setExpiraEn(null);
+      setOpcionesUI(null);
+      setModoBorrador(true);
+      setMostrarSugerencias(true);
+      setErrorEsFatal(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo cargar el saludo.");
+      setErrorEsFatal(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [agente, esPublico, chatToken, cotizacionId, propsClienteNombre, whatsappNumero, sessionStorageKey, onActividad]);
+
+  /** La sesión privada nace recién cuando el usuario envía su primer mensaje. */
+  const crearSesionPrivada = useCallback(async () => {
+    const res = await fetch("/api/chat/sesiones", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sessionId: null, agente: agente }),
+      body: JSON.stringify({ agente }),
     });
-
     if (!res.ok) {
-      let mensaje = "Error al iniciar el chat";
+      let mensaje = "No se pudo iniciar la conversación";
       try { const body = await res.json(); if (body.error?.message) mensaje = body.error.message as string; } catch {}
-      setError(mensaje);
-      setErrorEsFatal(res.status === 404 || res.status === 429);
-      if (res.status === 404 || res.status === 429) {
-        sessionStorage.removeItem(sessionStorageKey);
-        setSessionId(null);
-      }
-      setLoading(false);
-      return;
+      throw new Error(mensaje);
     }
-
-    // Obtener saludo del servidor
     const data = await res.json();
-    sessionJustCreated.current = true; // Marcar que la sesión fue creada recién
-    setSessionId(data.sessionId);
-    sessionStorage.setItem(sessionStorageKey, data.sessionId);
-    setMensajes(data.mensajes || []);
-    setSugerencias(data.sugerencias || []);
-    setAgenteUI(data.agente || null);
-    setExpiraEn(data.expiraEn || null);
+    sessionJustCreated.current = true; // Evita recargar historial a mitad del primer envío
+    const sid = data.sessionId as string;
+    setSessionId(sid);
     setModoBorrador(false);
-    setMostrarSugerencias(true);
-    setErrorEsFatal(false);
-    onActividad?.();
-    setLoading(false);
-  }, [esPublico, chatToken, cotizacionId, propsClienteNombre, whatsappNumero, sessionStorageKey, onSesionCreada, onActividad]);
+    onSesionCreada?.(sid);
+    return sid;
+  }, [agente, onSesionCreada]);
 
   // ─── Funciones de envío ──────────────────────────────────────────────────
 
   const enviarTexto = useCallback(async (texto: string) => {
-    if (!texto.trim() || !sessionId || loading) return;
+    if (!texto.trim() || loading) return;
     setInput("");
     setError(null);
+    setOpcionesUI(null);
 
     const mensajeOptimista: Mensaje = {
       id: `temp-${Date.now()}`,
@@ -373,6 +404,10 @@ export function ChatPanel(props: ChatPanelProps) {
     setMostrarSugerencias(false);
 
     try {
+      // El primer mensaje crea la sesión (antes se creaba al abrir el chat).
+      const sid = sessionId || (esPublico ? null : await crearSesionPrivada());
+      if (!sid) throw new Error("No hay una sesión activa.");
+
       // Para chat público, recuperar token de sessionStorage si no está en props
       const token = esPublico
         ? (chatToken || (typeof window !== "undefined" ? sessionStorage.getItem(`${sessionStorageKey}_token`) : null))
@@ -383,7 +418,7 @@ export function ChatPanel(props: ChatPanelProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           mensaje: texto,
-          sessionId,
+          sessionId: sid,
           t: token,
         }),
       });
@@ -392,20 +427,31 @@ export function ChatPanel(props: ChatPanelProps) {
         let mensaje = "Error al enviar el mensaje";
         try { const body = await res.json(); if (body.error?.message) mensaje = body.error.message as string; } catch {}
         setError(mensaje);
-        setErrorEsFatal(res.status === 404 || res.status === 429);
-        if (res.status === 404 || res.status === 429) {
-          sessionStorage.removeItem(sessionStorageKey);
-          sessionStorage.removeItem(`${sessionStorageKey}_token`);
+        setErrorEsFatal(res.status === 404 || res.status === 410 || res.status === 429);
+        if (res.status === 404 || res.status === 410 || res.status === 429) {
+          if (esPublico) {
+            sessionStorage.removeItem(sessionStorageKey);
+            sessionStorage.removeItem(`${sessionStorageKey}_token`);
+          }
           setSessionId(null);
         }
+        setMensajes((prev) => prev.filter((m) => !m.id.startsWith("temp-")));
+        onActividad?.(); // La lista lateral debe reflejar la sesion recien creada.
         setLoading(false);
         return;
       }
 
-      const { texto: textoCompleto, mensajeId, error: errorStream, acciones: accionesNuevas } = await leerStreamUI(res);
+      const {
+        texto: textoCompleto,
+        mensajeId,
+        error: errorStream,
+        acciones: accionesNuevas,
+        opciones: opcionesNuevas,
+      } = await leerStreamUI(res);
 
       setErrorEsFatal(false);
       if (errorStream) setError(errorStream);
+      if (opcionesNuevas) setOpcionesUI(opcionesNuevas);
 
       if (textoCompleto.trim() || accionesNuevas.length > 0) {
         setMensajes((prev) => [
@@ -420,32 +466,44 @@ export function ChatPanel(props: ChatPanelProps) {
           },
         ]);
         accionesNuevas.forEach((a) => { setAcciones((prev) => ({ ...prev, [a.accionId]: a })); });
+        setModoBorrador(false);
         onActividad?.();
+      } else {
+        setMensajes((prev) => [
+          ...prev.filter((m) => !m.id.startsWith("temp-")),
+          { id: `user-${Date.now()}`, rol: "user", contenido: texto, creadoEn: new Date().toISOString() },
+        ]);
       }
       setLoading(false);
-    } catch {
-      setError("Lo siento, tuve un problema técnico. Intenta de nuevo en unos segundos.");
+    } catch (err) {
+      setMensajes((prev) => prev.filter((m) => !m.id.startsWith("temp-")));
+      setError(err instanceof Error ? err.message : "Lo siento, tuve un problema técnico. Intenta de nuevo en unos segundos.");
+      onActividad?.();
       setLoading(false);
     }
-  }, [sessionId, chatToken, loading]);
+  }, [sessionId, chatToken, loading, esPublico, crearSesionPrivada, sessionStorageKey, onActividad]);
 
   const enviarMensaje = useCallback(() => enviarTexto(input), [input, enviarTexto]);
 
   // Nueva conversación
   const nuevaConversacion = useCallback(() => {
-    sessionStorage.removeItem(sessionStorageKey);
-    sessionStorage.removeItem(`${sessionStorageKey}_token`);
+    if (esPublico) {
+      sessionStorage.removeItem(sessionStorageKey);
+      sessionStorage.removeItem(`${sessionStorageKey}_token`);
+    }
     setSessionId(null);
     setMensajes([]);
     setAcciones({});
+    setOpcionesUI(null);
     setSugerencias([]);
     setModoBorrador(true);
     setMostrarSugerencias(true);
     setError(null);
     setErrorEsFatal(false);
     setInput("");
+    setLoading(false);
     setTimeout(() => iniciarChat(), 0);
-  }, [sessionStorageKey, iniciarChat]);
+  }, [esPublico, sessionStorageKey, iniciarChat]);
 
   // Manejar confirmación/rechazo de acción
   const alFinalizarAccion = useCallback((accionId: string, exito: boolean, mensaje?: string) => {
@@ -500,24 +558,13 @@ export function ChatPanel(props: ChatPanelProps) {
     cargarHistorial(sessionId);
   }, [sessionId, cargarHistorial]);
 
-  // Auto-iniciar chat si no hay sesión guardada
+  // Sin sesión: el público reutiliza la de su cotización; cliente/admin solo
+  // cargan el saludo en modo borrador (sin crear nada en la BD).
   useEffect(() => {
     if (!sessionId) {
       setTimeout(() => iniciarChat(), 0);
     }
-  }, [esPublico, propsClienteId, cotizacionId, propsClienteNombre, whatsappNumero, chatToken, sessionStorageKey, iniciarChat]);
-
-  // Leer sessionId de storage solo en cliente (evitar cascading renders con setTimeout)
-  // Público NO usa sessionStorage: siempre inicia sesión nueva/reutilizada vía obtenerOCrearSesionPublica
-  useEffect(() => {
-    if (esPublico) return;
-    if (typeof window !== "undefined" && !sessionId) {
-      const saved = sessionStorage.getItem(sessionStorageKey);
-      if (saved) {
-        setTimeout(() => setSessionId(saved), 0);
-      }
-    }
-  }, [esPublico, sessionStorageKey, sessionId]);
+  }, [sessionId, esPublico, propsClienteId, cotizacionId, propsClienteNombre, whatsappNumero, chatToken, sessionStorageKey, iniciarChat]);
 
   // ─── Render ────────────────────────────────────────────────────────────────
 
@@ -571,7 +618,7 @@ export function ChatPanel(props: ChatPanelProps) {
         {mensajes.map((msg) => (
           <div key={msg.id} className={`flex ${msg.rol === "user" ? "justify-end" : "justify-start"}`}>
             <div
-              className={`max-w-[${msg.accionIds?.length ? "95%" : "85%"}] rounded-2xl px-3 py-3 ${msg.rol === "user"
+              className={`${msg.accionIds?.length ? "max-w-[95%]" : "max-w-[85%]"} rounded-2xl px-3 py-3 ${msg.rol === "user"
                 ? "bg-amber-500 text-white shadow-md"
                 : "bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 shadow-sm text-neutral-900 dark:text-white"}`}
             >
@@ -595,6 +642,13 @@ export function ChatPanel(props: ChatPanelProps) {
           </div>
         ))}
         {loading && <BrickLoader />}
+        {opcionesUI && (
+          <TarjetaOpciones
+            titulo={opcionesUI.titulo}
+            opciones={opcionesUI.opciones}
+            onElegir={(termino) => enviarTexto(termino)}
+          />
+        )}
       </div>
 
       {/* Tarjetas de acción sueltas (al final del chat) */}
@@ -609,7 +663,7 @@ export function ChatPanel(props: ChatPanelProps) {
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyPress={(e) => { if (e.key === "Enter") { e.preventDefault(); enviarMensaje(); } }}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); enviarMensaje(); } }}
             placeholder={modoBorrador ? "Escribe tu primera pregunta…" : "Escribe tu pregunta…"}
             disabled={loading}
             className="flex-1 px-4 py-3 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50"

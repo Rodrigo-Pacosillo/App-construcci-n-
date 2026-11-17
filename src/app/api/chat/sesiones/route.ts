@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { crearSesion, listarSesiones } from "@/lib/ai/sesiones";
-import { construirSaludoCliente } from "@/lib/ai/saludos/cliente";
-import { construirSaludoAdmin } from "@/lib/ai/saludos/admin";
+import { prepararSaludo } from "@/lib/ai/saludos/preparar";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+const crearSchema = z.object({
+  agente: z.enum(["cliente", "admin"]).default("cliente"),
+});
 
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -15,36 +22,45 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(lista);
 }
 
+/**
+ * Unico punto de creacion de sesiones privadas. Se llama al enviar el PRIMER
+ * mensaje; abrir el chat usa /api/chat/saludo y no persiste nada.
+ */
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session || !session.user) {
     return NextResponse.json({ error: { code: "NO_AUTORIZADO", message: "No autorizado" } }, { status: 403 });
   }
-  const body = await req.json().catch(() => ({}));
-  const agente = (body.agente as "cliente" | "admin") || "cliente";
 
-  // Resolver clienteId real (fix B1 + B2)
-  let clienteId: string | undefined;
-  if (agente === "cliente") {
-    const usuario = await prisma.usuario.findUnique({
-      where: { id: session.user.id },
-      select: { clienteId: true, nombre: true, apellidos: true },
+  const body = await req.json().catch(() => ({}));
+  const parsed = crearSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: { code: "VALIDACION", message: "Agente invalido" } }, { status: 400 });
+  }
+  const { agente } = parsed.data;
+
+  let saludo;
+  try {
+    saludo = await prepararSaludo({
+      agente,
+      usuarioId: session.user.id,
+      nombre: session.user.name,
     });
-    clienteId = usuario?.clienteId ?? undefined;
-    if (!clienteId) {
+  } catch (error) {
+    if (error instanceof Error && error.message === "SIN_CLIENTE") {
       return NextResponse.json(
         { error: { code: "NO_AUTORIZADO", message: "Su usuario no tiene un cliente asociado." } },
         { status: 403 }
       );
     }
+    throw error;
   }
 
-  const sesion = await crearSesion({ usuarioId: session.user.id, agente, clienteId });
-
-  // Persistir saludo como mensaje assistant (fix B8)
-  const saludo = agente === "admin"
-    ? await construirSaludoAdmin({ nombre: session.user.name ?? "Admin" })
-    : await construirSaludoCliente({ clienteId: clienteId! });
+  const sesion = await crearSesion({
+    usuarioId: session.user.id,
+    agente,
+    clienteId: saludo.clienteId,
+  });
 
   await prisma.chatMensaje.create({
     data: {

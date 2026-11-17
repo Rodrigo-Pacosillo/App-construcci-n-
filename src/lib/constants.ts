@@ -130,13 +130,6 @@ export const CLIENTE_NAV_SECTIONS: NavSection[] = [
       { id: "contratos", label: "Contratos", href: "/cliente/contratos", icon: "FileCheck" },
     ],
   },
-  {
-    id: "cuenta",
-    label: "Mi cuenta",
-    items: [
-      { id: "perfil", label: "Perfil", href: "/cliente/perfil", icon: "User" },
-    ],
-  },
 ];
 
 // ─── Labels para UI ────────────────────────────────────────────────

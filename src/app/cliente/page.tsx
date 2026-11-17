@@ -172,9 +172,9 @@ export default async function ClienteDashboard({
               <p className="mt-2 font-heading text-2xl font-bold">{obraSeleccionada.direccionObra}</p>
               <p className="mt-1 text-sm text-ink-muted">
                 Inicio:{" "}
-                {new Date(obraSeleccionada.fechaInicio).toLocaleDateString("es-AR")}
+                {new Date(obraSeleccionada.fechaInicio).toLocaleDateString("es-BO")}
                 {obraSeleccionada.fechaFinEstimada
-                  ? ` - Fin estimado: ${new Date(obraSeleccionada.fechaFinEstimada).toLocaleDateString("es-AR")}`
+                  ? ` - Fin estimado: ${new Date(obraSeleccionada.fechaFinEstimada).toLocaleDateString("es-BO")}`
                   : ""}
               </p>
               <p className="mt-1 text-sm text-ink-muted">

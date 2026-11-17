@@ -34,6 +34,43 @@ function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(href + "/");
 }
 
+function CuentaLink({
+  clienteNombre,
+  onNavigate,
+}: {
+  clienteNombre: string;
+  onNavigate?: () => void;
+}) {
+  const pathname = usePathname();
+  const active = isActive(pathname, "/cliente/perfil");
+
+  return (
+    <Link
+      href="/cliente/perfil"
+      onClick={onNavigate}
+      aria-label="Ir a mi perfil"
+      className={`flex items-center gap-3 border-b border-border px-4 py-4 transition-colors hover:bg-ink/5 ${
+        active ? "bg-ink/5" : ""
+      }`}
+    >
+      <span
+        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border ${
+          active ? "border-accent text-accent-strong" : "border-border text-ink-muted"
+        }`}
+        aria-hidden="true"
+      >
+        <User className="h-5 w-5" />
+      </span>
+      <span className="min-w-0">
+        <span className="section-label block text-ink-faint">MI CUENTA</span>
+        <span className="block truncate text-sm font-medium text-ink">
+          {clienteNombre || "Mi perfil"}
+        </span>
+      </span>
+    </Link>
+  );
+}
+
 interface SectionState {
   isExpanded: boolean;
 }
@@ -155,7 +192,7 @@ export function ClienteSidebar({
       {/* Mobile header */}
       <div className="flex items-center justify-between border-b border-border bg-surface px-4 py-3 lg:hidden">
         <Link href="/cliente" className="font-heading text-lg font-bold">
-          MI CUENTA
+          CONSTR-ART
         </Link>
         <button
           onClick={() => setOpen(!open)}
@@ -182,9 +219,13 @@ export function ClienteSidebar({
                 className="font-heading text-lg font-bold"
                 onClick={() => setOpen(false)}
               >
-                MI CUENTA
+                CONSTR-ART
               </Link>
             </div>
+            <CuentaLink
+              clienteNombre={clienteNombre}
+              onNavigate={() => setOpen(false)}
+            />
             <div className="flex-1 overflow-y-auto p-4">
               <NavSections {...navSectionsProps} onNavigate={() => setOpen(false)} />
             </div>
@@ -223,9 +264,10 @@ export function ClienteSidebar({
       <div className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-border bg-surface lg:flex">
         <div className="flex h-16 shrink-0 items-center border-b border-border px-6">
           <Link href="/cliente" className="font-heading text-lg font-bold">
-            MI CUENTA
+            CONSTR-ART
           </Link>
         </div>
+        <CuentaLink clienteNombre={clienteNombre} />
         <nav className="flex-1 overflow-y-auto p-4">
           <NavSections {...navSectionsProps} />
         </nav>
@@ -278,7 +320,6 @@ export function ClienteSidebar({
                 clienteId={clienteId}
                 cotizacionId={cotizacionId}
                 clienteNombre={clienteNombre}
-                whatsappNumero=""
               />
             </div>
           </div>

@@ -49,5 +49,5 @@ export function bloqueFecha(): string {
     hour: "2-digit",
     minute: "2-digit",
   }).format(new Date());
-  return `Fecha y hora actual (${TZ_NEGOCIO}): ${fecha}. Interprete "hoy", "mañana", "el lunes" con esta fecha.`;
+  return `Fecha y hora actual (${TZ_NEGOCIO}, dato interno): ${fecha}. Interprete "hoy", "mañana", "el lunes" con esta fecha. No mencione la fecha ni la hora salvo que el usuario las pregunte expresamente.`;
 }

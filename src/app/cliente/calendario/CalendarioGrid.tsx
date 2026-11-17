@@ -258,7 +258,7 @@ export function CalendarioGrid({ eventos, obra }: CalendarioGridProps) {
                         {TIPO_LABEL[e.tipo] ?? e.tipo}
                       </span>
                       <span className="ml-2 text-xs text-ink-faint">
-                        {new Date(e.fechaInicio).toLocaleString("es-AR", {
+                        {new Date(e.fechaInicio).toLocaleString("es-BO", {
                           day: "2-digit",
                           month: "2-digit",
                           year: "numeric",
@@ -269,7 +269,7 @@ export function CalendarioGrid({ eventos, obra }: CalendarioGridProps) {
                       </span>
                       {e.fechaFin && (
                         <span className="ml-1 text-xs text-ink-faint">
-                          {new Date(e.fechaFin).toLocaleString("es-AR", {
+                          {new Date(e.fechaFin).toLocaleString("es-BO", {
                             day: "2-digit",
                             month: "2-digit",
                             year: "numeric",

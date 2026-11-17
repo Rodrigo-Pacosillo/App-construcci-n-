@@ -9,7 +9,7 @@ export function formatFecha(fecha: Date | string | null | undefined): string {
   if (!fecha) return "—";
   const d = typeof fecha === "string" ? new Date(fecha) : fecha;
   if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleDateString("es-AR", {
+  return d.toLocaleDateString("es-BO", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -23,7 +23,7 @@ export function formatFechaHora(fecha: Date | string | null | undefined): string
   if (!fecha) return "—";
   const d = typeof fecha === "string" ? new Date(fecha) : fecha;
   if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleString("es-AR", {
+  return d.toLocaleString("es-BO", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",

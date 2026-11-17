@@ -57,7 +57,10 @@ export async function resolverObra(
   }
   return {
     estado: "ambiguo",
-    opciones: candidatos.slice(0, 5).map((o) => ({ etiqueta: etiqueta(o as unknown as ObraRow) })),
+    opciones: candidatos.slice(0, 5).map((o) => ({
+      etiqueta: etiqueta(o as unknown as ObraRow),
+      termino: o.direccionObra || o.nombreComercial || "",
+    })),
     sugerencia: "Hay varias obras que coinciden. Indique cual.",
   };
 }

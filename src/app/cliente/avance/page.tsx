@@ -39,7 +39,7 @@ async function getDatos(obraId?: string) {
 
 function formatDate(date: Date | null | undefined) {
   if (!date) return "—";
-  return new Date(date).toLocaleDateString("es-AR", {
+  return new Date(date).toLocaleDateString("es-BO", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",

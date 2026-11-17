@@ -75,14 +75,14 @@ export default async function ClientContratosPage() {
                   </h2>
                   <p className="mt-1 text-sm text-ink-muted">
                     {c.fechaFirma
-                      ? `Firmado el ${new Date(c.fechaFirma).toLocaleDateString("es-AR")}`
+                      ? `Firmado el ${new Date(c.fechaFirma).toLocaleDateString("es-BO")}`
                       : "Fecha de firma no registrada"}
                   </p>
                 </div>
                 <div className="text-right">
                   <p className="section-label text-accent-strong">Acordado</p>
                   <p className="mt-1 font-heading text-lg font-bold">
-                    ${Number(c.montoTotal).toLocaleString("es-AR")}
+                    ${Number(c.montoTotal).toLocaleString("es-BO")}
                   </p>
                 </div>
               </div>
