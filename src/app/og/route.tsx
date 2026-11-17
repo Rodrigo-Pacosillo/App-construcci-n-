@@ -1,13 +1,48 @@
 import { ImageResponse } from "next/og";
-import { Archivo } from "next/font/google";
-
-const archivo = Archivo({
-  subsets: ["latin"],
-  weight: ["400", "700", "900"],
-  display: "swap",
-});
 
 export const runtime = "edge";
+
+type FuenteOg = {
+  name: string;
+  data: ArrayBuffer;
+  style: "normal";
+  weight: 400 | 900;
+};
+
+// Los .ttf viven en /public/fonts (satori no acepta woff2). Se cachean en memoria
+// del isolate para no re-descargarlos en cada render de imagen.
+let fuentesCache: FuenteOg[] | null = null;
+
+async function cargarFuentes(req: Request): Promise<FuenteOg[] | undefined> {
+  if (fuentesCache) return fuentesCache;
+
+  try {
+    const [regular, black] = await Promise.all([
+      fetch(new URL("/fonts/archivo-400.ttf", req.url)).then((res) => {
+        if (!res.ok) throw new Error(`archivo-400.ttf: ${res.status}`);
+        return res.arrayBuffer();
+      }),
+      fetch(new URL("/fonts/archivo-900.ttf", req.url)).then((res) => {
+        if (!res.ok) throw new Error(`archivo-900.ttf: ${res.status}`);
+        return res.arrayBuffer();
+      }),
+    ]);
+
+    fuentesCache = [
+      { name: "Archivo", data: regular, style: "normal", weight: 400 },
+      { name: "Archivo", data: black, style: "normal", weight: 900 },
+    ];
+    return fuentesCache;
+  } catch (error) {
+    // Sin la fuente propia, ImageResponse usa la fuente embebida por defecto.
+    // Preferimos una OG con tipografía distinta antes que un 500.
+    console.error(
+      "[og] no se pudieron cargar las fuentes:",
+      error instanceof Error ? error.message : String(error)
+    );
+    return undefined;
+  }
+}
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -16,6 +51,7 @@ export async function GET(req: Request) {
   const type = searchParams.get("type") || "default";
 
   const isDark = type === "dark";
+  const fuentes = await cargarFuentes(req);
 
   return new ImageResponse(
     (
@@ -28,7 +64,7 @@ export async function GET(req: Request) {
           alignItems: "center",
           justifyContent: "center",
           backgroundColor: isDark ? "#0C0D10" : "#FAFAF8",
-          fontFamily: archivo.style.fontFamily,
+          fontFamily: "Archivo",
           color: isDark ? "#F2F1EC" : "#17181A",
           position: "relative",
           overflow: "hidden",
@@ -63,10 +99,18 @@ export async function GET(req: Request) {
         />
 
         {/* Content */}
-        <div style={{ textAlign: "center", zIndex: 1, maxWidth: "90%" }}>
-          <p
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            textAlign: "center",
+            maxWidth: "90%",
+          }}
+        >
+          <div
             style={{
-              fontFamily: archivo.style.fontFamily,
+              fontFamily: "Archivo",
               fontSize: 14,
               fontWeight: 400,
               letterSpacing: "0.3em",
@@ -76,10 +120,11 @@ export async function GET(req: Request) {
             }}
           >
             CONSTR-ART
-          </p>
-          <h1
+          </div>
+          <div
             style={{
-              fontFamily: archivo.style.fontFamily,
+              display: "flex",
+              fontFamily: "Archivo",
               fontSize: 72,
               fontWeight: 900,
               lineHeight: 1.1,
@@ -88,19 +133,20 @@ export async function GET(req: Request) {
             }}
           >
             {title}
-          </h1>
-          <p
+          </div>
+          <div
             style={{
-              fontFamily: archivo.style.fontFamily,
+              display: "flex",
+              fontFamily: "Archivo",
               fontSize: 28,
               fontWeight: 400,
               color: isDark ? "rgba(242, 241, 236, 0.7)" : "rgba(23, 24, 26, 0.6)",
               maxWidth: 800,
-              margin: "0 auto",
+              textAlign: "center",
             }}
           >
             {subtitle}
-          </p>
+          </div>
         </div>
 
         {/* Bottom accent */}
@@ -119,16 +165,7 @@ export async function GET(req: Request) {
     {
       width: 1200,
       height: 630,
-      fonts: [
-        {
-          name: "Archivo",
-          data: await fetch(
-            "https://fonts.gstatic.com/s/archivo/v23/k3kUo8kEI-tA1RRcTZGmTlHGCacds86x.woff2"
-          ).then((res) => res.arrayBuffer()),
-          style: "normal",
-          weight: 900,
-        },
-      ],
+      fonts: fuentes,
     }
   );
 }
